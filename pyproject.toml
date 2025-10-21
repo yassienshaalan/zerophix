@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zerophi"
+version = "0.1.0"
+description = "Zero-PHI De-identification + Semantic Retargeting (PoC)"
+authors = [ { name = "OpenMed PoC User" } ]
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+dependencies = [
+  "pydantic>=2.6",
+  "fastapi>=0.110",
+  "uvicorn>=0.30",
+  "regex>=2023.12.25",
+  "transformers>=4.41",
+]
+[project.optional-dependencies]
+torch = ["torch>=2.2"]
+dev = ["pytest", "httpx", "ruff"]
+
+[tool.setuptools.package-dir]
+"" = "src"
