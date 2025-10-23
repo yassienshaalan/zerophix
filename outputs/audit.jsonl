@@ -1,0 +1,13 @@
+{"span": [0, 10], "label": "PII.NAME_HINT", "detector": "regex", "action": "pseudonymize", "replacement": "[PII.NAME_HINT:E83314A4A7]"}
+{"span": [16, 26], "label": "PII.DATE", "detector": "regex", "action": "pseudonymize", "replacement": "76553273"}
+{"span": [31, 41], "label": "PII.ADDRESS", "detector": "regex", "action": "pseudonymize", "replacement": "FEEB7D89"}
+{"span": [90, 112], "label": "PII.EMAIL", "detector": "regex", "action": "pseudonymize", "replacement": "[PII.EMAIL:45C9035B62]"}
+{"span": [18, 27], "label": "PSI.FILEPATH", "detector": "regex", "action": "redact", "replacement": "[PSI.FILEPATH]"}
+{"span": [0, 12], "label": "PII.NAME_HINT", "detector": "regex", "action": "pseudonymize", "replacement": "[PII.NAME_HINT:E12573FBC3]"}
+{"span": [45, 55], "label": "PII.DATE", "detector": "regex", "action": "pseudonymize", "replacement": "4953A197"}
+{"span": [114, 128], "label": "PII.NAME_HINT", "detector": "regex", "action": "pseudonymize", "replacement": "[PII.NAME_HINT:A3208D90CF]"}
+{"span": [47, 56], "label": "PSI.FILEPATH", "detector": "regex", "action": "redact", "replacement": "[PSI.FILEPATH]"}
+{"span": [17, 29], "label": "PII.NAME_HINT", "detector": "regex", "action": "pseudonymize", "replacement": "[PII.NAME_HINT:5D0D320E0B]"}
+{"span": [94, 104], "label": "PII.DATE", "detector": "regex", "action": "pseudonymize", "replacement": "9FBA6B68"}
+{"span": [106, 120], "label": "PSI.PROJECT", "detector": "regex", "action": "redact", "replacement": "[PSI.PROJECT]"}
+{"span": [129, 151], "label": "PSI.API_KEY", "detector": "regex", "action": "redact", "replacement": "[PSI.API_KEY]"}

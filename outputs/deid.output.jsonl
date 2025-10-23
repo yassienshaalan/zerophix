@@ -1,0 +1,3 @@
+{"id": "1", "text": "[PII.NAME_HINT:E83[PSI.FILEPATH](DOB 76553273) at FEEB7D89, Melbourne VIC. Diagnosed with melanoma. Email: [PII.EMAIL:45C9035B62]", "entities": []}
+{"id": "2", "text": "[PII.NAME_HINT:E12573FBC3] Doe called +61 (3) 9[PSI.FILEPATH]on 4953A197. Pembrolizumab 200mg initiated for metastatic melanoma at [PII.NAME_HINT:A3208D90CF].", "entities": []}
+{"id": "3", "text": "Resident at 221B [PII.NAME_HINT:5D0D320E0B] presented with diabetes mellitus and hypertension. Follow-up o[PSI.PROJECT]oject Fal[PSI.API_KEY]PQRSTUV12345", "entities": []}
