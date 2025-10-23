@@ -1,0 +1,2 @@
+- {label: "PSI.PROJECT", pattern: "\\b(Project|Codename)\\s+[A-Z][A-Za-z0-9_-]+\\b"}
+- {label: "PSI.SECRET", pattern: "(?i)(secret|token|api_key)\\s*[:=]\\s*[A-Za-z0-9_\\-]{24,}"}

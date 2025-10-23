@@ -1,0 +1,29 @@
+engine:
+  offline: true
+  precedence: [PHI.*, PSI.*, PII.*]
+pii:
+  enabled: true
+  mode: pseudonymize
+  format_preserving: true
+  detectors:
+    regex:
+      builtin_packs: [global_core, au_ids]
+      custom_files: [configs/company/pii.regex.yaml]
+phi:
+  enabled: true
+  mode: pseudonymize
+  detectors:
+    openmed:
+      disease: {local_path: local_models/openmed_disease, min_conf: 0.6}
+      drug:    {local_path: local_models/openmed_drug,    min_conf: 0.6}
+      gene:    {local_path: local_models/openmed_dna,     min_conf: 0.6}
+psi:
+  enabled: true
+  mode: redact
+  detectors:
+    regex:
+      builtin_packs: [psi_corporate]
+      custom_files: [configs/company/psi.regex.yaml]
+outputs:
+  sidecar_entities: true
+  audit_log_path: outputs/audit.jsonl
