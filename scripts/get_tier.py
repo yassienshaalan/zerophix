@@ -11,13 +11,22 @@ def ensure_deps():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "transformers>=4.41"])
 
 def fetch(repo_id: str, out_dir: str):
-    from transformers import AutoTokenizer, AutoModelForTokenClassification
-    log(f"downloading {repo_id} → {out_dir}")
-    tok = AutoTokenizer.from_pretrained(repo_id)
-    mdl = AutoModelForTokenClassification.from_pretrained(repo_id)
-    os.makedirs(out_dir, exist_ok=True)
-    tok.save_pretrained(out_dir); mdl.save_pretrained(out_dir)
-    log(f"saved to {out_dir}")
+    import os
+    from huggingface_hub import snapshot_download
+    # Force cache inside repo
+    repo_root = os.path.abspath(os.path.join(out_dir, "..", ".."))
+    hf_home = os.path.join(repo_root, "local_models", ".hf")
+    hf_cache = os.path.join(repo_root, "local_models", ".cache")
+    os.makedirs(hf_home, exist_ok=True)
+    os.makedirs(hf_cache, exist_ok=True)
+    os.environ["HF_HOME"] = hf_home
+    os.environ["TRANSFORMERS_CACHE"] = hf_cache
+    os.environ["HF_DATASETS_CACHE"] = hf_cache
+
+    # Download entire repo snapshot (no torch required)
+    snapshot_download(repo_id, local_dir=out_dir, ignore_patterns=["*.h5", "*.msgpack"])
+    print(f"[get_tier] saved snapshot to {out_dir}")
+
 
 def main():
     ap = argparse.ArgumentParser(description="Download OpenMed tier to local_models/")
