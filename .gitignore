@@ -1,0 +1,48 @@
+# Virtual envs
+venv/
+.venv/
+env/
+.env/
+pip-wheel-metadata/
+.python-version
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+
+# Packaging
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# Testing / coverage / tooling
+.pytest_cache/
+.coverage*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.pyre/
+.pytype/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Environment files (keep local only)
+*.env
+.env.*
