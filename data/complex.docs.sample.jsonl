@@ -1,0 +1,25 @@
+{"id": "A1", "text": "Admission note: John Smith (TFN 123 456 789) presented to 12 King St, Melbourne VIC on 03/08/2024. Diagnosed with melanoma; pembrolizumab 200mg q3w planned. Email: john.smith+onco@example.com, phone +61 3 9555 1212."}
+{"id": "A2", "text": "Jane Doe ABN 12 345 678 901 visited 44 High Street, Sydney NSW, 2000 on 11-02-2024. Type 2 diabetes mellitus controlled on metformin 1g bd. URL: https://portal.hospital.example/path?pid=123"}
+{"id": "A3", "text": "Discharge: Patient TFN 321456987 with atrial fibrillation started warfarin 5mg nocte. Contact (03) 9123 4567, email: jdoe@example.com. IP: 10.1.22.35; File: C:\\Users\\Jane\\reports\\echo_2024.pdf"}
+{"id": "A4", "text": "Clinic: 221B Baker Street noted hypertension; lisinopril 10 mg daily commenced. Next appt 02/11/2025. Project Atlas secret: XJ9A2KLMNOPQRSTUV1234567890."}
+{"id": "A5", "text": "Pathology: positive for Escherichia coli UTI; amoxicillin 500 mg tds x7 days. Internal host: lab-gateway.internal; API key: sk_live_8Hq3pZb1kL9rTmF4N8aQw2s3."}
+{"id": "A6", "text": "Oncology MDT: BRCA1 VUS discussed. Address: 5 River Rd, Brisbane QLD. Codename Falcon token=AbCdEfGhIjKlMnOpQrStUvWxYz_123456."}
+{"id": "A7", "text": "ED triage at 14:20: Mr. Peter Parker DOB 12/01/1984 c/o chest pain; ECG shows NSR. Medicare 1234 56789 1. Contact: +61-412-345-678."}
+{"id": "A8", "text": "Respiratory: COPD exacerbation, steroids + azithromycin. Home: 77 Queen Lane, Hobart TAS. api_key: ZZZYYYXXWWVVUUttssrrQQPP1122334455."}
+{"id": "A9", "text": "Neurology letter: probable multiple sclerosis; MRI brain pending. Email neuro.team@hospital.org; referral ID CUST000123."}
+{"id": "A10", "text": "Surgery: appendicitis → laparoscopic appendectomy. Document at /srv/share/ops/cases/2025/appendix_case.txt; URL http://intra.svc/ops?id=77."}
+{"id": "B1", "text": "Telehealth: +61 (2) 8010 7777 contacted patient at 1600 AEST. Address: 9 Garden Ave, Adelaide SA. TFN: 987 654 321."}
+{"id": "B2", "text": "Immunisation: influenza A vaccine administered 2025-03-15. Follow-up 15/04/2025. Email nurse.unit+flu@clinic.example"}
+{"id": "B3", "text": "Psychiatry note for NAME_HINT: Mary Johnson reports insomnia. Trialed melatonin; consider sertraline."}
+{"id": "B4", "text": "Pharmacy: pembrolizumab lot ZX-2025-88 stored at 2-8C. Contact warehouse (03)9555-0000; internal DNS rx-cache.corp."}
+{"id": "B5", "text": "Dermatology: psoriasis flare; topical clobetasol advised. Photo uploaded to https://files.example/h/abc123. Account ACC-1A2B3C4D."}
+{"id": "B6", "text": "ICU: sepsis, likely Staphylococcus aureus; piperacillin-tazobactam started. IP 172.16.0.7. Filepath: /var/log/icu/notes.log"}
+{"id": "B7", "text": "Cardiology: myocardial infarction suspected; aspirin 300 mg given. Patient email: first.last@domain.co.uk; phone 03 9000 1234."}
+{"id": "B8", "text": "Genetics: CFTR variant c.1521_1523delCTT detected. Address 101 Bay Rd, Geelong VIC. Project Nebula SECRET=QWERTYUIOPASDFGHJKLZXCVBNM12345."}
+{"id": "B9", "text": "Admin: ABN 51 824 753 556 verified. Portal: https://admin.corp/auth; api_key = 9f9e8d8c7b7a6a5a4a3a2a1a0ZZYYXXWWVV."}
+{"id": "B10", "text": "General practice: hypertension + diabetes; metformin 1g bd, lisinopril 20 mg. Next review 1/6/2025."}
+{"id": "C1", "text": "Orthopaedics: fractured radius; cast applied. Email: patient+ortho@sample.net; phone: (02) 7000 8888; ADDRESS: 33 Ocean Dr, Darwin NT."}
+{"id": "C2", "text": "Nephrology: CKD stage 3; start ACE inhibitor. File C:/Clin/renal/ckd_stage3.txt; URL https://intra.hospital/cases/ckd?u=1."}
+{"id": "C3", "text": "ENT: otitis media; amoxicillin prescribed. Contact via portal https://portal.example/p/9988. Name hint: Alice Brown."}
+{"id": "C4", "text": "ID: COVID-19 positive (RAT); isolate until 2025-10-31. Internal host qa-results.intra; TOKEN: abcdefghijklmnopqrstuvwxyzABCDE12345."}
+{"id": "C5", "text": "Endocrine: hyperthyroidism; propylthiouracil started. Emergency contact +61 4 1111 2222. Customer ID CUST654321."}
