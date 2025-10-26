@@ -1,19 +1,19 @@
 regex_patterns:
-  PERSON_NAME: "\b([A-Z][a-z]+\s[A-Z][a-z]+)\b"
-  DOB_ISO: "\b(19|20)\d{2}-([0][1-9]|1[0-2])-([0][1-9]|[12]\d|3[01])\b"
-  PHONE_AU: "\b0[23478]\d{2}\s?\d{3}\s?\d{3}\b|\b\+61\s?\d{1,2}\s?\d{3}\s?\d{3}\b"
-  MEDICARE: "\b(\d{4}\s?\d{5}\s?[1-9]-\d)\b"
-  TFN: "\b(\d{3}\s?\d{3}\s?\d{3})\b"
-  ABN: "\b(\d{2}\s?\d{3}\s?\d{3}\s?\d{3})\b"
-  EMAIL: "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"
-  ADDRESS_HINT: "\b(Street|St|Road|Rd|Avenue|Ave|Lane|Ln|VIC|NSW|QLD|SA|WA|TAS|ACT|NT)\b"
-  IHI: "\b(800360\d{9})\b"
+  PERSON_NAME: '\b([A-Z][a-z]+\s[A-Z][a-z]+)\b'
+  DOB_ISO: '\b(19|20)\d{2}-([0][1-9]|1[0-2])-([0][1-9]|[12]\d|3[01])\b'
+  PHONE_AU: '\b0[23478]\d{2}\s?\d{3}\s?\d{3}\b|\b\+61\s?\d{1,2}\s?\d{3}\s?\d{3}\b'
+  MEDICARE: '\b(\d{4}\s?\d{5}\s?[1-9]-\d)\b'
+  TFN: '\b(\d{3}\s?\d{3}\s?\d{3})\b'
+  ABN: '\b(\d{2}\s?\d{3}\s?\d{3}\s?\d{3})\b'
+  EMAIL: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+  ADDRESS_HINT: '\b(Street|St|Road|Rd|Avenue|Ave|Lane|Ln|VIC|NSW|QLD|SA|WA|TAS|ACT|NT)\b'
+  IHI: '\b(800360\d{9})\b'
 
 actions:
-  default: "mask"
-  PERSON_NAME: "replace"
-  EMAIL: "hash"
-  MEDICARE: "replace"
-  TFN: "replace"
-  ABN: "replace"
-  IHI: "replace"
+  default: 'mask'
+  PERSON_NAME: 'replace'
+  EMAIL: 'hash'
+  MEDICARE: 'replace'
+  TFN: 'replace'
+  ABN: 'replace'
+  IHI: 'replace'

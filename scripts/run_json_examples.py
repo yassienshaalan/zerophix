@@ -22,13 +22,16 @@ def main():
     for f in files:
         with open(f, "r", encoding="utf-8") as fh:
             spec = json.load(fh)
-        cfg = RedactionConfig(
-            country=spec.get("country","AU"),
+        md = args.models_dir or os.environ.get("ZEROPHI_MODELS_DIR")
+        cfg_kwargs = dict(
+            country=spec.get("country", "AU"),
             company=spec.get("company"),
             use_openmed=bool(spec.get("use_openmed", False)),
-            models_dir=args.models_dir or os.environ.get("ZEROPHI_MODELS_DIR"),
-            masking_style=spec.get("masking_style","hash")
+            masking_style=spec.get("masking_style", "hash"),
         )
+        if md:
+            cfg_kwargs["models_dir"] = md  # avoid passing None
+        cfg = RedactionConfig(**cfg_kwargs)
         pipe = RedactionPipeline.from_config(cfg)
         out = pipe.redact(spec["text"])
         print("\n=== File:", f, "===")
