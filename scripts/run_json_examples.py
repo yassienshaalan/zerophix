@@ -24,14 +24,15 @@ def main():
             spec = json.load(fh)
         md = args.models_dir or os.environ.get("ZEROPHI_MODELS_DIR")
         cfg_kwargs = dict(
-            country=spec.get("country", "AU"),
+            country=spec.get("country","AU"),
             company=spec.get("company"),
             use_openmed=bool(spec.get("use_openmed", False)),
-            masking_style=spec.get("masking_style", "hash"),
+            masking_style=spec.get("masking_style","hash"),
         )
         if md:
-            cfg_kwargs["models_dir"] = md  # avoid passing None
+            cfg_kwargs["models_dir"] = md  # only set when a string exists
         cfg = RedactionConfig(**cfg_kwargs)
+
         pipe = RedactionPipeline.from_config(cfg)
         out = pipe.redact(spec["text"])
         print("\n=== File:", f, "===")
