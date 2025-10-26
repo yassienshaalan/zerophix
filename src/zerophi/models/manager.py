@@ -17,6 +17,32 @@ REGISTRY = {
         "license": "Apache-2.0",
     },
 }
+REGISTRY.update({
+    # Disease / Anatomy
+    "openmed-ner-disease-149m": {
+        "hf_repo": "OpenMed/OpenMed-NER-DiseaseDetect-ModernClinical-149M",
+        "task": "token-classification", "size": "149M", "license": "Apache-2.0"
+    },
+    "openmed-ner-anatomy-149m": {
+        "hf_repo": "OpenMed/OpenMed-NER-AnatomyDetect-ModernClinical-149M",
+        "task": "token-classification", "size": "149M", "license": "Apache-2.0"
+    },
+
+    # Pathology tiny (fast CPU)
+    "openmed-ner-pathology-65m": {
+        "hf_repo": "OpenMed/OpenMed-NER-PathologyDetect-TinyMed-65M",
+        "task": "token-classification", "size": "65M", "license": "Apache-2.0"
+    },
+
+    # Base suite aliases (bundle picks one of each domain)
+    "openmed-suite-base": {
+        "bundle": [
+            "openmed-ner-disease-149m",
+            "openmed-ner-anatomy-149m",
+            "openmed-ner-pathology-65m"
+        ]
+    }
+})
 
 def ensure_model(name: str, models_dir: Optional[str] = None) -> str:
     """
