@@ -1,7 +1,0 @@
-tiers:
-  A:
-    - {repo_id: OpenMed/OpenMed-NER-DiseaseDetect-SuperClinical-434M, local_dir: openmed_disease}
-    - {repo_id: OpenMed/OpenMed-NER-Pharma-Detect, local_dir: openmed_drug}
-  B:
-    - {repo_id: OpenMed/OpenMed-NER-DNADetect-SuperClinical-434M, local_dir: openmed_dna}
-  C: []

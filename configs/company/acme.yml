@@ -1,0 +1,4 @@
+regex_patterns:
+  EMPLOYEE_ID: "\bEMP-?\d{6}\b"
+actions:
+  EMPLOYEE_ID: "replace"

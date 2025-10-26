@@ -1,2 +1,0 @@
-- {label: "PII.ACCOUNT", pattern: "\\bACC-[A-Z0-9]{8}\\b"}
-- {label: "PII.CUSTOMER_ID", pattern: "\\bCUST\\d{6}\\b"}
