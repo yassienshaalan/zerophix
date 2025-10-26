@@ -1,0 +1,9 @@
+{
+  "id": "complex_4_logs_code_blobs",
+  "country": "AU",
+  "company": "acme",
+  "use_openmed": false,
+  "masking_style": "mask",
+  "text": "INFO patient_id=\"EMP-000999\" status=OK\n# Not a TFN: 1234567890; Not an ABN: 12 345 67 890\nEmail placeholders: test.user+qa@example.co.uk\n\"address\": \"Unit 2, 5 King St, Newtown NSW 2042\" ",
+  "notes": "Stress false positives; ensure checksum/context limit over-redaction."
+}

@@ -1,0 +1,9 @@
+{
+  "id": "complex_1_free_text_pii_phi",
+  "country": "AU",
+  "company": null,
+  "use_openmed": true,
+  "masking_style": "replace",
+  "text": "Patient: John A. Smith (DOB 1977-04-02), Medicare 2424 12345 1-2, IHI 800360123456789,\nmobile 0412 345 678, email john.smith77@rmh.org.au.\nLives at 12 Acacia Rd, Hawthorn VIC 3122. Seen at Royal Melbourne Hospital.\nDiagnoses: T2DM, mild CKD. Started metformin 500mg bd. Follow-up next Tue.",
+  "notes": "Mixed PII+PHI; good for regex + OpenMed; AU-first entities."
+}

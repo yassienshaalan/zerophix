@@ -1,0 +1,9 @@
+{
+  "id": "complex_2_enterprise_overlay",
+  "country": "AU",
+  "company": "acme",
+  "use_openmed": false,
+  "masking_style": "hash",
+  "text": "ACME EMP-123456 created CLAIM-998877 re member “Jane Doe”.\nABN 53 004 085 616, TFN 123 456 782. Born on 1986-12-14.\nReach me on +61 3 9010 1234 or jane.d@acme.com.",
+  "notes": "Company overlay with EMP/CLAIM IDs; AU tax/registration numbers."
+}

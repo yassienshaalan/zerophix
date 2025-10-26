@@ -1,0 +1,9 @@
+{
+  "id": "complex_5_phones_edgecases",
+  "country": "AU",
+  "company": null,
+  "use_openmed": false,
+  "masking_style": "replace",
+  "text": "Call (+61)412-345-678 or 04 1234 5678; alt: +61 2 9010 1234.\nRef: IHI 800360123456789, Med. 2424 12345 1-2 (verify checksum).",
+  "notes": "Edge-case phones and AU health identifiers"
+}
