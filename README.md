@@ -75,6 +75,11 @@ pip install -e ".[all]"
 
 ## Quick Start
 
+> **Complete Examples Available**  
+> • [Quick Start Examples](examples/quick_start_examples.py) - Basic usage patterns  
+> • [Comprehensive Examples](examples/comprehensive_usage_examples.py) - All features  
+> • [API Integration Examples](examples/api_usage_examples.py) - REST API & SDK usage
+
 ### Command Line Interface
 
 #### Basic Text Redaction
