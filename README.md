@@ -44,17 +44,26 @@ pip install zerophi
 
 ### Full Installation with All Features
 ```bash
-# Core with ML models
+# Core with ML models (spaCy NER, BERT, OpenMed medical models)
 pip install "zerophi[spacy,bert,openmed]"
 
-# With document processing
+# With document processing (PDF, DOCX, Excel support)
 pip install "zerophi[documents]"
 
-# With API server
+# With API server (FastAPI, WebSocket support)
 pip install "zerophi[api]"
 
-# Complete enterprise installation
+# Complete enterprise installation (all features)
 pip install "zerophi[spacy,bert,openmed,documents,api,async,fast]"
+```
+
+### OpenMed Medical Model Setup
+```bash
+# Install OpenMed dependencies
+pip install "zerophi[openmed]"
+
+# Download OpenMed models (first-time setup)
+python -c "from zerophi.detectors.openmed_detector import ensure_model; ensure_model('openmed-base')"
 ```
 
 ### Development Installation
@@ -260,7 +269,17 @@ config = RedactionConfig(
 )
 ```
 
-#### 4. **Statistical Analysis** (Pattern discovery)
+#### 4. **OpenMed Medical Entity Detection** (Healthcare-specialized)
+```python
+config = RedactionConfig(
+    use_openmed=True,
+    openmed_model="openmed-base",  # or openmed-large
+    openmed_confidence=0.8,
+    enable_assertion=True  # Filter negated entities
+)
+```
+
+#### 5. **Statistical Analysis** (Pattern discovery)
 ```python
 config = RedactionConfig(
     use_statistical=True,
@@ -269,7 +288,7 @@ config = RedactionConfig(
 )
 ```
 
-#### 5. **Custom Entity Detection**
+#### 6. **Custom Entity Detection**
 ```python
 from zerophi.detectors.custom_detector import CustomEntityDetector
 
@@ -283,9 +302,35 @@ detector.add_pattern("PROJECT_CODE", r"PROJ-[A-Z]{3}-\d{4}", confidence=0.9)
 | Model | Speed | Accuracy | Memory | Use Case |
 |-------|-------|----------|--------|----------|
 | Regex | Very Fast | 99.9% | Minimal | Production, real-time |
-| spaCy | Fast | 96.5% | Low | Balanced performance |
+| spaCy NER | Fast | 96.5% | Low | Balanced performance |
 | BERT | Moderate | 98.7% | Medium | High accuracy needs |
+| OpenMed | Moderate | 97.8% | Medium | Medical/Healthcare PHI |
 | Statistical | Very Fast | 92.3% | Minimal | Pattern discovery |
+
+### Supported Models
+
+#### spaCy Models
+- **en_core_web_sm** - Small English model (50MB)
+- **en_core_web_md** - Medium English model (50MB)
+- **en_core_web_lg** - Large English model (750MB, recommended)
+- **en_core_web_trf** - Transformer-based model (560MB, highest accuracy)
+
+#### BERT Models
+- **bert-base-cased** - General purpose BERT (110M parameters)
+- **bert-base-uncased** - Uncased BERT variant
+- **distilbert-base-cased** - Faster, smaller BERT (66M parameters)
+- **roberta-base** - RoBERTa variant with improved training
+
+#### OpenMed Models
+- **openmed-base** - Base medical entity detection model (110M parameters)
+- **openmed-large** - Large medical model (340M parameters, higher accuracy)
+- **openmed-clinical** - Clinical notes specialized variant
+- **Custom LoRA adapters** - Fine-tuned domain-specific adapters
+
+#### Statistical Models
+- **Entropy analysis** - Information theory based detection
+- **Frequency analysis** - Pattern frequency scoring
+- **N-gram analysis** - Context-aware statistical patterns
 
 ## Security & Compliance
 
