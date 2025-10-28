@@ -40,6 +40,8 @@
 pip install zerophi
 ```
 
+> **Need step-by-step instructions?** See our comprehensive [Usage Guide](USAGE_GUIDE.md) for detailed setup and usage instructions.
+
 ### Full Installation with All Features
 ```bash
 # Core with ML models
@@ -914,6 +916,41 @@ Apache License 2.0 - see [LICENSE](LICENSE) file for details.
 - **FastAPI** for modern API framework
 - **Cryptography** for enterprise security
 - **Rich** for beautiful CLI interfaces
+
+## Quick Reference
+
+### Essential Commands
+```bash
+# Basic redaction
+zerophi redact --text "John Doe, SSN: 123-45-6789"
+
+# File redaction
+zerophi redact-file --input document.pdf --output clean.pdf
+
+# Batch processing
+zerophi batch-redact --input-dir ./docs --output-dir ./clean
+
+# Start API server
+zerophi serve --host 0.0.0.0 --port 8000
+
+# Security commands
+zerophi security compliance-check
+zerophi security audit-logs
+zerophi security zero-trust-test
+```
+
+### Python Quick Start
+```python
+from zerophi.pipelines.redaction import RedactionPipeline
+from zerophi.config import RedactionConfig
+
+config = RedactionConfig(country="US", detectors=["regex", "spacy"])
+pipeline = RedactionPipeline(config)
+result = pipeline.redact("Sensitive text here")
+print(result['text'])
+```
+
+For detailed step-by-step instructions, see [USAGE_GUIDE.md](USAGE_GUIDE.md).
 
 ## Support
 
