@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zerophi"
-version = "0.1.0"
-description = "Zero-PII/PHI redaction for AU (and beyond): composable regex + NER with optional OpenMed models"
+version = "0.2.0"
+description = "Enterprise-grade PII/PSI/PHI redaction service: multilingual, customizable, and privacy-first"
 authors = [{name = "Your Name"}]
 readme = "README.md"
 license = {text = "Apache-2.0"}
@@ -17,6 +17,10 @@ dependencies = [
     "click>=8.1.7",
     "tqdm>=4.66.5",
     "rich>=13.9.2",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "nltk>=3.8.1",
+    "cryptography>=41.0.0",
 ]
 
 [project.urls]
@@ -27,9 +31,43 @@ Issues = "https://github.com/yourorg/zerophi/issues"
 zerophi = "zerophi.cli:app"
 
 [project.optional-dependencies]
+# Core ML models
+spacy = ["spacy>=3.7.0", "spacy-transformers>=1.3.0"]
 openmed = ["transformers>=4.44.0", "torch>=2.3.0"]
+bert = ["transformers>=4.44.0", "torch>=2.3.0", "sentence-transformers>=2.2.0"]
+
+# Performance and processing
+async = ["aiofiles>=23.0.0", "asyncio-pool>=0.5.0"]
+fast = ["ujson>=5.8.0", "orjson>=3.9.0", "cython>=3.0.0"]
+
+# Document processing
+documents = ["pypdf2>=3.0.0", "python-docx>=0.8.11", "openpyxl>=3.1.0", "pandas>=2.0.0"]
+
+# Web and API
+api = ["fastapi>=0.104.0", "uvicorn>=0.24.0", "httpx>=0.25.0"]
+
+# Cloud integrations
+azure = ["azure-ai-textanalytics>=5.3.0", "azure-storage-blob>=12.19.0"]
+aws = ["boto3>=1.29.0", "botocore>=1.32.0"]
+gcp = ["google-cloud-dlp>=3.12.0", "google-cloud-storage>=2.10.0"]
+
+# Benchmarking and evaluation
 azurebench = ["requests>=2.32.3"]
-dev = ["pytest>=8.3.3", "pytest-cov>=5.0.0", "ruff>=0.6.7", "mypy>=1.11.2"]
+evaluation = ["scikit-learn>=1.3.0", "matplotlib>=3.7.0", "seaborn>=0.12.0"]
+
+# Development
+dev = ["pytest>=8.3.3", "pytest-cov>=5.0.0", "pytest-asyncio>=0.21.0", "ruff>=0.6.7", "mypy>=1.11.2", "black>=23.0.0"]
+
+# Full installation
+all = [
+    "spacy>=3.7.0", "spacy-transformers>=1.3.0",
+    "transformers>=4.44.0", "torch>=2.3.0", "sentence-transformers>=2.2.0",
+    "aiofiles>=23.0.0", "asyncio-pool>=0.5.0",
+    "ujson>=5.8.0", "orjson>=3.9.0",
+    "pypdf2>=3.0.0", "python-docx>=0.8.11", "openpyxl>=3.1.0", "pandas>=2.0.0",
+    "fastapi>=0.104.0", "uvicorn>=0.24.0", "httpx>=0.25.0",
+    "scikit-learn>=1.3.0", "matplotlib>=3.7.0", "seaborn>=0.12.0"
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
