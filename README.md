@@ -48,19 +48,25 @@ pip install zerophi
 # Core with ML models (spaCy NER, BERT, OpenMed medical models)
 pip install "zerophi[spacy,bert,openmed]"
 
+# With GLiNER zero-shot detector (RECOMMENDED!)
+pip install "zerophi[gliner]"
+
 # With document processing (PDF, DOCX, Excel support)
 pip install "zerophi[documents]"
 
 # With API server (FastAPI, WebSocket support)
 pip install "zerophi[api]"
 
-# Complete enterprise installation (all features)
-pip install "zerophi[spacy,bert,openmed,documents,api,async,fast]"
+# Complete enterprise installation (all features including GLiNER)
+pip install "zerophi[all]"
 ```
 
 ### GLiNER Zero-Shot Detector (NEW - Recommended!)
 ```bash
-# Install GLiNER for zero-shot entity detection
+# Option 1: Install as zerophi extra (recommended)
+pip install "zerophi[gliner]"
+
+# Option 2: Install standalone
 pip install gliner
 
 # No training needed - detect ANY entity type instantly!
