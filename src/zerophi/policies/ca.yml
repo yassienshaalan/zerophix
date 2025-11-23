@@ -1,0 +1,209 @@
+# Canadian PII/PSI/PHI patterns and policies (PIPEDA compliance)
+regex_patterns:
+  # Personal Identifiers
+  PERSON_NAME: '\b([A-Z][a-z]+\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b'
+  
+  # Social Insurance Number (SIN)
+  CA_SIN: '\b(\d{3}[-\s]?\d{3}[-\s]?\d{3})\b'
+  
+  # Health Card Numbers (varies by province)
+  CA_HEALTH_CARD: '\b(health card|carte santé)\s*:?\s*([A-Z0-9]{8,12})\b'
+  
+  # Ontario Health Insurance Plan (OHIP)
+  ON_OHIP: '\b(\d{4}[-\s]?\d{3}[-\s]?\d{3}[-\s]?[A-Z]{2})\b'
+  
+  # Quebec Health Insurance (RAMQ)
+  QC_RAMQ: '\b([A-Z]{4}\d{8})\b'
+  
+  # British Columbia Personal Health Number
+  BC_PHN: '\b(\d{4}\s?\d{3}\s?\d{3})\b'
+  
+  # Canadian Phone Numbers
+  PHONE_CA: '\b(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b'
+  
+  # Email Addresses
+  EMAIL: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+  
+  # Dates
+  DOB_CA: '\b(0?[1-9]|[12]\d|3[01])/(0?[1-9]|1[0-2])/(19|20)\d{2}\b'
+  DOB_ISO: '\b(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b'
+  
+  # Canadian Postal Codes
+  CA_POSTAL_CODE: '\b[A-Z][0-9][A-Z]\s?[0-9][A-Z][0-9]\b'
+  
+  # Driver's License (varies by province)
+  CA_DRIVERS_LICENSE: '\b([A-Z]{1,2}\d{7,8}|\d{8,12}|[A-Z]\d{7})\b'
+  
+  # Canadian Passport
+  CA_PASSPORT: '\b[A-Z]{2}[0-9]{6}\b'
+  
+  # Business Number (BN)
+  CA_BUSINESS_NUMBER: '\b(\d{9})\s?(RT|RP|RC|RM)\s?(\d{4})\b'
+  
+  # GST/HST Number
+  CA_GST_HST: '\b(\d{9})\s?RT\s?(\d{4})\b'
+  
+  # Payroll Number
+  CA_PAYROLL_NUMBER: '\b(\d{9})\s?RP\s?(\d{4})\b'
+  
+  # Corporation Number
+  CA_CORPORATION_NUMBER: '\b(\d{9})\s?RC\s?(\d{4})\b'
+  
+  # Bank Account Information
+  CA_BANK_ACCOUNT: '\b(account|compte)\s*(?:number|numéro|#)?\s*:?\s*(\d{7,12})\b'
+  
+  # Canadian Transit Number
+  CA_TRANSIT_NUMBER: '\b(\d{5}[-\s]?\d{3})\b'
+  
+  # Credit Card Numbers
+  CREDIT_CARD: '\b(?:\d{4}[-\s]?){3}\d{4}\b'
+  
+  # Medical Record Numbers
+  MEDICAL_RECORD: '\b(patient id|medical record|dossier médical)\s*:?\s*([A-Z0-9]{6,12})\b'
+  
+  # Healthcare Professional Licenses
+  CA_MEDICAL_LICENSE: '\b(licence|license)\s*(?:number|numéro|#)?\s*:?\s*([A-Z0-9]{6,15})\b'
+  
+  # Canadian Addresses
+  CA_ADDRESS: '\b\d+\s+([A-Z][a-z]+\s+)+(Street|St|Avenue|Ave|Road|Rd|Lane|Ln|Drive|Dr|Boulevard|Blvd|Rue|Chemin|Ch)\b'
+  
+  # Provincial IDs
+  
+  # Ontario Driver License
+  ON_DRIVERS_LICENSE: '\b[A-Z]\d{4}[-\s]?\d{5}[-\s]?\d{5}\b'
+  
+  # Quebec Driver License
+  QC_DRIVERS_LICENSE: '\b[A-Z]\d{4}[-\s]?\d{6}[-\s]?\d{2}\b'
+  
+  # Alberta Personal ID
+  AB_PERSONAL_ID: '\b\d{9}\b'
+  
+  # IP Addresses
+  IP_ADDRESS: '\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+  
+  # URLs
+  URL: 'https?://[^\s<>"{}|\\^`\[\]]+|www\.[^\s<>"{}|\\^`\[\]]+\.[a-z]{2,}'
+
+# PIPEDA compliant redaction actions
+actions:
+  default: 'hash'
+  PERSON_NAME: 'synthetic'
+  CA_SIN: 'replace'
+  CA_HEALTH_CARD: 'replace'
+  ON_OHIP: 'replace'
+  QC_RAMQ: 'replace'
+  BC_PHN: 'replace'
+  PHONE_CA: 'preserve_format'
+  EMAIL: 'preserve_format'
+  DOB_CA: 'synthetic'
+  DOB_ISO: 'synthetic'
+  CA_POSTAL_CODE: 'preserve_format'
+  CA_DRIVERS_LICENSE: 'replace'
+  CA_PASSPORT: 'replace'
+  CA_BUSINESS_NUMBER: 'hash'
+  CA_GST_HST: 'replace'
+  CA_PAYROLL_NUMBER: 'replace'
+  CA_CORPORATION_NUMBER: 'hash'
+  CA_BANK_ACCOUNT: 'encrypt'
+  CA_TRANSIT_NUMBER: 'replace'
+  CREDIT_CARD: 'mask'
+  MEDICAL_RECORD: 'replace'
+  CA_MEDICAL_LICENSE: 'replace'
+  CA_ADDRESS: 'synthetic'
+  ON_DRIVERS_LICENSE: 'replace'
+  QC_DRIVERS_LICENSE: 'replace'
+  AB_PERSONAL_ID: 'replace'
+  IP_ADDRESS: 'mask'
+  URL: 'brackets'
+
+# PIPEDA compliance settings
+compliance:
+  standard: 'PIPEDA'
+  provincial_laws: true
+  
+  # Provincial privacy laws
+  provincial_compliance:
+    - 'BC_PIPA'       # British Columbia Personal Information Protection Act
+    - 'AB_PIPA'       # Alberta Personal Information Protection Act
+    - 'QC_LAW_25'     # Quebec Law 25
+    - 'ON_PHIPA'      # Ontario Personal Health Information Protection Act
+  
+  # PIPEDA fair information principles
+  fair_information_principles:
+    - 'accountability'
+    - 'identifying_purposes'
+    - 'consent'
+    - 'limiting_collection'
+    - 'limiting_use_disclosure_retention'
+    - 'accuracy'
+    - 'safeguards'
+    - 'openness'
+    - 'individual_access'
+    - 'challenging_compliance'
+  
+  # Sensitive personal information
+  sensitive_categories:
+    - 'health_information'
+    - 'financial_information'
+    - 'personal_characteristics'
+    - 'opinions_views'
+    - 'correspondence'
+    - 'intentions'
+
+# Healthcare compliance (federal and provincial)
+healthcare:
+  # Federal
+  canada_health_act: true
+  personal_health_information_act: true
+  
+  # Provincial health authorities
+  provincial_health_compliance:
+    ON:
+      - 'OHIP'
+      - 'PHIPA'
+    QC:
+      - 'RAMQ'
+      - 'Act_respecting_health_services'
+    BC:
+      - 'MSP'
+      - 'PIPA'
+    AB:
+      - 'AHCIP'
+      - 'HIA'
+
+# Financial compliance
+financial:
+  # Federal financial regulations
+  bank_act: true
+  proceeds_of_crime_act: true
+  personal_information_protection_electronic_documents_act: true
+  
+  # Anti-money laundering
+  fintrac_compliance: true
+  
+  # Provincial securities
+  provincial_securities_compliance: true
+
+# Cross-border data transfer
+cross_border:
+  # PIPEDA requirements for international transfers
+  adequate_protection_required: true
+  consent_for_transfers: true
+  
+  # US-Canada data sharing agreements
+  beyond_the_border_agreement: true
+
+# Entity confidence thresholds
+thresholds:
+  CA_SIN: 0.95
+  CA_HEALTH_CARD: 0.90
+  ON_OHIP: 0.95
+  QC_RAMQ: 0.95
+  BC_PHN: 0.95
+  CA_POSTAL_CODE: 0.90
+  CA_DRIVERS_LICENSE: 0.85
+  CA_PASSPORT: 0.95
+  CREDIT_CARD: 0.95
+  EMAIL: 0.90
+  PHONE_CA: 0.85
+  MEDICAL_RECORD: 0.90

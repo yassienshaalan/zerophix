@@ -1,0 +1,140 @@
+# US-specific PII/PSI/PHI patterns and policies
+regex_patterns:
+  # Personal Identifiers
+  PERSON_NAME: '\b([A-Z][a-z]+\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b'
+  
+  # Social Security Numbers
+  SSN: '\b(\d{3}[-\s]?\d{2}[-\s]?\d{4})\b'
+  
+  # Individual Taxpayer Identification Number
+  ITIN: '\b(9\d{2}[-\s]?[7-9]\d[-\s]?\d{4})\b'
+  
+  # Employer Identification Number  
+  EIN: '\b(\d{2}[-\s]?\d{7})\b'
+  
+  # Driver's License (varies by state, general pattern)
+  DRIVERS_LICENSE: '\b([A-Z]{1,2}\d{7,8}|\d{8,9})\b'
+  
+  # Phone Numbers
+  PHONE_US: '\b(\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b'
+  
+  # Credit Card Numbers
+  CREDIT_CARD: '\b(?:\d{4}[-\s]?){3}\d{4}\b'
+  
+  # Email Addresses
+  EMAIL: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
+  
+  # Dates
+  DOB_US: '\b(0?[1-9]|1[0-2])/(0?[1-9]|[12]\d|3[01])/(19|20)\d{2}\b'
+  DOB_ISO: '\b(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b'
+  
+  # Medical Record Numbers
+  MEDICAL_RECORD: '\b(MRN|Medical Record|Chart)\s*:?\s*([A-Z0-9]{6,12})\b'
+  
+  # Medicare Numbers
+  MEDICARE_US: '\b(\d{3}[-\s]?\d{2}[-\s]?\d{4}[-\s]?[A-Z]{1,2})\b'
+  
+  # Medicaid Numbers (varies by state)
+  MEDICAID: '\b(medicaid|medicaid id)\s*:?\s*([A-Z0-9]{8,12})\b'
+  
+  # Health Plan IDs
+  HEALTH_PLAN_ID: '\b(health plan|plan id|member id)\s*:?\s*([A-Z0-9]{6,15})\b'
+  
+  # DEA Numbers
+  DEA_NUMBER: '\b([A-Z]{2}\d{7})\b'
+  
+  # National Provider Identifier
+  NPI: '\b(NPI\s*:?\s*)?(\d{10})\b'
+  
+  # Bank Account Numbers
+  BANK_ACCOUNT: '\b(account|acct)\s*(?:number|#)?\s*:?\s*(\d{8,17})\b'
+  
+  # Routing Numbers
+  ROUTING_NUMBER: '\b(routing|ABA)\s*(?:number|#)?\s*:?\s*(\d{9})\b'
+  
+  # IP Addresses
+  IP_ADDRESS: '\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+  
+  # URLs
+  URL: 'https?://[^\s<>"{}|\\^`\[\]]+|www\.[^\s<>"{}|\\^`\[\]]+\.[a-z]{2,}'
+  
+  # US Addresses (simplified)
+  US_ADDRESS: '\b\d+\s+([A-Z][a-z]+\s+)+(Street|St|Avenue|Ave|Road|Rd|Lane|Ln|Drive|Dr|Boulevard|Blvd|Court|Ct|Place|Pl)\b'
+  
+  # US States
+  US_STATE: '\b(Alabama|Alaska|Arizona|Arkansas|California|Colorado|Connecticut|Delaware|Florida|Georgia|Hawaii|Idaho|Illinois|Indiana|Iowa|Kansas|Kentucky|Louisiana|Maine|Maryland|Massachusetts|Michigan|Minnesota|Mississippi|Missouri|Montana|Nebraska|Nevada|New Hampshire|New Jersey|New Mexico|New York|North Carolina|North Dakota|Ohio|Oklahoma|Oregon|Pennsylvania|Rhode Island|South Carolina|South Dakota|Tennessee|Texas|Utah|Vermont|Virginia|Washington|West Virginia|Wisconsin|Wyoming|AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)\b'
+  
+  # ZIP Codes
+  ZIP_CODE: '\b\d{5}(?:-\d{4})?\b'
+  
+  # Passport Numbers
+  PASSPORT: '\b(passport)\s*(?:number|#)?\s*:?\s*([A-Z0-9]{6,9})\b'
+  
+  # Vehicle Identification Numbers
+  VIN: '\b[A-HJ-NPR-Z0-9]{17}\b'
+
+# Redaction actions for different entity types
+actions:
+  default: 'hash'
+  PERSON_NAME: 'synthetic'
+  SSN: 'replace'
+  ITIN: 'replace'
+  EIN: 'replace'
+  DRIVERS_LICENSE: 'replace'
+  PHONE_US: 'preserve_format'
+  CREDIT_CARD: 'mask'
+  EMAIL: 'preserve_format'
+  DOB_US: 'synthetic'
+  DOB_ISO: 'synthetic'
+  MEDICAL_RECORD: 'replace'
+  MEDICARE_US: 'replace'
+  MEDICAID: 'replace'
+  HEALTH_PLAN_ID: 'replace'
+  DEA_NUMBER: 'replace'
+  NPI: 'replace'
+  BANK_ACCOUNT: 'encrypt'
+  ROUTING_NUMBER: 'replace'
+  IP_ADDRESS: 'mask'
+  URL: 'brackets'
+  US_ADDRESS: 'synthetic'
+  US_STATE: 'hash'
+  ZIP_CODE: 'preserve_format'
+  PASSPORT: 'replace'
+  VIN: 'hash'
+
+# HIPAA compliance settings
+compliance:
+  standard: 'HIPAA'
+  safe_harbor_method: true
+  expert_determination: false
+  
+  # Safe Harbor identifiers (18 types)
+  safe_harbor_identifiers:
+    - 'PERSON_NAME'
+    - 'US_ADDRESS'
+    - 'DOB_US'
+    - 'DOB_ISO'
+    - 'PHONE_US'
+    - 'EMAIL'
+    - 'SSN'
+    - 'MEDICAL_RECORD'
+    - 'HEALTH_PLAN_ID'
+    - 'ACCOUNT_NUMBER'
+    - 'CERTIFICATE_NUMBER'
+    - 'VEHICLE_IDENTIFIER'
+    - 'DEVICE_IDENTIFIER'
+    - 'URL'
+    - 'IP_ADDRESS'
+    - 'BIOMETRIC_IDENTIFIER'
+    - 'FACE_PHOTO'
+    - 'OTHER_UNIQUE_IDENTIFIER'
+
+# Entity confidence thresholds
+thresholds:
+  SSN: 0.95
+  MEDICAL_RECORD: 0.90
+  CREDIT_CARD: 0.95
+  PHONE_US: 0.85
+  EMAIL: 0.90
+  DEA_NUMBER: 0.95
+  NPI: 0.95
