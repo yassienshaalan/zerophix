@@ -61,3 +61,44 @@ class RedactionPipeline:
             i = s.end
         out_text.append(text[i:])
         return {"text": "".join(out_text), "spans": [s.__dict__ for s in merged]}
+
+    def scan(self, text: str) -> Dict[str, object]:
+        """Scan text for PII/PHI without redacting. Returns detection report."""
+        spans: List[Span] = []
+        for comp in self.components:
+            spans.extend(comp.detect(text))
+
+        spans.sort(key=lambda x: (x.start, -x.end))
+        merged: List[Span] = []
+        for s in spans:
+            if merged and not (s.start >= merged[-1].end or s.end <= merged[-1].start):
+                a = merged[-1]
+                if (s.end - s.start) > (a.end - a.start) or s.score >= a.score:
+                    merged[-1] = s
+                continue
+            merged.append(s)
+
+        # Calculate statistics
+        entity_counts = {}
+        for s in merged:
+            entity_counts[s.label] = entity_counts.get(s.label, 0) + 1
+
+        # Extract matched text snippets
+        detections = []
+        for s in merged:
+            detections.append({
+                "start": s.start,
+                "end": s.end,
+                "label": s.label,
+                "score": s.score,
+                "text": text[s.start:s.end],
+                "context": text[max(0, s.start-20):min(len(text), s.end+20)]
+            })
+
+        return {
+            "original_text": text,
+            "total_detections": len(merged),
+            "entity_counts": entity_counts,
+            "detections": detections,
+            "has_pii": len(merged) > 0
+        }
