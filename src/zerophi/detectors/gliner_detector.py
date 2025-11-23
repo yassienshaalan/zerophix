@@ -76,7 +76,7 @@ class GLiNERDetector(Detector):
     ]
     
     def __init__(self, 
-                 model_name: str = "urchade/gliner_largev2.1",
+                 model_name: str = "urchade/gliner_large-v2.1",
                  confidence_threshold: float = 0.5,
                  device: Optional[str] = None):
         """
@@ -85,9 +85,9 @@ class GLiNERDetector(Detector):
         Args:
             model_name: GLiNER model from HuggingFace
                        Options: 
-                       - urchade/gliner_largev2.1 (best accuracy)
-                       - urchade/gliner_medium (balanced)
-                       - urchade/gliner_small (fastest)
+                       - urchade/gliner_large-v2.1 (best accuracy)
+                       - urchade/gliner_medium-v2.1 (balanced)
+                       - urchade/gliner_small-v2.1 (fastest)
             confidence_threshold: Minimum confidence score (0-1)
             device: 'cuda', 'cpu', or None (auto-detect)
         """
