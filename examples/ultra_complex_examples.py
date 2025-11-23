@@ -819,51 +819,51 @@ def example_2_financial_compliance():
     ═══════════════════════════════════════════════════════════════════════
     
     IDENTITY DOCUMENTS:
-    [✓] Primary: Driver License NSW 12345678 (Certified copy)
-    [✓] Primary: Passport N8976543 (Certified copy)
-    [✓] Primary: Medicare Card 3456 78901 2-4
-    [✓] Co-applicant: Driver License NSW 87654321 (Certified copy)
-    [✓] Co-applicant: Passport N7654321 (Certified copy)
-    [✓] Marriage Certificate (2015-08-15, NSW Registry BDM Ref: 2015/12345)
+    [ ] Primary: Driver License NSW 12345678 (Certified copy)
+    [ ] Primary: Passport N8976543 (Certified copy)
+    [ ] Primary: Medicare Card 3456 78901 2-4
+    [ ] Co-applicant: Driver License NSW 87654321 (Certified copy)
+    [ ] Co-applicant: Passport N7654321 (Certified copy)
+    [ ] Marriage Certificate (2015-08-15, NSW Registry BDM Ref: 2015/12345)
     
     INCOME VERIFICATION:
-    [✓] Primary: Last 2 years Tax Returns (2022-23, 2023-24)
-    [✓] Primary: Last 2 years Tax Assessments (ATO Portal)
-    [✓] Primary: Last 3 payslips (September, October, November 2024)
-    [✓] Primary: Employment Contract (PwC - dated 2018-03-01)
-    [✓] Primary: Letter from Employer (dated 2024-11-10)
-    [✓] Co-applicant: Last 2 years Tax Returns
-    [✓] Co-applicant: Last 3 payslips
-    [✓] Co-applicant: Employment Contract (Roche - dated 2019-07-15)
-    [✓] Co-applicant: Letter from Employer (dated 2024-11-08)
-    [✓] Rental Income: Property Management Statements (12 months)
-    [✓] Investment Income: Dividend Statements (CommSec, Selfwealth)
+    [ ] Primary: Last 2 years Tax Returns (2022-23, 2023-24)
+    [ ] Primary: Last 2 years Tax Assessments (ATO Portal)
+    [ ] Primary: Last 3 payslips (September, October, November 2024)
+    [ ] Primary: Employment Contract (PwC - dated 2018-03-01)
+    [ ] Primary: Letter from Employer (dated 2024-11-10)
+    [ ] Co-applicant: Last 2 years Tax Returns
+    [ ] Co-applicant: Last 3 payslips
+    [ ] Co-applicant: Employment Contract (Roche - dated 2019-07-15)
+    [ ] Co-applicant: Letter from Employer (dated 2024-11-08)
+    [ ] Rental Income: Property Management Statements (12 months)
+    [ ] Investment Income: Dividend Statements (CommSec, Selfwealth)
     
     ASSET VERIFICATION:
-    [✓] Bank Statements: All accounts (Last 3 months)
-    [✓] Superannuation Statements (Latest)
-    [✓] Investment Property: Contract of Sale (2020)
-    [✓] Investment Property: Recent Valuation ($1.15M - dated 2024-10-01)
-    [✓] Investment Property: Council Rates Notice
-    [✓] Investment Property: Strata/Body Corporate (N/A - house)
-    [✓] Share Portfolio: Latest statements (CommSec, Selfwealth, Vanguard)
-    [✓] Vehicle Registration: Tesla & RAV4
+    [ ] Bank Statements: All accounts (Last 3 months)
+    [ ] Superannuation Statements (Latest)
+    [ ] Investment Property: Contract of Sale (2020)
+    [ ] Investment Property: Recent Valuation ($1.15M - dated 2024-10-01)
+    [ ] Investment Property: Council Rates Notice
+    [ ] Investment Property: Strata/Body Corporate (N/A - house)
+    [ ] Share Portfolio: Latest statements (CommSec, Selfwealth, Vanguard)
+    [ ] Vehicle Registration: Tesla & RAV4
     
     LIABILITY VERIFICATION:
-    [✓] Investment Loan: Latest statement (CBA IL-2020-456789)
-    [✓] Car Loan: Latest statement (Macquarie ML-2021-789456)
-    [✓] Credit Card: Statements (CBA Visa, ANZ Amex)
-    [✓] HECS-HELP: ATO Notices of Assessment
+    [ ] Investment Loan: Latest statement (CBA IL-2020-456789)
+    [ ] Car Loan: Latest statement (Macquarie ML-2021-789456)
+    [ ] Credit Card: Statements (CBA Visa, ANZ Amex)
+    [ ] HECS-HELP: ATO Notices of Assessment
     
     PROPERTY DOCUMENTS:
-    [✓] Contract of Sale: Signed and exchanged (2024-11-10)
-    [✓] Deposit Receipt: $265,000 paid to agent trust account
-    [✓] Building & Pest Inspection: Clear (dated 2024-11-05)
-    [✓] Strata Report: N/A (Torrens Title)
-    [✓] Section 32/149 Certificate (dated 2024-11-01)
-    [✓] Council Rates Notice (Mosman Council)
-    [✓] Title Search: Lot 123 DP 456789
-    [✓] Water Compliance Certificate
+    [ ] Contract of Sale: Signed and exchanged (2024-11-10)
+    [ ] Deposit Receipt: $265,000 paid to agent trust account
+    [ ] Building & Pest Inspection: Clear (dated 2024-11-05)
+    [ ] Strata Report: N/A (Torrens Title)
+    [ ] Section 32/149 Certificate (dated 2024-11-01)
+    [ ] Council Rates Notice (Mosman Council)
+    [ ] Title Search: Lot 123 DP 456789
+    [ ] Water Compliance Certificate
     
     ═══════════════════════════════════════════════════════════════════════
     SECTION 9: DECLARATIONS & CONSENT
@@ -947,13 +947,13 @@ def example_2_financial_compliance():
     Property ID: NSW-PROP-2024-MOSMAN-789
     
     COMPLIANCE CHECKS:
-    [✓] AML/CTF verification complete (AUSTRAC)
-    [✓] Sanctions screening: Clear
-    [✓] PEP screening: Not applicable
-    [✓] Source of funds: Verified (salary + savings + property equity)
-    [✓] Identity verification: Green ID - Verified
-    [✓] Address verification: Complete
-    [✓] Employment verification: Pending final call
+    [ ] AML/CTF verification complete (AUSTRAC)
+    [ ] Sanctions screening: Clear
+    [ ] PEP screening: Not applicable
+    [ ] Source of funds: Verified (salary + savings + property equity)
+    [ ] Identity verification: Green ID - Verified
+    [ ] Address verification: Complete
+    [ ] Employment verification: Pending final call
     
     ═══════════════════════════════════════════════════════════════════════
     END OF LOAN APPLICATION PACKAGE
