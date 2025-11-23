@@ -352,17 +352,17 @@ def example_1_healthcare_clinical_records():
     pipe = RedactionPipeline.from_config(cfg)
     
     # Step 1: Scan the document
-    print("\n📋 STEP 1: Comprehensive PHI/PII Detection Scan")
+    print("\nSTEP 1: Comprehensive PHI/PII Detection Scan")
     scan_result = pipe.scan(clinical_document)
     
-    print(f"\n✓ Scan Complete!")
+    print(f"\n Scan Complete!")
     print(f"  • Document Length: {len(clinical_document):,} characters")
     print(f"  • Total PHI/PII Detections: {scan_result['total_detections']}")
     print(f"  • Contains Sensitive Data: {'YES - RESTRICTED' if scan_result['has_pii'] else 'NO'}")
     print(f"  • Unique Entity Types: {len(scan_result['entity_counts'])}")
     
     # Step 2: Detailed entity breakdown
-    print("\n📊 STEP 2: Entity Type Breakdown")
+    print("\n STEP 2: Entity Type Breakdown")
     print("-" * 80)
     
     if scan_result['entity_counts']:
@@ -372,7 +372,7 @@ def example_1_healthcare_clinical_records():
             print(f"  [{risk_level:6}] {entity_type:20} : {count:3} occurrences")
     
     # Step 3: Sample detections (first 10)
-    print("\n🔍 STEP 3: Sample Detections (First 10 Found)")
+    print("\n STEP 3: Sample Detections (First 10 Found)")
     print("-" * 80)
     
     for i, det in enumerate(scan_result['detections'][:10], 1):
@@ -384,7 +384,7 @@ def example_1_healthcare_clinical_records():
         print(f"    Context: ...{det['context'][:60]}...")
     
     # Step 4: Generate comprehensive reports
-    print("\n📄 STEP 4: Generating Compliance Reports")
+    print("\n STEP 4: Generating Compliance Reports")
     print("-" * 80)
     
     # Create reports directory
@@ -403,11 +403,11 @@ def example_1_healthcare_clinical_records():
         report = ReportGenerator.generate(scan_result, format=fmt)
         output_file = reports_dir / f"clinical_phi_audit_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{fmt}"
         output_file.write_text(report, encoding="utf-8")
-        print(f"  ✓ {fmt.upper():8} : {description}")
+        print(f"   {fmt.upper():8} : {description}")
         print(f"             Saved to: {output_file}")
     
     # Step 5: Risk Assessment Summary
-    print("\n⚠️  STEP 5: RISK ASSESSMENT SUMMARY")
+    print("\n STEP 5: RISK ASSESSMENT SUMMARY")
     print("-" * 80)
     
     total_detections = scan_result['total_detections']
@@ -430,7 +430,7 @@ def example_1_healthcare_clinical_records():
     print(f"  COMPLIANCE STATUS: {'NON-COMPLIANT' if total_detections > 0 else 'COMPLIANT'} for research sharing")
     
     # Step 6: Patient-specific breakdown
-    print("\n👥 STEP 6: Per-Patient PHI Summary")
+    print("\n STEP 6: Per-Patient PHI Summary")
     print("-" * 80)
     
     patient_sections = [
@@ -448,7 +448,7 @@ def example_1_healthcare_clinical_records():
         print(f"    PHI Items Detected: ~{len(patient_detections)} (approximate)")
     
     # Step 7: Recommendations
-    print("\n💡 STEP 7: RECOMMENDATIONS FOR DE-IDENTIFICATION")
+    print("\n STEP 7: RECOMMENDATIONS FOR DE-IDENTIFICATION")
     print("-" * 80)
     print("""
   1. IMMEDIATE ACTIONS:
@@ -984,7 +984,7 @@ def example_2_financial_compliance():
     pipe = RedactionPipeline.from_config(cfg)
     
     # Step 1: Comprehensive scan
-    print("\n💳 STEP 1: Financial PII/PSI Detection Scan")
+    print("\n STEP 1: Financial PII/PSI Detection Scan")
     scan_result = pipe.scan(financial_documents)
     
     print(f"\n✓ Financial Document Scan Complete!")
@@ -995,7 +995,7 @@ def example_2_financial_compliance():
     print(f"  • Compliance Risk: {'HIGH - Requires Protection' if scan_result['total_detections'] > 50 else 'MEDIUM'}")
     
     # Step 2: Financial-specific entity breakdown
-    print("\n💰 STEP 2: Financial Data Category Breakdown")
+    print("\n STEP 2: Financial Data Category Breakdown")
     print("-" * 80)
     
     # Categorize detections
@@ -1013,7 +1013,7 @@ def example_2_financial_compliance():
             print(f"  [{risk:8}] {category:15} : {count:3} items")
     
     # Step 3: High-value targets
-    print("\n🎯 STEP 3: High-Value Data Protection Targets")
+    print("\n STEP 3: High-Value Data Protection Targets")
     print("-" * 80)
     
     high_value_items = {}
@@ -1031,7 +1031,7 @@ def example_2_financial_compliance():
         print(f"    Encryption Required: YES")
     
     # Step 4: Generate compliance reports
-    print("\n📊 STEP 4: Generating Regulatory Compliance Reports")
+    print("\n STEP 4: Generating Regulatory Compliance Reports")
     print("-" * 80)
     
     reports_dir = Path("reports/financial_compliance")
@@ -1055,7 +1055,7 @@ def example_2_financial_compliance():
         print(f"    File: {filename}")
     
     # Step 5: Regulatory compliance assessment
-    print("\n⚖️  STEP 5: REGULATORY COMPLIANCE ASSESSMENT")
+    print("\n STEP 5: REGULATORY COMPLIANCE ASSESSMENT")
     print("-" * 80)
     
     regulations = {
@@ -1072,7 +1072,7 @@ def example_2_financial_compliance():
         print(f"    [{compliance:6}] {regulation:30} : {status}")
     
     # Step 6: Data retention and disposal
-    print("\n🗑️  STEP 6: DATA RETENTION & DISPOSAL REQUIREMENTS")
+    print("\n  STEP 6: DATA RETENTION & DISPOSAL REQUIREMENTS")
     print("-" * 80)
     print("""
   RETENTION REQUIREMENTS:
@@ -1095,7 +1095,7 @@ def example_2_financial_compliance():
     """)
     
     # Step 7: Recommendations
-    print("\n💡 STEP 7: DATA PROTECTION RECOMMENDATIONS")
+    print("\n STEP 7: DATA PROTECTION RECOMMENDATIONS")
     print("-" * 80)
     print(f"""
   IMMEDIATE ACTIONS REQUIRED:
@@ -1138,7 +1138,7 @@ def example_2_financial_compliance():
     """)
     
     # Step 8: Risk score
-    print("\n⚠️  STEP 8: PRIVACY RISK SCORE")
+    print("\n  STEP 8: PRIVACY RISK SCORE")
     print("-" * 80)
     
     pii_count = scan_result['total_detections']
@@ -1217,7 +1217,7 @@ def main():
         print("="*80)
         
     except Exception as e:
-        print(f"\n❌ ERROR: {str(e)}")
+        print(f"\n ERROR: {str(e)}")
         print("Please ensure zerophi is properly installed and configured.")
         raise
 
