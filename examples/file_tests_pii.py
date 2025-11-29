@@ -71,14 +71,19 @@ def parse_args() -> argparse.Namespace:
 
 
 def resolve_paths(args: argparse.Namespace) -> Tuple[Path, Path, Path]:
-    data_dir = Path(args.data_dir).expanduser().resolve() if args.data_dir else BASE_DIR
+    def normalize_arg_path(value: Optional[str]) -> Optional[Path]:
+        if value is None:
+            return None
+        path = Path(value).expanduser()
+        if not path.is_absolute():
+            path = (Path.cwd() / path).absolute()
+        return path
+
+    data_dir = normalize_arg_path(args.data_dir) or BASE_DIR
 
     def choose_path(arg_value: Optional[str], default_name: str) -> Path:
-        return (
-            Path(arg_value).expanduser().resolve()
-            if arg_value
-            else (data_dir / default_name).resolve()
-        )
+        normalized = normalize_arg_path(arg_value)
+        return normalized if normalized else (data_dir / default_name)
 
     csv_path = choose_path(args.csv, "pii.csv")
     xlsx_path = choose_path(args.xlsx, "pii.xlsx")
