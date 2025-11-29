@@ -21,7 +21,7 @@ import pandas as pd
 
 from zerophi.pipelines.redaction import RedactionPipeline
 from zerophi.config import RedactionConfig
-from zerophi.documents.pdf_processor import PDFProcessor
+from zerophi.processors.documents import PDFProcessor
 from zerophi.security.encryption import EncryptionManager
 
 
@@ -186,7 +186,7 @@ def test_pdf_redaction_and_encryption() -> None:
 
     processor = PDFProcessor()
     print_subsection("3.1 Extract text")
-    text = processor.extract_text(PDF_PATH)
+    text = processor.extract_text(PDF_PATH.read_bytes())
     print("First 400 chars of extracted text:")
     print(text[:400])
     print("\n...")

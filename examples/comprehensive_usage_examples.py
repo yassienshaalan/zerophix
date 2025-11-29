@@ -41,10 +41,12 @@ from zerophi.performance.batch import BatchProcessor
 from zerophi.performance.stream import StreamProcessor
 
 # Document processing
-from zerophi.documents.pdf_processor import PDFProcessor
-from zerophi.documents.docx_processor import DOCXProcessor
-from zerophi.documents.excel_processor import ExcelProcessor
-from zerophi.documents.csv_processor import CSVProcessor
+from zerophi.processors.documents import (
+    PDFProcessor,
+    DOCXProcessor,
+    ExcelProcessor,
+    CSVProcessor,
+)
 
 # API components
 from zerophi.api.server import create_app
