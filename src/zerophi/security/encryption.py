@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 
 try:
-    from cryptography.fernet import Fernet
+    from cryptography.fernet import Fernet, InvalidToken
     from cryptography.hazmat.primitives import hashes, serialization
     from cryptography.hazmat.primitives.asymmetric import rsa, padding
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -589,6 +589,108 @@ class SecureFileHandler:
             
         except Exception as e:
             raise EncryptionError(f"Failed to securely delete file: {e}")
+
+class EncryptionManager:
+    """High-level symmetric encryption helper built on top of KeyManager."""
+
+    def __init__(self, key_store_path: str = "./keys", cache_fernets: bool = True):
+        if not CRYPTO_AVAILABLE:
+            raise EncryptionError("Cryptography library not available")
+
+        self.key_manager = KeyManager(key_store_path=key_store_path)
+        self.cache_fernets = cache_fernets
+        self._fernet_cache: Dict[str, Fernet] = {}
+        self._index_existing_keys()
+
+    def _index_existing_keys(self):
+        """Discover previously generated keys so decrypt works across sessions."""
+        key_dir = Path(self.key_manager.key_store_path)
+        for key_file in key_dir.glob("*.key"):
+            if key_file.name == "master.key":
+                continue
+            try:
+                with open(key_file, "r") as f:
+                    key_data = json.load(f)
+                purpose = key_data.get("metadata", {}).get("purpose")
+                if purpose:
+                    self.key_manager.key_versions[purpose] = key_file.stem
+            except Exception:
+                continue
+
+    def _get_key_for_purpose(self, purpose: str) -> bytes:
+        key_id = self.key_manager.key_versions.get(purpose)
+        if key_id:
+            try:
+                return self.key_manager.get_data_encryption_key(key_id)
+            except EncryptionError:
+                pass  # Fall through to create a new key
+
+        key_info = self.key_manager.generate_data_encryption_key(purpose)
+        return key_info["key"]
+
+    def _get_fernet(self, purpose: str) -> Fernet:
+        if self.cache_fernets and purpose in self._fernet_cache:
+            return self._fernet_cache[purpose]
+
+        key = self._get_key_for_purpose(purpose)
+        fernet = Fernet(key)
+        if self.cache_fernets:
+            self._fernet_cache[purpose] = fernet
+        return fernet
+
+    def rotate_key(self, purpose: str):
+        key_info = self.key_manager.rotate_key(purpose)
+        if self.cache_fernets and purpose in self._fernet_cache:
+            self._fernet_cache[purpose] = Fernet(key_info["key"])
+        return key_info
+
+    def encrypt(self, data: Union[str, bytes, Dict[str, Any]], *, purpose: str,
+                metadata: Optional[Dict[str, Any]] = None) -> str:
+        fernet = self._get_fernet(purpose)
+        payload = self._serialize_payload(data, metadata)
+        token = fernet.encrypt(payload)
+        return token.decode("utf-8")
+
+    def decrypt(self, token: Union[str, bytes], *, purpose: str) -> Union[str, bytes, Dict[str, Any]]:
+        fernet = self._get_fernet(purpose)
+        token_bytes = token if isinstance(token, bytes) else token.encode("utf-8")
+        try:
+            payload = fernet.decrypt(token_bytes)
+        except InvalidToken as exc:
+            raise EncryptionError("Invalid token or wrong purpose supplied") from exc
+        return self._deserialize_payload(payload)
+
+    def _serialize_payload(self, data: Union[str, bytes, Dict[str, Any]],
+                            metadata: Optional[Dict[str, Any]]) -> bytes:
+        if isinstance(data, bytes):
+            payload_type = "bytes"
+            raw = base64.b64encode(data).decode("utf-8")
+        elif isinstance(data, str):
+            payload_type = "str"
+            raw = base64.b64encode(data.encode("utf-8")).decode("utf-8")
+        else:
+            payload_type = "json"
+            raw = base64.b64encode(json.dumps(data).encode("utf-8")).decode("utf-8")
+
+        envelope = {
+            "version": 1,
+            "type": payload_type,
+            "data": raw,
+            "metadata": metadata or {},
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        return json.dumps(envelope).encode("utf-8")
+
+    def _deserialize_payload(self, payload: bytes) -> Union[str, bytes, Dict[str, Any]]:
+        envelope = json.loads(payload.decode("utf-8"))
+        data_bytes = base64.b64decode(envelope["data"])
+        payload_type = envelope.get("type", "str")
+
+        if payload_type == "bytes":
+            return data_bytes
+        if payload_type == "json":
+            return json.loads(data_bytes.decode("utf-8"))
+        return data_bytes.decode("utf-8")
 
 # Export encryption key generation utility
 def generate_fernet_key() -> str:

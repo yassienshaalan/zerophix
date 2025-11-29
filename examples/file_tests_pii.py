@@ -11,7 +11,6 @@ This script demonstrates how to use ZeroPhi with three local files:
 Place this script in a directory with those three files next to it.
 
 Author: ZeroPhi Team
-Date: October 2025
 """
 
 from pathlib import Path
