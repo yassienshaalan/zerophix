@@ -13,8 +13,9 @@ Place this script in a directory with those three files next to it.
 Author: ZeroPhi Team
 """
 
+import argparse
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Tuple
 
 import pandas as pd
 
@@ -40,6 +41,49 @@ BASE_DIR = Path(__file__).resolve().parent
 CSV_PATH = BASE_DIR / "pii.csv"
 XLSX_PATH = BASE_DIR / "pii.xlsx"
 PDF_PATH = BASE_DIR / "pii.pdf"
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Run file-based ZeroPhi redaction demos with optional custom file paths."
+    )
+    parser.add_argument(
+        "--data-dir",
+        type=str,
+        help="Directory containing pii.csv/pii.xlsx/pii.pdf (defaults to this script's folder)",
+    )
+    parser.add_argument(
+        "--csv",
+        type=str,
+        help="Path to pii.csv (overrides --data-dir)",
+    )
+    parser.add_argument(
+        "--xlsx",
+        type=str,
+        help="Path to pii.xlsx (overrides --data-dir)",
+    )
+    parser.add_argument(
+        "--pdf",
+        type=str,
+        help="Path to pii.pdf (overrides --data-dir)",
+    )
+    return parser.parse_args()
+
+
+def resolve_paths(args: argparse.Namespace) -> Tuple[Path, Path, Path]:
+    data_dir = Path(args.data_dir).expanduser().resolve() if args.data_dir else BASE_DIR
+
+    def choose_path(arg_value: Optional[str], default_name: str) -> Path:
+        return (
+            Path(arg_value).expanduser().resolve()
+            if arg_value
+            else (data_dir / default_name).resolve()
+        )
+
+    csv_path = choose_path(args.csv, "pii.csv")
+    xlsx_path = choose_path(args.xlsx, "pii.xlsx")
+    pdf_path = choose_path(args.pdf, "pii.pdf")
+    return csv_path, xlsx_path, pdf_path
 
 
 def assert_file_exists(path: Path) -> None:
@@ -232,13 +276,22 @@ def test_pdf_redaction_and_encryption() -> None:
 
 
 def main() -> None:
+    global CSV_PATH, XLSX_PATH, PDF_PATH
+
+    args = parse_args()
+    CSV_PATH, XLSX_PATH, PDF_PATH = resolve_paths(args)
+
     print("ZeroPhi File-Based Test Examples (PII Files)")
     print("===========================================")
     print(f"Script directory: {BASE_DIR}")
-    print("Expected files next to this script:")
+    print("Using the following files (override with --data-dir/--csv/--xlsx/--pdf):")
     print(f"  - {CSV_PATH.name}")
     print(f"  - {XLSX_PATH.name}")
     print(f"  - {PDF_PATH.name}")
+    print("Resolved paths:")
+    print(f"  CSV : {CSV_PATH}")
+    print(f"  XLSX: {XLSX_PATH}")
+    print(f"  PDF : {PDF_PATH}")
 
     test_csv_redaction_and_hashing()
     test_excel_redaction_and_hashing()
