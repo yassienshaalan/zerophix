@@ -105,6 +105,26 @@ pip install -e ".[all]"
 > • [Comprehensive Examples](examples/comprehensive_usage_examples.py) - All features  
 > • [API Integration Examples](examples/api_usage_examples.py) - REST API & SDK usage
 
+### File-Based Redaction Demo (CSV/XLSX/PDF)
+
+Use `examples/file_tests_pii.py` when you want an end-to-end walkthrough of CSV, Excel, and PDF processing:
+
+```bash
+# from the repo root (or install location)
+python examples/file_tests_pii.py \
+  --data-dir /path/to/folder/with/pii-files \
+  --csv /path/to/pii.csv \
+  --xlsx /path/to/pii.xlsx \
+  --pdf /path/to/pii.pdf
+```
+
+- `--data-dir` points to a directory that contains `pii.csv`, `pii.xlsx`, and `pii.pdf`; you can override individual files with `--csv/--xlsx/--pdf` if they live elsewhere.
+- All arguments are optional. If you skip them, the script looks for the files next to `file_tests_pii.py` (useful when you drop sample data into `examples/`).
+- The script prints the resolved paths before running so you can confirm it is reading from the correct location (helpful when working through symlinks or mounted volumes).
+- Each section demonstrates a different workflow: CSV redaction plus hashing validation, Excel redaction across multiple sheets with joinability checks, and PDF text extraction followed by redaction and encryption verification.
+
+> Need synthetic sample data? Create quick placeholders (e.g., `examples/pii.csv`) and force-add them with `git add -f` if your `.gitignore` excludes `*.csv`.
+
 ### Command Line Interface
 
 #### Basic Text Redaction
