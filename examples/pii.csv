@@ -1,0 +1,11 @@
+id,full_name,dob,email,phone,medicare_number,credit_card_number,address,notes
+1,John Smith,1985-03-15,john.smith@example.com,+61-412-345-678,2950 12345 1,4532 1234 5678 9012,"12 Green St, Central City VIC 3000","Patient John Smith visited Central City Hospital on 2024-05-01. MRN: CCH001234."
+2,Mary Johnson,1990-07-22,mary.johnson@example.com,+61-423-888-111,4950 67890 2,5105 1051 0510 5100,"8 River Rd, Eastview NSW 2000","Referred by Dr. Alice Brown. Medicare: 4950 67890 2. Policy ID: HLTH-PL-9988."
+3,Ali Khan,1978-11-02,ali.khan@example.com,+61-430-777-222,3950 11223 3,3714 496353 98431,"25 Hilltop Ave, Northfield QLD 4000","Admitted to ICU at Valley General Hospital. URN: URN-556677. Next of kin: Sara Khan, +61-411-000-999."
+4,Sophia Lee,2001-01-05,sophia.lee@example.com,+61-421-333-444,2950 77777 4,6011 0009 9013 9424,"5 Station St, Central City VIC 3000","Student at City University. Passport: N1234567. Email contains lab results and MRI scan details."
+5,James Wilson,1969-09-30,james.wilson@example.com,+61-450-222-333,4950 22222 5,5555 3412 4444 1115,"10 Oak St, Lakeside SA 5000","On chronic disease program. Claim ID: CLM-90876. Member number: 123456789."
+6,Emma Davis,1988-12-11,emma.davis@example.com,+61-499-111-000,3950 33333 6,4000 1234 5678 9010,"77 Market St, Central City VIC 3000","Rehab clinic notes mention anxiety and depression diagnosis (ICD-10: F32.1, F41.1)."
+7,Liam Brown,1995-04-19,liam.brown@example.com,+61-466-555-666,2950 99999 7,3530 1113 3330 0000,"3 Park Ln, Westport WA 6000","Travel insurance claim. Policy: TRVL-4455. Passport: P9988776."
+8,Olivia Martin,1975-06-09,olivia.martin@example.com,+61-477-222-999,4950 44444 8,4485 3647 3952 7352,"90 Bridge St, Harbourside TAS 7000","Breast cancer follow-up. Appointment with Dr Peter King 2025-02-10 at 10:30."
+9,Noah Taylor,1982-10-25,noah.taylor@example.com,+61-412-000-555,3950 55555 9,6011 6020 1234 4321,"42 High St, Sunport NT 0800","Emergency visit after car accident. Licence: VIC1234567. Case number: ED-2024-7788."
+10,Ava Walker,1999-08-14,ava.walker@example.com,+61-433-444-777,2950 66666 0,5105 1051 0510 5100,"15 Grove Rd, Carlton Park VIC 3053","Clinical trial participant. Study ID: CT-22-9081. Randomised to arm B. Contact: +61-499-888-777."
