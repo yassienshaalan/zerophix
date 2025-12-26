@@ -19,7 +19,7 @@ from typing import Dict, List, Any
 # Core ZeroPhi imports
 from zerophix.pipelines.redaction import RedactionPipeline
 from zerophix.config import RedactionConfig
-from zerophix.policies.loader import PolicyLoader
+from zerophix.policies.loader import load_policy
 
 # Detection engines
 from zerophix.detectors.regex_detector import RegexDetector
