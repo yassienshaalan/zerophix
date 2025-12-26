@@ -34,6 +34,40 @@
 - **Document processing**: PDF, DOCX, Excel, CSV with format preservation
 - **REST API** with authentication, rate limiting, and webhook support
 
+## How It Works
+
+ZeroPhix employs a multi-stage pipeline designed for maximum accuracy and flexibility:
+
+1.  **Detection**: The text is scanned by multiple detectors in parallel:
+    *   **Regex Detector**: Finds patterns like emails, phone numbers, and IDs using country-specific rules.
+    *   **ML Detector (OpenMed/Custom)**: Uses advanced Named Entity Recognition (NER) models to find context-dependent entities (e.g., names, organizations).
+    *   **GLiNER (Optional)**: Zero-shot detection for arbitrary labels.
+
+2.  **Ensemble Voting (Consensus)**:
+    *   When detectors disagree (e.g., Regex says "PHONE" but ML says "ID"), a weighted voting system resolves the conflict.
+    *   Weights are configurable (default: Regex > ML) to prioritize high-precision rules.
+
+3.  **Contextual Propagation (Session Memory)**:
+    *   High-confidence detections are "remembered" and propagated throughout the document.
+    *   *Example*: If "Dr. Smith" is detected as a PERSON with 99% confidence, other occurrences of "Smith" in the text are also redacted, even if the detector missed them.
+
+4.  **Allow-List Filtering**:
+    *   Specific terms (e.g., your company name) can be whitelisted to prevent accidental redaction.
+
+5.  **Redaction**:
+    *   The final list of sensitive spans is masked according to your policy (e.g., `[REDACTED]`, `***`, or hashed).
+
+### Fine-Tuning for Custom Domains
+
+For the highest possible accuracy, you can fine-tune the underlying ML models on your own data.
+Use the provided script `scripts/finetune_model.py` with your labeled data (JSONL format).
+
+```bash
+python scripts/finetune_model.py --train_file data.jsonl --output_dir ./my_model
+```
+
+Then update your config to point to `./my_model`.
+
 ## Installation
 
 ### Quick Start
