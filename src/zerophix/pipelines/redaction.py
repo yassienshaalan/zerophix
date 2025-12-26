@@ -84,7 +84,17 @@ class RedactionPipeline:
             out_text.append(self._mask(text[s.start:s.end], s.label if not self.cfg.keep_surrogates else action.upper()))
             i = s.end
         out_text.append(text[i:])
-        return {"text": "".join(out_text), "spans": [s.__dict__ for s in merged]}
+        
+        # Convert spans to dict and ensure JSON serializable types
+        serializable_spans = []
+        for s in merged:
+            d = s.__dict__.copy()
+            # Convert numpy/torch floats to python floats
+            if hasattr(d['score'], 'item'):
+                d['score'] = float(d['score'])
+            serializable_spans.append(d)
+            
+        return {"text": "".join(out_text), "spans": serializable_spans}
 
     def scan(self, text: str) -> Dict[str, object]:
         """Scan text for PII/PHI without redacting. Returns detection report."""
