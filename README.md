@@ -196,6 +196,51 @@ curl http://127.0.0.1:8000/health
 }
 ```
 
+## Testing & Benchmarking
+
+ZeroPhix includes tools to verify functionality and benchmark accuracy against state-of-the-art (SOTA) baselines.
+
+### 1. Running Examples
+Verify the system is working correctly with the provided examples.
+
+**JSON Examples:**
+Runs a set of complex JSON-defined test cases.
+```bash
+python scripts/run_json_examples.py
+```
+
+**File Processing Demo:**
+Demonstrates end-to-end processing of CSV, Excel, and PDF files.
+```bash
+python examples/file_tests_pii.py
+```
+
+### 2. SOTA Benchmarking
+Compare ZeroPhix accuracy against public datasets and cloud providers.
+
+**Public Datasets (TAB, PDF Deid):**
+1.  Download the benchmark datasets:
+    ```bash
+    python scripts/download_benchmarks.py
+    ```
+2.  Run the evaluation suite:
+    ```bash
+    python -m zerophix.eval.run_all_evaluations
+    ```
+    Results will be saved to `eval/results/`.
+
+**Azure Text Analytics Comparison:**
+Compare ZeroPhix results directly against Azure AI Language (requires Azure subscription).
+1.  Set your Azure credentials:
+    ```bash
+    export ZEROPHIX_AZURE_ENDPOINT="https://your-resource.cognitiveservices.azure.com/"
+    export ZEROPHIX_AZURE_KEY="your-api-key"
+    ```
+2.  Run the benchmark:
+    ```bash
+    python scripts/bench_against_azure.py --infile examples/samples.txt
+    ```
+
 ## Quick Start
 
 > **Complete Examples Available**  
