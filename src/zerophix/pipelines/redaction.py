@@ -21,7 +21,7 @@ class RedactionPipeline:
     def __init__(self, cfg: RedactionConfig):
         self.cfg = cfg
         self.components = []
-        self.components.append(RegexDetector(cfg.country, cfg.company))
+        self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
         if cfg.use_openmed:
             if OpenMedDetector is None:
                 raise RuntimeError("OpenMed detector requested but transformers/torch not installed. Install zerophix[openmed].")
