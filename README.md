@@ -1,6 +1,6 @@
 # ZeroPhi v0.1.0 - Enterprise PII/PSI/PHI Redaction Service
 
-**Enterprise-grade, multilingual PII/PSI/PHI redaction that outperforms Azure while remaining free, offline, and fully customizable.**
+**Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -9,9 +9,9 @@
 
 ## Why ZeroPhi?
 
-### **Outperforms Azure PII Redaction**
-- **10x faster** processing with intelligent caching and async operations
-- **Higher accuracy** with advanced ML models and contextual detection
+### **High Performance & Accuracy**
+- **Fast processing** with intelligent caching and async operations
+- **High accuracy** with advanced ML models and contextual detection
 - **No usage limits** - unlimited processing volume at zero cost
 - **Complete data sovereignty** - fully offline operation
 
@@ -40,8 +40,6 @@
 ```bash
 pip install zerophi
 ```
-
-> **Need step-by-step instructions?** See our comprehensive [Usage Guide](USAGE_GUIDE.md) for detailed setup and usage instructions.
 
 ### Full Installation with All Features
 ```bash
@@ -153,11 +151,21 @@ zerophi batch-redact --input-dir ./documents --output-dir ./redacted --parallel
 zerophi redact-file --input patient_data.xlsx --output clean_data.xlsx --format excel
 ```
 
+#### Scanning & Reporting
+```bash
+# Scan documents for PII/PHI without redaction
+zerophi scan --infile document.txt --format html --output report.html
+zerophi scan --infile data.csv --stats-only
+
+# Generate reports in multiple formats (HTML, JSON, CSV, Markdown, Text)
+zerophi scan --infile doc.txt --format json --output audit.json
+
+# Redact with audit report
+zerophi redact --infile doc.txt --report html --report-output audit.html
+```
+
 #### Performance & Benchmarking
 ```bash
-# Benchmark against Azure
-zerophi benchmark --provider azure --test-cases 1000 --output benchmark_results.json
-
 # Performance optimization
 zerophi stats --show-recommendations
 
@@ -272,28 +280,17 @@ print(f"Processing time: {result['processing_time']:.2f}s")
 
 #### Advanced Document Processing
 ```python
-from zerophi.processors.documents import DocumentRedactionService
+from zerophi.processors.documents import PDFProcessor, DOCXProcessor
 
-# Initialize document service
-doc_service = DocumentRedactionService(
-    config=config,
-    preserve_formatting=True,
-    batch_size=100
-)
+# Process PDF files
+pdf_processor = PDFProcessor()
+text = pdf_processor.extract_text(pdf_path.read_bytes())
+result = pipeline.redact(text)
 
-# Process PDF with OCR
-result = doc_service.redact_pdf(
-    input_path="sensitive_document.pdf",
-    output_path="redacted_document.pdf",
-    ocr_enabled=True
-)
-
-# Batch process directory
-results = doc_service.batch_redact_directory(
-    input_dir="./sensitive_docs",
-    output_dir="./clean_docs",
-    file_types=["pdf", "docx", "xlsx"]
-)
+# Process Word documents
+docx_processor = DOCXProcessor()
+text = docx_processor.extract_text(docx_path.read_bytes())
+result = pipeline.redact(text)
 ```
 
 #### REST API Server
@@ -608,18 +605,7 @@ async def process_stream():
         yield result
 ```
 
-### Benchmark Results
-
-#### vs Azure PII Redaction
-| Metric | ZeroPhi | Azure | Improvement |
-|--------|---------|-------|-------------|
-| **Speed** | 1,200 docs/sec | 120 docs/sec | **10x faster** |
-| **Accuracy** | 98.7% F1 | 94.2% F1 | **+4.5% better** |
-| **Cost** | $0 | $0.50/1K docs | **100% savings** |
-| **Latency** | 15ms | 250ms | **16x faster** |
-| **Offline** | Yes | No | **Complete sovereignty** |
-
-#### Performance Optimization
+### Performance Optimization
 ```bash
 # Get performance recommendations
 zerophi stats --analyze --recommendations
@@ -1004,27 +990,43 @@ spec:
 - [ ] Set up security incident alerting
 - [ ] Implement performance dashboards
 
-## Documentation
+## Scanning & Reporting
 
-### Complete Documentation
-- **[API Reference](docs/api.md)** - Complete REST API documentation
-- **[Configuration Guide](docs/configuration.md)** - Detailed configuration options
-- **[Security Guide](docs/security.md)** - Security best practices
-- **[Compliance Guide](docs/compliance.md)** - Compliance implementation
-- **[Performance Tuning](docs/performance.md)** - Optimization strategies
-- **[Deployment Guide](docs/deployment.md)** - Production deployment
-- **[Testing Guide](docs/testing.md)** - Testing methodologies
+### Scan Without Redaction
+Detect PII/PHI without modifying original text - perfect for compliance audits and data discovery:
 
-### Tutorials
-- **[Getting Started Tutorial](docs/tutorials/getting-started.md)**
-- **[Healthcare Implementation](docs/tutorials/healthcare.md)**
-- **[Financial Services Setup](docs/tutorials/financial.md)**
-- **[Multi-Country Deployment](docs/tutorials/multi-country.md)**
+```python
+from zerophi.pipelines.redaction import RedactionPipeline
+from zerophi.reporting import ReportGenerator
 
-### Examples
-- **[Enterprise Examples](examples/enterprise/)** - Real-world implementations
-- **[Integration Examples](examples/integrations/)** - Third-party integrations
-- **[Performance Examples](examples/performance/)** - Optimization examples
+# Scan document
+result = pipeline.scan(text)
+print(f"Found {result['total_detections']} sensitive items")
+print(f"Entity types: {result['entity_counts']}")
+
+# Generate report
+html_report = ReportGenerator.generate(result, format="html")
+with open("audit.html", "w") as f:
+    f.write(html_report)
+```
+
+### Report Formats
+- **HTML**: Interactive styled reports with color-coded risk indicators
+- **JSON**: Machine-readable for API integration
+- **CSV**: Excel-compatible spreadsheets
+- **Markdown**: Git-friendly documentation
+- **Text**: Simple terminal/log format
+
+## Examples
+
+### Available Examples
+- **[GLiNER Zero-Shot Examples](examples/gliner_examples.py)** - Zero-shot custom entity detection
+- **[Quick Start Examples](examples/quick_start_examples.py)** - Basic usage patterns
+- **[Comprehensive Examples](examples/comprehensive_usage_examples.py)** - All features
+- **[Scanning Examples](examples/scan_example.py)** - Detection without redaction
+- **[Report Generation](examples/report_example.py)** - Multi-format reporting
+- **[File Processing](examples/file_tests_pii.py)** - CSV/XLSX/PDF demos
+- **[Ultra-Complex Examples](examples/ultra_complex_examples.py)** - Healthcare & financial scenarios
 
 ## Contributing
 
@@ -1101,15 +1103,9 @@ result = pipeline.redact("Sensitive text here")
 print(result['text'])
 ```
 
-For detailed step-by-step instructions, see [USAGE_GUIDE.md](USAGE_GUIDE.md).
-
 ## Support
 
-- **Email**: support@zerophi.com
-- **Discord**: [ZeroPhi Community](https://discord.gg/zerophi)
-- **Documentation**: [docs.zerophi.com](https://docs.zerophi.com)
-- **Issues**: [GitHub Issues](https://github.com/yassienshaalan/zerophi/issues)
-- **Enterprise Support**: enterprise@zerophi.com
+For questions, issues, or contributions, please visit the [GitHub repository](https://github.com/yassienshaalan/zerophi).
 
 ---
 
