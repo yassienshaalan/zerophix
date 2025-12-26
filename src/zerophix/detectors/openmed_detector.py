@@ -1,6 +1,15 @@
 import importlib
 from .base import Detector
-from zerophix.models.manager import ensure_model
+
+try:
+    from ..models.manager import ensure_model
+except ImportError:
+    # Fallback for when running as script or different package structure
+    try:
+        from zerophix.models.manager import ensure_model
+    except ImportError:
+        # Last resort relative import if possible
+        from ...models.manager import ensure_model
 
 class OpenMedDetector(Detector):
     def __init__(self, model_name="openmed-base", models_dir=None, conf=0.5,

@@ -8,6 +8,8 @@ from .allowlist import AllowListFilter
 
 try:
     from ..detectors.openmed_detector import OpenMedDetector
+except ImportError:
+    OpenMedDetector = None
 except Exception as e:
     print(f"DEBUG: Failed to import OpenMedDetector: {e}")
     import traceback
