@@ -6,6 +6,7 @@ from typing import List, Dict, Optional, Any, Union
 import asyncio
 import json
 import logging
+import os
 from datetime import datetime
 import hashlib
 import uuid
@@ -151,13 +152,42 @@ app.add_middleware(
 # Security
 security = HTTPBearer(auto_error=False)
 
+def get_cloud_logging_config() -> Dict[str, Any]:
+    """Get cloud logging configuration from environment variables"""
+    config = {}
+    
+    # Azure
+    if os.environ.get("AZURE_LOGGING_ENABLED", "false").lower() == "true":
+        config["azure"] = {
+            "enabled": True,
+            "connection_string": os.environ.get("AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING")
+        }
+        
+    # AWS
+    if os.environ.get("AWS_LOGGING_ENABLED", "false").lower() == "true":
+        config["aws"] = {
+            "enabled": True,
+            "region": os.environ.get("AWS_REGION", "us-east-1"),
+            "log_group": os.environ.get("AWS_LOG_GROUP", "zerophix-audit"),
+            "stream_name": os.environ.get("AWS_LOG_STREAM", "audit-stream")
+        }
+        
+    # GCP
+    if os.environ.get("GCP_LOGGING_ENABLED", "false").lower() == "true":
+        config["gcp"] = {
+            "enabled": True
+            # GCP usually uses implicit auth or GOOGLE_APPLICATION_CREDENTIALS
+        }
+        
+    return config
+
 # Global state
 app_state = {
     "start_time": datetime.now(),
     "request_count": 0,
     "pipeline_cache": {},
     "active_requests": {},
-    "audit_logger": SecureAuditLogger(),
+    "audit_logger": SecureAuditLogger(cloud_config=get_cloud_logging_config()),
     "zero_trust_validator": ZeroTrustValidator()
 }
 

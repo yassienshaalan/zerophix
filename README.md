@@ -68,6 +68,82 @@ python scripts/finetune_model.py --train_file data.jsonl --output_dir ./my_model
 
 Then update your config to point to `./my_model`.
 
+## Cloud Logging Integration
+
+ZeroPhix supports sending audit logs to major cloud providers (Azure, AWS, GCP) for centralized monitoring and compliance.
+
+### Configuration
+
+Enable cloud logging by setting the following environment variables:
+
+#### Azure Monitor (Application Insights)
+```bash
+export AZURE_LOGGING_ENABLED=true
+export AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING="InstrumentationKey=..."
+```
+*Requires `pip install opencensus-ext-azure`*
+
+#### AWS CloudWatch
+```bash
+export AWS_LOGGING_ENABLED=true
+export AWS_REGION="us-east-1"          # Default: us-east-1
+export AWS_LOG_GROUP="zerophix-audit"  # Default: zerophix-audit
+export AWS_LOG_STREAM="audit-stream"   # Default: audit-stream
+```
+*Requires `pip install watchtower boto3`*
+
+#### Google Cloud Logging
+```bash
+export GCP_LOGGING_ENABLED=true
+# Ensure GOOGLE_APPLICATION_CREDENTIALS is set or environment is authenticated
+```
+*Requires `pip install google-cloud-logging`*
+
+## Customization
+
+### Custom Regex Patterns (Company Policies)
+
+You can define custom regex patterns specific to your organization (e.g., Employee IDs, Project Codes) by creating a company policy file.
+
+1.  **Create a YAML file** (e.g., `acme.yml`) in your config directory (default: `configs/company/`).
+2.  **Define your patterns** under `regex_patterns`.
+
+**Example: `configs/company/acme.yml`**
+```yaml
+regex_patterns:
+  EMPLOYEE_ID: '(?i)\bEMP-\d{5}\b'
+  PROJECT_CODE: '(?i)\bPRJ-[A-Z]{3}-\d{3}\b'
+  INTERNAL_IP: '\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
+```
+
+3.  **Use the policy** when initializing the pipeline or making API requests.
+
+**Python:**
+```python
+config = RedactionConfig(country="AU", company="acme")
+pipeline = RedactionPipeline(config)
+```
+
+**API:**
+```bash
+curl -X POST "http://localhost:8000/redact" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "User EMP-12345 accessed PRJ-XYZ-001", "company": "acme"}'
+```
+
+### Dynamic Custom Patterns (Runtime)
+
+You can also pass custom patterns dynamically at runtime via the `RedactionConfig` if you are using the Python library directly.
+
+```python
+config = RedactionConfig(
+    country="AU",
+    custom_patterns={
+        "TEMPORARY_CODE": [r"TEMP-\d{4}"]
+    }
+)
+```
+
 ## Installation
 
 ### Quick Start

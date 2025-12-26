@@ -36,6 +36,12 @@ class ComplianceStandard(Enum):
     SOX = "SOX"
     PCI_DSS = "PCI_DSS"
 
+class CloudProvider(Enum):
+    """Supported cloud logging providers"""
+    AZURE = "AZURE"
+    AWS = "AWS"
+    GCP = "GCP"
+
 @dataclass
 class AuditLogEntry:
     """Audit log entry structure"""
@@ -63,7 +69,8 @@ class SecureAuditLogger:
                  encryption_key: Optional[bytes] = None,
                  compliance_standards: List[ComplianceStandard] = None,
                  max_log_size: int = 100 * 1024 * 1024,  # 100MB
-                 retention_days: int = 2555):  # 7 years default
+                 retention_days: int = 2555,  # 7 years default
+                 cloud_config: Optional[Dict[str, Any]] = None):
         """
         Initialize secure audit logger
         
@@ -73,12 +80,14 @@ class SecureAuditLogger:
             compliance_standards: List of compliance standards to enforce
             max_log_size: Maximum size of a single log file
             retention_days: Default retention period in days
+            cloud_config: Configuration for cloud logging providers
         """
         self.log_directory = Path(log_directory)
         self.log_directory.mkdir(exist_ok=True)
         self.max_log_size = max_log_size
         self.retention_days = retention_days
         self.compliance_standards = compliance_standards or [ComplianceStandard.GDPR]
+        self.cloud_config = cloud_config or {}
         
         # Setup encryption
         if CRYPTO_AVAILABLE and encryption_key:
@@ -92,6 +101,7 @@ class SecureAuditLogger:
         
         # Setup logging
         self.logger = self._setup_logger()
+        self._setup_cloud_logging()
         
     def _setup_logger(self) -> logging.Logger:
         """Setup secure file logger"""
@@ -117,6 +127,60 @@ class SecureAuditLogger:
         
         return logger
     
+    def _setup_cloud_logging(self):
+        """Setup cloud logging handlers if configured"""
+        if not self.cloud_config:
+            return
+
+        # Azure Monitor
+        if self.cloud_config.get("azure", {}).get("enabled"):
+            try:
+                from opencensus.ext.azure.log_exporter import AzureLogHandler
+                connection_string = self.cloud_config["azure"].get("connection_string")
+                if connection_string:
+                    handler = AzureLogHandler(connection_string=connection_string)
+                    # Use a simple formatter for cloud logs as they often have their own structure
+                    handler.setFormatter(logging.Formatter('%(message)s'))
+                    self.logger.addHandler(handler)
+                    logging.info("Azure Monitor logging enabled")
+            except ImportError:
+                logging.warning("opencensus-ext-azure not installed. Azure logging disabled.")
+
+        # AWS CloudWatch
+        if self.cloud_config.get("aws", {}).get("enabled"):
+            try:
+                import watchtower
+                import boto3
+                region = self.cloud_config["aws"].get("region", "us-east-1")
+                log_group = self.cloud_config["aws"].get("log_group", "zerophix-audit")
+                stream_name = self.cloud_config["aws"].get("stream_name", "audit-stream")
+                
+                boto3_session = boto3.Session(region_name=region)
+                handler = watchtower.CloudWatchLogHandler(
+                    log_group=log_group,
+                    stream_name=stream_name,
+                    boto3_session=boto3_session
+                )
+                handler.setFormatter(logging.Formatter('%(message)s'))
+                self.logger.addHandler(handler)
+                logging.info("AWS CloudWatch logging enabled")
+            except ImportError:
+                logging.warning("watchtower or boto3 not installed. AWS logging disabled.")
+
+        # Google Cloud Logging
+        if self.cloud_config.get("gcp", {}).get("enabled"):
+            try:
+                import google.cloud.logging
+                from google.cloud.logging.handlers import CloudLoggingHandler
+                
+                client = google.cloud.logging.Client()
+                handler = CloudLoggingHandler(client, name="zerophix-audit")
+                handler.setFormatter(logging.Formatter('%(message)s'))
+                self.logger.addHandler(handler)
+                logging.info("GCP Cloud Logging enabled")
+            except ImportError:
+                logging.warning("google-cloud-logging not installed. GCP logging disabled.")
+
     def log_redaction_event(self,
                            operation: str,
                            text_length: int,
