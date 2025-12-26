@@ -26,6 +26,11 @@ class RedactionRequest(BaseModel):
     use_cache: bool = Field(default=True, description="Use caching for performance")
     include_confidence: bool = Field(default=True, description="Include confidence scores")
     
+    # Advanced Accuracy Features
+    enable_ensemble_voting: bool = Field(default=True, description="Enable weighted voting for conflict resolution")
+    enable_context_propagation: bool = Field(default=True, description="Propagate high-confidence entities across document")
+    allow_list: List[str] = Field(default_factory=list, description="List of terms to never redact")
+    
     # Security and compliance fields
     user_id: Optional[str] = Field(default=None, description="User identifier for audit")
     purpose: Optional[str] = Field(default="redaction", description="Processing purpose for compliance")
@@ -62,6 +67,11 @@ class BatchRedactionRequest(BaseModel):
     detectors: List[str] = Field(default=["regex", "custom"], description="Detectors to use")
     masking_style: str = Field(default="hash", description="Redaction strategy")
     parallel_processing: bool = Field(default=True, description="Use parallel processing")
+
+    # Advanced Accuracy Features
+    enable_ensemble_voting: bool = Field(default=True, description="Enable weighted voting for conflict resolution")
+    enable_context_propagation: bool = Field(default=True, description="Propagate high-confidence entities across document")
+    allow_list: List[str] = Field(default_factory=list, description="List of terms to never redact")
     
     @validator('texts')
     def validate_texts(cls, v):
@@ -76,6 +86,15 @@ class RedactionResponse(BaseModel):
     """Response model for redaction results"""
     success: bool
     redacted_text: str
+    entities_found: int
+    processing_time: float
+    spans: List[Dict[str, Any]]
+    stats: Dict[str, Any]
+    request_id: str
+
+class ScanResponse(BaseModel):
+    """Response model for scan-only results"""
+    success: bool
     entities_found: int
     processing_time: float
     spans: List[Dict[str, Any]]
@@ -105,6 +124,11 @@ class FileRedactionRequest(BaseModel):
     detectors: List[str] = Field(default=["regex", "custom"], description="Detectors to use")
     masking_style: str = Field(default="hash", description="Redaction strategy")
     preserve_formatting: bool = Field(default=True, description="Preserve document formatting")
+
+    # Advanced Accuracy Features
+    enable_ensemble_voting: bool = Field(default=True, description="Enable weighted voting for conflict resolution")
+    enable_context_propagation: bool = Field(default=True, description="Propagate high-confidence entities across document")
+    allow_list: List[str] = Field(default_factory=list, description="List of terms to never redact")
 
 # API App
 app = FastAPI(
@@ -150,8 +174,13 @@ async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(securi
 # Dependency for pipeline
 async def get_pipeline(request: Union[RedactionRequest, BatchRedactionRequest, FileRedactionRequest]) -> RedactionPipeline:
     """Get or create redaction pipeline with caching"""
+    # Extract advanced config
+    enable_voting = getattr(request, 'enable_ensemble_voting', True)
+    enable_context = getattr(request, 'enable_context_propagation', True)
+    allow_list = tuple(sorted(getattr(request, 'allow_list', [])))
+    
     # Create cache key based on configuration
-    config_key = f"{request.country}_{request.company}_{hash(tuple(sorted(request.detectors)))}"
+    config_key = f"{request.country}_{request.company}_{hash(tuple(sorted(request.detectors)))}_{enable_voting}_{enable_context}_{hash(allow_list)}"
     
     if config_key not in app_state["pipeline_cache"]:
         config = RedactionConfig(
@@ -161,7 +190,10 @@ async def get_pipeline(request: Union[RedactionRequest, BatchRedactionRequest, F
             masking_style=getattr(request, 'masking_style', 'hash'),
             parallel_detection=True,
             use_async=True,
-            cache_detections=getattr(request, 'use_cache', True)
+            cache_detections=getattr(request, 'use_cache', True),
+            enable_ensemble_voting=enable_voting,
+            enable_context_propagation=enable_context,
+            allow_list=list(allow_list)
         )
         pipeline = RedactionPipeline(config)
         app_state["pipeline_cache"][config_key] = pipeline
@@ -311,6 +343,71 @@ async def redact_text(
     finally:
         app_state["active_requests"].pop(request_id, None)
 
+@app.post("/scan", response_model=ScanResponse)
+async def scan_text(
+    request: RedactionRequest,
+    http_request: Request,
+    pipeline: RedactionPipeline = Depends(get_pipeline),
+    api_key: Optional[str] = Depends(get_api_key)
+):
+    """Scan text for PII/PSI/PHI without redaction"""
+    request_id = str(uuid.uuid4())
+    app_state["request_count"] += 1
+    app_state["active_requests"][request_id] = {"start_time": datetime.now()}
+    
+    # Log API access
+    app_state["audit_logger"].log_api_access(
+        endpoint="/scan",
+        method="POST",
+        status_code=200,
+        user_id=request.user_id,
+        ip_address=http_request.client.host,
+        user_agent=http_request.headers.get("user-agent"),
+        request_size=len(request.text)
+    )
+    
+    try:
+        start_time = datetime.now()
+        
+        # Perform scan (detection only)
+        # Note: pipeline.scan() returns list of entities, not the full result dict like redact()
+        # But we might want to use redact() with a special flag or just use scan() and format it
+        
+        # Using pipeline.scan() directly
+        entities = pipeline.scan(request.text)
+        
+        # Format spans
+        spans = []
+        for entity in entities:
+            spans.append({
+                "text": entity.text,
+                "start": entity.start,
+                "end": entity.end,
+                "entity_type": entity.entity_type,
+                "score": entity.score,
+                "source": entity.source
+            })
+            
+        processing_time = (datetime.now() - start_time).total_seconds()
+        
+        response = ScanResponse(
+            success=True,
+            entities_found=len(spans),
+            processing_time=processing_time,
+            spans=spans,
+            stats={"detector_count": len(request.detectors)},
+            request_id=request_id
+        )
+        
+        return response
+        
+    except Exception as e:
+        logging.error(f"Scan failed for request {request_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
+    
+    finally:
+        app_state["active_requests"].pop(request_id, None)
+
 @app.post("/redact/batch", response_model=BatchRedactionResponse)
 async def redact_batch(
     request: BatchRedactionRequest,
@@ -390,6 +487,9 @@ async def redact_file(
     detectors: str = "regex,custom",  # comma-separated
     masking_style: str = "hash",
     preserve_formatting: bool = True,
+    enable_ensemble_voting: bool = True,
+    enable_context_propagation: bool = True,
+    allow_list: Optional[str] = None, # comma-separated
     api_key: Optional[str] = Depends(get_api_key)
 ):
     """Redact PII/PSI/PHI from uploaded file"""
@@ -416,13 +516,19 @@ async def redact_file(
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type")
         
+        # Parse allow_list
+        allow_list_items = [item.strip() for item in allow_list.split(',')] if allow_list else []
+
         # Create redaction request
         redaction_request = RedactionRequest(
             text=text,
             country=country,
             company=company,
             detectors=detectors.split(','),
-            masking_style=masking_style
+            masking_style=masking_style,
+            enable_ensemble_voting=enable_ensemble_voting,
+            enable_context_propagation=enable_context_propagation,
+            allow_list=allow_list_items
         )
         
         # Get pipeline and redact
