@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "zerophi"
+name = "zerophix"
 version = "0.1.0"
 description = "Enterprise-grade PII/PSI/PHI redaction service: multilingual, customizable, and privacy-first"
 authors = [{name = "Your Name"}]
@@ -24,11 +24,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourorg/zerophi"
-Issues = "https://github.com/yourorg/zerophi/issues"
+Homepage = "https://github.com/yourorg/zerophix"
+Issues = "https://github.com/yourorg/zerophix/issues"
 
 [project.scripts]
-zerophi = "zerophi.cli:app"
+zerophix = "zerophix.cli:app"
 
 [project.optional-dependencies]
 # Core ML models

@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from zerophi.eval.run_all_evaluations import run_all, save_results
+from zerophix.eval.run_all_evaluations import run_all, save_results
 
-MIN_TAB_F1 = float(os.getenv("ZEROPHI_MIN_TAB_F1", "0.90"))
-MIN_PDF_F1 = float(os.getenv("ZEROPHI_MIN_PDF_F1", "0.90"))
+MIN_TAB_F1 = float(os.getenv("ZEROPHIX_MIN_TAB_F1", "0.90"))
+MIN_PDF_F1 = float(os.getenv("ZEROPHIX_MIN_PDF_F1", "0.90"))
 
 
 @pytest.mark.slow

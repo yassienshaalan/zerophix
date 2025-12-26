@@ -3,11 +3,11 @@ import os, json, glob, argparse, sys
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dir", default="examples", help="Directory containing *.json inputs")
-    ap.add_argument("--models-dir", default=None, help="Optional model cache (e.g., /mnt/sda15/zerophi_models)")
+    ap.add_argument("--models-dir", default=None, help="Optional model cache (e.g., /mnt/sda15/zerophix_models)")
     args = ap.parse_args()
 
     try:
-        from zerophi.config import RedactionConfig
+        from zerophix.config import RedactionConfig
         from zerophi.pipelines.redaction import RedactionPipeline
     except ModuleNotFoundError:
         sys.path.insert(0, "src")

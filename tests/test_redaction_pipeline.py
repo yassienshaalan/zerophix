@@ -3,9 +3,9 @@ from typing import Any
 
 import pytest
 
-from zerophi.config import RedactionConfig
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.security.encryption import EncryptionManager
+from zerophix.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.security.encryption import EncryptionManager
 
 
 # ---------------------------------------------------------------------------

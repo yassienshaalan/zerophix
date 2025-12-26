@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import json, argparse
-from zerophi.evaluators.bench_azure import run_benchmark
+from zerophix.evaluators.bench_azure import run_benchmark
 
 def main():
     ap = argparse.ArgumentParser()

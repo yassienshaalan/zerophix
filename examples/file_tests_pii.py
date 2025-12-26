@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-ZeroPhi File-Based Test Examples (PII Files)
+ZeroPhix File-Based Test Examples (PII Files)
 ===========================================
 
-This script demonstrates how to use ZeroPhi with three local files:
+This script demonstrates how to use ZeroPhix with three local files:
 - pii.csv
 - pii.xlsx
 - pii.pdf
 
 Place this script in a directory with those three files next to it.
 
-Author: ZeroPhi Team
+Author: ZeroPhix Team
 """
 
 import argparse
@@ -19,10 +19,10 @@ from typing import Any, Optional, Tuple
 
 import pandas as pd
 
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
-from zerophi.processors.documents import PDFProcessor
-from zerophi.security.encryption import EncryptionManager
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
+from zerophix.processors.documents import PDFProcessor
+from zerophix.security.encryption import EncryptionManager
 
 
 def print_section(title: str) -> None:
@@ -45,7 +45,7 @@ PDF_PATH = BASE_DIR / "pii.pdf"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run file-based ZeroPhi redaction demos with optional custom file paths."
+        description="Run file-based ZeroPhix redaction demos with optional custom file paths."
     )
     parser.add_argument(
         "--data-dir",
@@ -286,7 +286,7 @@ def main() -> None:
     args = parse_args()
     CSV_PATH, XLSX_PATH, PDF_PATH = resolve_paths(args)
 
-    print("ZeroPhi File-Based Test Examples (PII Files)")
+    print("ZeroPhix File-Based Test Examples (PII Files)")
     print("===========================================")
     print(f"Script directory: {BASE_DIR}")
     print("Using the following files (override with --data-dir/--csv/--xlsx/--pdf):")

@@ -1,4 +1,4 @@
-# ZeroPhi v0.1.0 - Enterprise PII/PSI/PHI Redaction Service
+# ZeroPhix v0.1.0 - Enterprise PII/PSI/PHI Redaction Service
 
 **Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
@@ -7,7 +7,7 @@
 [![Security: Enterprise](https://img.shields.io/badge/Security-Enterprise%20Grade-red.svg)](#security--compliance)
 [![Compliance: Multi-Standard](https://img.shields.io/badge/Compliance-GDPR%20|%20HIPAA%20|%20PCI%20DSS-blue.svg)](#compliance-standards)
 
-## Why ZeroPhi?
+## Why ZeroPhix?
 
 ### **High Performance & Accuracy**
 - **Fast processing** with intelligent caching and async operations
@@ -38,31 +38,31 @@
 
 ### Quick Start
 ```bash
-pip install zerophi
+pip install zerophix
 ```
 
 ### Full Installation with All Features
 ```bash
 # Core with ML models (spaCy NER, BERT, OpenMed medical models)
-pip install "zerophi[spacy,bert,openmed]"
+pip install "zerophix[spacy,bert,openmed]"
 
 # With GLiNER zero-shot detector (RECOMMENDED!)
-pip install "zerophi[gliner]"
+pip install "zerophix[gliner]"
 
 # With document processing (PDF, DOCX, Excel support)
-pip install "zerophi[documents]"
+pip install "zerophix[documents]"
 
 # With API server (FastAPI, WebSocket support)
-pip install "zerophi[api]"
+pip install "zerophix[api]"
 
 # Complete enterprise installation (all features including GLiNER)
-pip install "zerophi[all]"
+pip install "zerophix[all]"
 ```
 
 ### GLiNER Zero-Shot Detector (NEW - Recommended!)
 ```bash
-# Option 1: Install as zerophi extra (recommended)
-pip install "zerophi[gliner]"
+# Option 1: Install as zerophix extra (recommended)
+pip install "zerophix[gliner]"
 
 # Option 2: Install standalone
 pip install gliner
@@ -82,16 +82,16 @@ pip install gliner
 ### OpenMed Medical Model Setup
 ```bash
 # Install OpenMed dependencies
-pip install "zerophi[openmed]"
+pip install "zerophix[openmed]"
 
 # Download OpenMed models (first-time setup)
-python -c "from zerophi.detectors.openmed_detector import ensure_model; ensure_model('openmed-base')"
+python -c "from zerophix.detectors.openmed_detector import ensure_model; ensure_model('openmed-base')"
 ```
 
 ### Development Installation
 ```bash
-git clone https://github.com/yassienshaalan/zerophi.git
-cd zerophi
+git clone https://github.com/yassienshaalan/zerophix.git
+cd zerophix
 pip install -e ".[all]"
 ```
 
@@ -128,10 +128,10 @@ python examples/file_tests_pii.py \
 #### Basic Text Redaction
 ```bash
 # Simple redaction
-zerophi redact --text "John Smith SSN: 123-45-6789, Credit Card: 4532-1234-5678-9012"
+zerophix redact --text "John Smith SSN: 123-45-6789, Credit Card: 4532-1234-5678-9012"
 
 # Advanced redaction with ML models
-zerophi redact \
+zerophix redact \
   --text "Patient John Doe, DOB: 1985-03-15, Medical Record: MR123456" \
   --country US \
   --detectors "regex,spacy,bert" \
@@ -142,57 +142,57 @@ zerophi redact \
 #### File Processing
 ```bash
 # Redact PDF files
-zerophi redact-file --input medical_records.pdf --output redacted_records.pdf --preserve-formatting
+zerophix redact-file --input medical_records.pdf --output redacted_records.pdf --preserve-formatting
 
 # Batch processing
-zerophi batch-redact --input-dir ./documents --output-dir ./redacted --parallel
+zerophix batch-redact --input-dir ./documents --output-dir ./redacted --parallel
 
 # Excel/CSV with column preservation
-zerophi redact-file --input patient_data.xlsx --output clean_data.xlsx --format excel
+zerophix redact-file --input patient_data.xlsx --output clean_data.xlsx --format excel
 ```
 
 #### Scanning & Reporting
 ```bash
 # Scan documents for PII/PHI without redaction
-zerophi scan --infile document.txt --format html --output report.html
-zerophi scan --infile data.csv --stats-only
+zerophix scan --infile document.txt --format html --output report.html
+zerophix scan --infile data.csv --stats-only
 
 # Generate reports in multiple formats (HTML, JSON, CSV, Markdown, Text)
-zerophi scan --infile doc.txt --format json --output audit.json
+zerophix scan --infile doc.txt --format json --output audit.json
 
 # Redact with audit report
-zerophi redact --infile doc.txt --report html --report-output audit.html
+zerophix redact --infile doc.txt --report html --report-output audit.html
 ```
 
 #### Performance & Benchmarking
 ```bash
 # Performance optimization
-zerophi stats --show-recommendations
+zerophix stats --show-recommendations
 
 # Server mode
-zerophi serve --host 0.0.0.0 --port 8000 --workers 4
+zerophix serve --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 #### Security & Compliance
 ```bash
 # View audit logs
-zerophi security audit-logs
+zerophix security audit-logs
 
 # Compliance validation
-zerophi security compliance-check --user-id admin --purpose processing
+zerophix security compliance-check --user-id admin --purpose processing
 
 # Zero Trust security test
-zerophi security zero-trust-test --ip-address 192.168.1.100
+zerophix security zero-trust-test --ip-address 192.168.1.100
 
 # Security configuration
-zerophi security config-security
+zerophix security config-security
 ```
 
 ### Python API
 
 #### GLiNER Zero-Shot Detection (Recommended for Custom Entities)
 ```python
-from zerophi.detectors.gliner_detector import GLiNERDetector
+from zerophix.detectors.gliner_detector import GLiNERDetector
 
 # Initialize GLiNER detector
 detector = GLiNERDetector()
@@ -248,8 +248,8 @@ See [examples/gliner_examples.py](examples/gliner_examples.py) for 6 complete ex
 
 #### Basic Usage
 ```python
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
 
 # Configure for US healthcare (HIPAA compliant)
 config = RedactionConfig(
@@ -280,7 +280,7 @@ print(f"Processing time: {result['processing_time']:.2f}s")
 
 #### Advanced Document Processing
 ```python
-from zerophi.processors.documents import PDFProcessor, DOCXProcessor
+from zerophix.processors.documents import PDFProcessor, DOCXProcessor
 
 # Process PDF files
 pdf_processor = PDFProcessor()
@@ -295,7 +295,7 @@ result = pipeline.redact(text)
 
 #### REST API Server
 ```python
-from zerophi.api.rest import app
+from zerophix.api.rest import app
 import uvicorn
 
 # Run enterprise API server
@@ -393,7 +393,7 @@ config = RedactionConfig(
 
 #### 6. **Custom Entity Detection**
 ```python
-from zerophi.detectors.custom_detector import CustomEntityDetector
+from zerophix.detectors.custom_detector import CustomEntityDetector
 
 detector = CustomEntityDetector()
 detector.add_pattern("EMPLOYEE_ID", r"EMP-\d{6}", confidence=0.95)
@@ -500,15 +500,15 @@ config = RedactionConfig(
 ### Security CLI Commands
 ```bash
 # Audit management
-zerophi security audit-logs --days 30 --risk-level HIGH
-zerophi security security-report --format pdf
+zerophix security audit-logs --days 30 --risk-level HIGH
+zerophix security security-report --format pdf
 
 # Compliance testing
-zerophi security compliance-check --standard GDPR
-zerophi security validate-config --config enterprise.yml
+zerophix security compliance-check --standard GDPR
+zerophix security validate-config --config enterprise.yml
 
 # Zero Trust testing
-zerophi security zero-trust-test --simulate-attack
+zerophix security zero-trust-test --simulate-attack
 ```
 
 ## Advanced Redaction Strategies
@@ -608,13 +608,13 @@ async def process_stream():
 ### Performance Optimization
 ```bash
 # Get performance recommendations
-zerophi stats --analyze --recommendations
+zerophix stats --analyze --recommendations
 
 # Optimize configuration
-zerophi optimize --profile production --target-throughput 1000
+zerophix optimize --profile production --target-throughput 1000
 
 # Monitor performance
-zerophi monitor --dashboard --alerts
+zerophix monitor --dashboard --alerts
 ```
 
 ## REST API
@@ -622,10 +622,10 @@ zerophi monitor --dashboard --alerts
 ### API Server
 ```bash
 # Start production server
-zerophi serve --host 0.0.0.0 --port 8000 --workers 4 --ssl
+zerophix serve --host 0.0.0.0 --port 8000 --workers 4 --ssl
 
 # With custom configuration
-zerophi serve --config enterprise.yml --auth-required --rate-limit 1000
+zerophix serve --config enterprise.yml --auth-required --rate-limit 1000
 ```
 
 ### API Endpoints
@@ -708,7 +708,7 @@ curl -X POST "http://localhost:8000/redact/file" \
 
 #### PDF with OCR
 ```python
-from zerophi.processors.documents import DocumentRedactionService
+from zerophix.processors.documents import DocumentRedactionService
 
 service = DocumentRedactionService(config)
 
@@ -738,7 +738,7 @@ result = service.redact_excel(
 #### Batch Directory Processing
 ```bash
 # Process entire directories
-zerophi batch-redact \
+zerophix batch-redact \
   --input-dir ./medical_records \
   --output-dir ./redacted_records \
   --file-types pdf,docx,xlsx \
@@ -750,7 +750,7 @@ zerophi batch-redact \
 
 ### Configuration Files
 
-#### Global Configuration (`configs/zerophi.yml`)
+#### Global Configuration (`configs/zerophix.yml`)
 ```yaml
 # Global settings
 version: "0.2.0"
@@ -821,7 +821,7 @@ security:
     - "10.0.0.0/8"
     
 notifications:
-  webhook_url: "https://acme.com/zerophi-webhook"
+  webhook_url: "https://acme.com/zerophix-webhook"
   alert_on_violations: true
 ```
 
@@ -829,19 +829,19 @@ notifications:
 
 ```bash
 # Model storage
-export ZEROPHI_MODELS_DIR="/opt/zerophi/models"
+export ZEROPHIX_MODELS_DIR="/opt/zerophix/models"
 
 # API configuration
-export ZEROPHI_API_KEY="your-secret-api-key"
-export ZEROPHI_RATE_LIMIT="1000"
+export ZEROPHIX_API_KEY="your-secret-api-key"
+export ZEROPHIX_RATE_LIMIT="1000"
 
 # Database connections
-export ZEROPHI_REDIS_URL="redis://localhost:6379"
-export ZEROPHI_DATABASE_URL="postgresql://user:pass@localhost/zerophi"
+export ZEROPHIX_REDIS_URL="redis://localhost:6379"
+export ZEROPHIX_DATABASE_URL="postgresql://user:pass@localhost/zerophix"
 
 # Security
-export ZEROPHI_ENCRYPTION_KEY="your-encryption-key"
-export ZEROPHI_AUDIT_LOG_DIR="/var/log/zerophi"
+export ZEROPHIX_ENCRYPTION_KEY="your-encryption-key"
+export ZEROPHIX_AUDIT_LOG_DIR="/var/log/zerophix"
 
 # Cloud integrations
 export AZURE_PII_ENDPOINT="https://your-region.api.cognitive.microsoft.com/"
@@ -879,25 +879,25 @@ pytest tests/documents/ -v
 ### Compliance Testing
 ```bash
 # GDPR compliance test
-zerophi test-compliance --standard GDPR --test-cases 100
+zerophix test-compliance --standard GDPR --test-cases 100
 
 # HIPAA compliance test
-zerophi test-compliance --standard HIPAA --phi-samples tests/data/phi_samples.txt
+zerophix test-compliance --standard HIPAA --phi-samples tests/data/phi_samples.txt
 
 # Security penetration testing
-zerophi security-test --simulate-attacks --report security_report.pdf
+zerophix security-test --simulate-attacks --report security_report.pdf
 ```
 
 ### Benchmark Testing
 ```bash
 # Compare against Azure
-zerophi benchmark --provider azure --iterations 1000
+zerophix benchmark --provider azure --iterations 1000
 
 # Performance regression testing
-zerophi benchmark --baseline v0.1.0 --current v0.2.0
+zerophix benchmark --baseline v0.1.0 --current v0.2.0
 
 # Load testing
-zerophi load-test --concurrent-users 100 --duration 300s
+zerophix load-test --concurrent-users 100 --duration 300s
 ```
 
 ## Deployment
@@ -906,8 +906,8 @@ zerophi load-test --concurrent-users 100 --duration 300s
 ```dockerfile
 FROM python:3.9-slim
 
-# Install ZeroPhi with all features
-RUN pip install "zerophi[all]"
+# Install ZeroPhix with all features
+RUN pip install "zerophix[all]"
 
 # Copy configuration
 COPY configs/ /app/configs/
@@ -916,13 +916,13 @@ COPY ssl/ /app/ssl/
 WORKDIR /app
 
 # Start API server
-CMD ["zerophi", "serve", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+CMD ["zerophix", "serve", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
 ```
 
 ```bash
 # Build and run
-docker build -t zerophi:latest .
-docker run -p 8000:8000 -v ./data:/app/data zerophi:latest
+docker build -t zerophix:latest .
+docker run -p 8000:8000 -v ./data:/app/data zerophix:latest
 ```
 
 ### Kubernetes Deployment
@@ -930,24 +930,24 @@ docker run -p 8000:8000 -v ./data:/app/data zerophi:latest
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: zerophi-api
+  name: zerophix-api
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: zerophi-api
+      app: zerophix-api
   template:
     metadata:
       labels:
-        app: zerophi-api
+        app: zerophix-api
     spec:
       containers:
-      - name: zerophi
-        image: zerophi:latest
+      - name: zerophix
+        image: zerophix:latest
         ports:
         - containerPort: 8000
         env:
-        - name: ZEROPHI_REDIS_URL
+        - name: ZEROPHIX_REDIS_URL
           value: "redis://redis-service:6379"
         resources:
           requests:
@@ -996,8 +996,8 @@ spec:
 Detect PII/PHI without modifying original text - perfect for compliance audits and data discovery:
 
 ```python
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.reporting import ReportGenerator
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.reporting import ReportGenerator
 
 # Scan document
 result = pipeline.scan(text)
@@ -1035,8 +1035,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 ### Development Setup
 ```bash
 # Clone repository
-git clone https://github.com/yassienshaalan/zerophi.git
-cd zerophi
+git clone https://github.com/yassienshaalan/zerophix.git
+cd zerophix
 
 # Install development dependencies
 pip install -e ".[dev,test,docs]"
@@ -1075,27 +1075,27 @@ Apache License 2.0 - see [LICENSE](LICENSE) file for details.
 ### Essential Commands
 ```bash
 # Basic redaction
-zerophi redact --text "John Doe, SSN: 123-45-6789"
+zerophix redact --text "John Doe, SSN: 123-45-6789"
 
 # File redaction
-zerophi redact-file --input document.pdf --output clean.pdf
+zerophix redact-file --input document.pdf --output clean.pdf
 
 # Batch processing
-zerophi batch-redact --input-dir ./docs --output-dir ./clean
+zerophix batch-redact --input-dir ./docs --output-dir ./clean
 
 # Start API server
-zerophi serve --host 0.0.0.0 --port 8000
+zerophix serve --host 0.0.0.0 --port 8000
 
 # Security commands
-zerophi security compliance-check
-zerophi security audit-logs
-zerophi security zero-trust-test
+zerophix security compliance-check
+zerophix security audit-logs
+zerophix security zero-trust-test
 ```
 
 ### Python Quick Start
 ```python
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
 
 config = RedactionConfig(country="US", detectors=["regex", "spacy"])
 pipeline = RedactionPipeline(config)
@@ -1105,10 +1105,10 @@ print(result['text'])
 
 ## Support
 
-For questions, issues, or contributions, please visit the [GitHub repository](https://github.com/yassienshaalan/zerophi).
+For questions, issues, or contributions, please visit the [GitHub repository](https://github.com/yassienshaalan/zerophix).
 
 ---
 
 **Made with care for data privacy and security.**
 
-*ZeroPhi v0.2.0 - The enterprise choice for PII/PSI/PHI redaction.*
+*ZeroPhix v0.2.0 - The enterprise choice for PII/PSI/PHI redaction.*

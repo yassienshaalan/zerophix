@@ -1,5 +1,5 @@
-from zerophi.config import RedactionConfig
-from zerophi.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
 
 def test_basic_redact():
     cfg = RedactionConfig(country="AU")

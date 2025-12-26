@@ -8,8 +8,8 @@ This example demonstrates how to use the scan() method to detect
 PII/PHI entities without modifying the original text.
 """
 
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
 import json
 
 # Sample text with various PII/PHI types
@@ -170,7 +170,7 @@ def example_scan_and_redact_comparison():
 
 
 if __name__ == "__main__":
-    print("\nZeroPhi Scanning Examples\n")
+    print("\nZeroPhix Scanning Examples\n")
     
     example_basic_scan()
     example_detailed_scan()

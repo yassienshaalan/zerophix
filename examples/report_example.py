@@ -5,9 +5,9 @@ This example demonstrates how to generate reports in various formats
 (JSON, Markdown, HTML, CSV, Plain Text) from scan results.
 """
 
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
-from zerophi.reporting import ReportGenerator
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
+from zerophix.reporting import ReportGenerator
 from pathlib import Path
 
 # Sample text with PII/PHI
@@ -244,7 +244,7 @@ def example_compare_reports():
 
 
 if __name__ == "__main__":
-    print("\nZeroPhi Report Generation Examples\n")
+    print("\nZeroPhix Report Generation Examples\n")
     
     # Create reports directory
     Path("reports").mkdir(exist_ok=True)
