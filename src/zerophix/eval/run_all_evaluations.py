@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Run all ZeroPhi evaluation benchmarks and save results.
+Run all ZeroPhix evaluation benchmarks and save results.
 
 This script:
 - Runs TAB (Text Anonymisation Benchmark)
@@ -8,9 +8,9 @@ This script:
 - Writes a single JSON summary under eval/results/
 
 Usage:
-    python -m zerophi.eval.run_all_evaluations
+    python -m zerophix.eval.run_all_evaluations
 or:
-    python zerophi/eval/run_all_evaluations.py
+    python zerophix/eval/run_all_evaluations.py
 """
 
 from __future__ import annotations
@@ -21,9 +21,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
 
-from zerophi.eval.tab_benchmark import run_tab_benchmark
-from zerophi.eval.pdf_deid_benchmark import run_pdf_deid_benchmark
-from zerophi.config import RedactionConfig
+from zerophix.eval.tab_benchmark import run_tab_benchmark
+from zerophix.eval.pdf_deid_benchmark import run_pdf_deid_benchmark
+from zerophix.config import RedactionConfig
 
 
 ROOT = Path(__file__).resolve().parents[2]

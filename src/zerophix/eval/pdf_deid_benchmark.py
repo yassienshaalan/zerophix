@@ -3,9 +3,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Any, Iterable, Tuple
 
-from zerophi.config import RedactionConfig
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.eval.metrics import Span, compute_span_metrics
+from zerophix.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.eval.metrics import Span, compute_span_metrics
 
 ROOT = Path(__file__).resolve().parents[2]
 PDF_DEID_DIR = ROOT / "data" / "benchmarks" / "pdf_deid"

@@ -2,6 +2,10 @@ from typing import List, Dict
 from ..config import RedactionConfig
 from ..detectors.regex_detector import RegexDetector
 from ..detectors.base import Span
+from .consensus import ConsensusModel
+from .context import ContextPropagator
+from .allowlist import AllowListFilter
+
 try:
     from ..detectors.openmed_detector import OpenMedDetector
 except Exception:
@@ -19,6 +23,11 @@ class RedactionPipeline:
             if OpenMedDetector is None:
                 raise RuntimeError("OpenMed detector requested but transformers/torch not installed. Install zerophix[openmed].")
             self.components.append(OpenMedDetector(models_dir=cfg.models_dir, conf=self.cfg.thresholds.get('ner_conf', 0.5)))
+        
+        # Initialize accuracy enhancement components
+        self.consensus = ConsensusModel(cfg)
+        self.context_propagator = ContextPropagator(cfg)
+        self.allow_list = AllowListFilter(cfg)
 
     @classmethod
     def from_config(cls, cfg: RedactionConfig):
@@ -34,20 +43,32 @@ class RedactionPipeline:
             return f"[{label}]"
         return hashlib.sha256(s.encode("utf-8")).hexdigest()[:12]
 
+    def _process_spans(self, text: str, spans: List[Span]) -> List[Span]:
+        """
+        Apply consensus, context propagation, and allow-list filtering.
+        """
+        # 1. Resolve conflicts using Ensemble Voting
+        resolved_spans = self.consensus.resolve(spans, text)
+        
+        # 2. Propagate context (Session Memory)
+        # We run this after resolution so we propagate based on the "winner" labels
+        propagated_spans = self.context_propagator.propagate(text, resolved_spans)
+        
+        # 3. Filter allow-listed terms
+        final_spans = self.allow_list.filter(text, propagated_spans)
+        
+        # Sort for final output
+        final_spans.sort(key=lambda x: (x.start, -x.end))
+        
+        return final_spans
+
     def redact(self, text: str) -> Dict[str, object]:
         spans: List[Span] = []
         for comp in self.components:
             spans.extend(comp.detect(text))
 
-        spans.sort(key=lambda x: (x.start, -x.end))
-        merged: List[Span] = []
-        for s in spans:
-            if merged and not (s.start >= merged[-1].end or s.end <= merged[-1].start):
-                a = merged[-1]
-                if (s.end - s.start) > (a.end - a.start) or s.score >= a.score:
-                    merged[-1] = s
-                continue
-            merged.append(s)
+        # Apply advanced processing
+        merged = self._process_spans(text, spans)
 
         from ..policies.loader import load_policy
         policy = load_policy(self.cfg.country, self.cfg.company)
@@ -68,15 +89,8 @@ class RedactionPipeline:
         for comp in self.components:
             spans.extend(comp.detect(text))
 
-        spans.sort(key=lambda x: (x.start, -x.end))
-        merged: List[Span] = []
-        for s in spans:
-            if merged and not (s.start >= merged[-1].end or s.end <= merged[-1].start):
-                a = merged[-1]
-                if (s.end - s.start) > (a.end - a.start) or s.score >= a.score:
-                    merged[-1] = s
-                continue
-            merged.append(s)
+        # Apply advanced processing
+        merged = self._process_spans(text, spans)
 
         # Calculate statistics
         entity_counts = {}
