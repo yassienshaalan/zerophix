@@ -17,31 +17,31 @@ from pathlib import Path
 from typing import Dict, List, Any
 
 # Core ZeroPhi imports
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
-from zerophi.policies.loader import PolicyLoader
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
+from zerophix.policies.loader import PolicyLoader
 
 # Detection engines
-from zerophi.detectors.regex_detector import RegexDetector
-from zerophi.detectors.spacy_detector import SpacyDetector
-from zerophi.detectors.bert_detector import BertDetector
-from zerophi.detectors.openmed_detector import OpenMedDetector
-from zerophi.detectors.statistical_detector import StatisticalDetector
-from zerophi.detectors.custom_detector import CustomEntityDetector
+from zerophix.detectors.regex_detector import RegexDetector
+from zerophix.detectors.spacy_detector import SpacyDetector
+from zerophix.detectors.bert_detector import BertDetector
+from zerophix.detectors.openmed_detector import OpenMedDetector
+from zerophix.detectors.statistical_detector import StatisticalDetector
+from zerophix.detectors.custom_detector import CustomEntityDetector
 
 # Security and compliance
-from zerophi.security.audit import SecureAuditLogger
-from zerophi.security.compliance import ComplianceValidator
-from zerophi.security.zero_trust import ZeroTrustValidator
-from zerophi.security.encryption import EncryptionManager
+from zerophix.security.audit import SecureAuditLogger
+from zerophix.security.compliance import ComplianceValidator
+from zerophix.security.zero_trust import ZeroTrustValidator
+from zerophix.security.encryption import EncryptionManager
 
 # Performance features
-from zerophi.performance.cache import RedisCache
-from zerophi.performance.batch import BatchProcessor
-from zerophi.performance.stream import StreamProcessor
+from zerophix.performance.cache import RedisCache
+from zerophix.performance.batch import BatchProcessor
+from zerophix.performance.stream import StreamProcessor
 
 # Document processing
-from zerophi.processors.documents import (
+from zerophix.processors.documents import (
     PDFProcessor,
     DOCXProcessor,
     ExcelProcessor,
@@ -49,8 +49,8 @@ from zerophi.processors.documents import (
 )
 
 # API components
-from zerophi.api.server import create_app
-from zerophi.api.webhooks import WebhookManager
+from zerophix.api.server import create_app
+from zerophix.api.webhooks import WebhookManager
 
 
 def print_section(title: str):
