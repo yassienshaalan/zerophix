@@ -18,10 +18,7 @@ class ConsensusModel:
         
         resolved = []
         # Simple greedy resolution with weighted scoring for overlaps
-<<<<<<< HEAD
-=======
         # A more complex graph-based approach could be used, but this is efficient.
->>>>>>> 9ec42a51e6158e385856a6c308a6f08ffaedc4c0
         
         # We will group overlapping spans and pick the winner
         current_group = []
