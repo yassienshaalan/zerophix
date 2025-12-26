@@ -8,7 +8,10 @@ from .allowlist import AllowListFilter
 
 try:
     from ..detectors.openmed_detector import OpenMedDetector
-except Exception:
+except Exception as e:
+    print(f"DEBUG: Failed to import OpenMedDetector: {e}")
+    import traceback
+    traceback.print_exc()
     OpenMedDetector = None
 
 import hashlib
