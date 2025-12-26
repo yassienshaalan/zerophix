@@ -22,6 +22,26 @@ class RedactionConfig(BaseModel):
     use_statistical: bool = Field(default=False, description="Enable statistical pattern detector")
     use_contextual: bool = Field(default=True, description="Use contextual enhancement for ML detectors")
     
+    # Advanced Accuracy Features
+    enable_ensemble_voting: bool = Field(default=True, description="Enable weighted voting for conflict resolution")
+    detector_weights: Dict[str, float] = Field(
+        default_factory=lambda: {
+            "regex": 2.0,      # High precision
+            "custom": 2.0,     # User defined
+            "openmed": 1.5,    # Specialized
+            "bert": 1.2,       # General DL
+            "spacy": 1.0,      # General ML
+            "statistical": 0.8 # Heuristic
+        },
+        description="Weights for ensemble voting"
+    )
+    
+    enable_context_propagation: bool = Field(default=True, description="Propagate high-confidence entities across document")
+    context_propagation_threshold: float = Field(default=0.90, description="Confidence threshold to trigger propagation")
+    
+    allow_list: List[str] = Field(default_factory=list, description="List of terms to never redact")
+    allow_list_file: Optional[str] = Field(default=None, description="Path to file containing allow-list terms")
+
     # Model specifications
     spacy_model: str = Field(default="en_core_web_sm", description="spaCy model name")
     bert_model: str = Field(default="dslim/bert-base-NER", description="BERT model for NER")
