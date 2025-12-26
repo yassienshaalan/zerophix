@@ -95,6 +95,73 @@ cd zerophix
 pip install -e ".[all]"
 ```
 
+## REST API Usage
+
+ZeroPhix provides a high-performance REST API for integrating redaction capabilities into your applications.
+
+### 1. Installation & Startup
+
+```bash
+# Install dependencies
+pip install "zerophix[api]"
+
+# Start the server (Linux/Mac)
+export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+uvicorn zerophix.api.rest:app --reload
+
+# Start the server (Windows PowerShell)
+$env:PYTHONPATH="src"; uvicorn zerophix.api.rest:app --reload
+```
+
+The server will start at `http://127.0.0.1:8000`.
+Interactive documentation (Swagger UI) is available at `http://127.0.0.1:8000/docs`.
+
+### 2. API Endpoints
+
+#### Health Check
+`GET /health` - Check service status and stats.
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+#### Redact Text
+`POST /redact` - Redact PII/PHI from text.
+
+**Request:**
+```json
+{
+  "text": "Patient John Smith (DOB: 12/05/1980) was admitted.",
+  "country": "AU",
+  "masking_style": "replace",
+  "detectors": ["regex", "custom", "spacy"],
+  "include_confidence": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "redacted_text": "Patient <PERSON> (DOB: <DATE>) was admitted.",
+  "entities_found": 2,
+  "processing_time": 0.045,
+  "spans": [
+    { "start": 8, "end": 18, "label": "PERSON", "score": 0.95 },
+    { "start": 25, "end": 35, "label": "DATE", "score": 1.0 }
+  ],
+  "request_id": "a1b2c3d4-..."
+}
+```
+
+#### Batch Redaction
+`POST /batch/redact` - Process multiple texts in parallel.
+```json
+{
+  "texts": ["Text 1...", "Text 2..."],
+  "country": "US"
+}
+```
+
 ## Quick Start
 
 > **Complete Examples Available**  
