@@ -8,7 +8,8 @@ from .allowlist import AllowListFilter
 
 try:
     from ..detectors.openmed_detector import OpenMedDetector
-except ImportError:
+except ImportError as e:
+    print(f"DEBUG: Failed to import OpenMedDetector (ImportError): {e}")
     OpenMedDetector = None
 except Exception as e:
     print(f"DEBUG: Failed to import OpenMedDetector: {e}")
@@ -26,7 +27,12 @@ class RedactionPipeline:
         self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
         if cfg.use_openmed:
             if OpenMedDetector is None:
-                raise RuntimeError("OpenMed detector requested but transformers/torch not installed. Install zerophix[openmed].")
+                # Try to give a more helpful error message if we know why it failed
+                import sys
+                if 'transformers' not in sys.modules:
+                     raise RuntimeError("OpenMed detector requested but transformers/torch not installed. Install zerophix[openmed].")
+                else:
+                     raise RuntimeError("OpenMed detector requested but failed to import. Check logs for DEBUG messages.")
             self.components.append(OpenMedDetector(models_dir=cfg.models_dir, conf=self.cfg.thresholds.get('ner_conf', 0.5)))
         
         # Initialize accuracy enhancement components
