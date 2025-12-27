@@ -40,7 +40,12 @@ def _load_pdf_deid_ground_truth() -> List[PdfPageDoc]:
     docs: List[PdfPageDoc] = []
 
     files = list(mapping_dir.glob("pdf_deid_gts_*.json"))
-    print(f"DEBUG: Found {len(files)} PDF Deid GT files in {mapping_dir}")
+    if not files:
+        print(f"DEBUG: No 'pdf_deid_gts_*.json' found in {mapping_dir}")
+        # Fallback: look for any JSON that isn't a result file
+        all_json = list(mapping_dir.glob("*.json"))
+        files = [f for f in all_json if "result" not in f.name]
+        print(f"DEBUG: Falling back to {len(files)} JSON files (excluding *result*). Examples: {[f.name for f in files[:3]]}")
 
     for gt_file in files:
         with gt_file.open("r", encoding="utf-8") as f:
