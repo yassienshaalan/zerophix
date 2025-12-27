@@ -39,9 +39,20 @@ def _load_pdf_deid_ground_truth() -> List[PdfPageDoc]:
 
     docs: List[PdfPageDoc] = []
 
-    for gt_file in mapping_dir.glob("pdf_deid_gts_*.json"):
+    files = list(mapping_dir.glob("pdf_deid_gts_*.json"))
+    print(f"DEBUG: Found {len(files)} PDF Deid GT files in {mapping_dir}")
+
+    for gt_file in files:
         with gt_file.open("r", encoding="utf-8") as f:
             data: Dict[str, Any] = json.load(f)
+
+        # DEBUG: Print structure of first file
+        if len(docs) == 0:
+             print(f"DEBUG: First PDF Deid file keys: {data.keys()}")
+             if "pages" in data and len(data["pages"]) > 0:
+                 print(f"DEBUG: First page keys: {data['pages'][0].keys()}")
+                 if "entities" in data["pages"][0] and len(data["pages"][0]["entities"]) > 0:
+                     print(f"DEBUG: First entity: {data['pages'][0]['entities'][0]}")
 
         # This part is schema-dependent; you may need to adjust based on their JSON
         # For now we assume structure like:
