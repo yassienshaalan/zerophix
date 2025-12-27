@@ -34,15 +34,11 @@ from zerophix.detectors.statistical_detector import StatisticalDetector
 from zerophix.detectors.custom_detector import CustomEntityDetector
 
 # Security and compliance
-from zerophix.security.audit import SecureAuditLogger
-from zerophix.security.compliance import ComplianceValidator
-from zerophix.security.zero_trust import ZeroTrustValidator
+from zerophix.security.compliance import SecureAuditLogger, ComplianceValidator, ZeroTrustValidator
 from zerophix.security.encryption import EncryptionManager
 
 # Performance features
-from zerophix.performance.cache import RedisCache
-from zerophix.performance.batch import BatchProcessor
-from zerophix.performance.stream import StreamProcessor
+from zerophix.performance.optimization import PerformanceCache, BatchProcessor, StreamProcessor
 
 # Document processing
 from zerophix.processors.documents import (
@@ -431,10 +427,11 @@ def example_6_performance_optimization():
     print_section("6. PERFORMANCE OPTIMIZATION")
     
     # Example 6.1: Caching
-    print_subsection("6.1 Redis Caching")
+    print_subsection("6.1 Performance Caching")
     try:
-        # Note: Requires Redis server running
-        cache = RedisCache(host='localhost', port=6379, db=0)
+        # Note: Requires Redis server running for redis mode
+        # Using memory cache for demo
+        cache = PerformanceCache(cache_type="memory")
         
         # Test caching
         text = "John Doe, SSN: 123-45-6789"
