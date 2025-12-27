@@ -9,7 +9,7 @@ from zerophix.pipelines.redaction import RedactionPipeline
 from zerophix.eval.metrics import Span, compute_span_metrics
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 TAB_DIR = ROOT / "data" / "benchmarks" / "tab"
 
 
