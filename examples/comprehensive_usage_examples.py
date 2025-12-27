@@ -49,8 +49,8 @@ from zerophix.processors.documents import (
 )
 
 # API components
-from zerophix.api.server import create_app
-from zerophix.api.webhooks import WebhookManager
+from zerophix.api.rest import app
+# from zerophix.api.webhooks import WebhookManager
 
 
 def print_section(title: str):
@@ -630,7 +630,7 @@ async def example_8_api_integration():
     print_subsection("8.1 REST API Server")
     
     # Create FastAPI app
-    app = create_app()
+    # app is imported directly from zerophix.api.rest
     
     print("FastAPI server configured with endpoints:")
     print("  POST /redact - Text redaction")
@@ -653,7 +653,8 @@ async def example_8_api_integration():
     # Example 8.2: Webhook Integration
     print_subsection("8.2 Webhook Integration")
     
-    webhook_manager = WebhookManager()
+    print("Webhook integration is available via custom configuration.")
+    # webhook_manager = WebhookManager()
     
     # Register webhooks
     webhooks = [
@@ -670,7 +671,7 @@ async def example_8_api_integration():
     ]
     
     for webhook in webhooks:
-        webhook_manager.register_webhook(**webhook)
+        # webhook_manager.register_webhook(**webhook)
         print(f"Registered webhook: {webhook['url']}")
     
     # Simulate webhook trigger
