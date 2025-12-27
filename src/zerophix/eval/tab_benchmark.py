@@ -38,8 +38,17 @@ def _load_tab_split(json_path: Path) -> List[TabDoc]:
         annotations = doc["annotations"]
 
         spans: List[Span] = []
+        # DEBUG: Print first annotation to check structure
+        if len(docs) == 0 and len(annotations) > 0:
+            first_key = next(iter(annotations))
+            print(f"DEBUG: First annotation in TAB: {annotations[first_key]}")
+
         for ent in annotations.values():
             identifier_type = ent.get("identifier_type")
+            # DEBUG: Check identifier types
+            # if identifier_type not in ("DIRECT", "QUASI"):
+            #    print(f"DEBUG: Skipping identifier_type: {identifier_type}")
+            
             if identifier_type not in ("DIRECT", "QUASI"):
                 continue  # not required to be masked
 
