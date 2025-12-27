@@ -80,7 +80,7 @@ def _predict_spans(
     preds: List[Span] = []
     for d in docs:
         result = pipeline.redact(d.text)
-        for ent in result.get("entities", []):
+        for ent in result.get("spans", []):
             start = int(ent.get("start", 0))
             end = int(ent.get("end", 0))
             label = ent.get("label") or ent.get("entity_type") or "PHI"
