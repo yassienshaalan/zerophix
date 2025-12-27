@@ -44,6 +44,19 @@ class RedactionPipeline:
     def from_config(cls, cfg: RedactionConfig):
         return cls(cfg)
 
+    def scan(self, text: str) -> List[Span]:
+        """
+        Scan text for entities without redacting.
+        Returns a list of detected Span objects.
+        """
+        spans: List[Span] = []
+        for comp in self.components:
+            spans.extend(comp.detect(text))
+
+        # Apply advanced processing
+        merged = self._process_spans(text, spans)
+        return merged
+
     def _mask(self, s: str, label: str) -> str:
         style = self.cfg.masking_style
         if style == "mask":
@@ -73,7 +86,7 @@ class RedactionPipeline:
         
         return final_spans
 
-    def redact(self, text: str) -> Dict[str, object]:
+    def redact(self, text: str, user_context: Dict = None, session_id: str = None) -> Dict[str, object]:
         spans: List[Span] = []
         for comp in self.components:
             spans.extend(comp.detect(text))
