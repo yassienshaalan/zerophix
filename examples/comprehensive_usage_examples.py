@@ -34,7 +34,7 @@ from zerophix.detectors.statistical_detector import StatisticalDetector
 from zerophix.detectors.custom_detector import CustomEntityDetector
 
 # Security and compliance
-from zerophix.security.compliance import SecureAuditLogger, ComplianceValidator, ZeroTrustValidator
+from zerophix.security.compliance import SecureAuditLogger, ComplianceValidator, ZeroTrustValidator, ComplianceStandard
 from zerophix.security.encryption import EncryptionManager
 
 # Performance features
@@ -104,8 +104,8 @@ def example_1_basic_redaction():
         
         print(f"Original : {text}")
         print(f"Redacted : {result['text']}")
-        print(f"Entities : {result['entities']}")
-        print(f"Confidence: {result['confidence']:.2f}")
+        print(f"Entities : {result['spans']}")
+        # print(f"Confidence: {result['confidence']:.2f}")
 
 
 # =============================================================================
@@ -139,9 +139,10 @@ def example_2_ml_detection_engines():
         result = pipeline.redact(text)
         
         print(f"spaCy Result: {result['text'][:100]}...")
-        print(f"Entities found: {len(result['entities'])}")
-        for entity in result['entities'][:3]:  # Show first 3
-            print(f"  - {entity['text']} ({entity['label']}) - {entity['confidence']:.2f}")
+        print(f"Entities found: {len(result['spans'])}")
+        for entity in result['spans'][:3]:  # Show first 3
+            entity_text = text[entity['start']:entity['end']]
+            print(f"  - {entity_text} ({entity['label']}) - {entity['score']:.2f}")
     except Exception as e:
         print(f"spaCy detection failed: {e}")
     
@@ -159,9 +160,10 @@ def example_2_ml_detection_engines():
         result = pipeline.redact(text)
         
         print(f"BERT Result: {result['text'][:100]}...")
-        print(f"Entities found: {len(result['entities'])}")
-        for entity in result['entities'][:3]:
-            print(f"  - {entity['text']} ({entity['label']}) - {entity['confidence']:.2f}")
+        print(f"Entities found: {len(result['spans'])}")
+        for entity in result['spans'][:3]:
+            entity_text = text[entity['start']:entity['end']]
+            print(f"  - {entity_text} ({entity['label']}) - {entity['score']:.2f}")
     except Exception as e:
         print(f"BERT detection failed: {e}")
     
@@ -179,9 +181,10 @@ def example_2_ml_detection_engines():
         result = pipeline.redact(text)
         
         print(f"OpenMed Result: {result['text'][:100]}...")
-        print(f"Medical entities found: {len(result['entities'])}")
-        for entity in result['entities'][:3]:
-            print(f"  - {entity['text']} ({entity['label']}) - {entity['confidence']:.2f}")
+        print(f"Medical entities found: {len(result['spans'])}")
+        for entity in result['spans'][:3]:
+            entity_text = text[entity['start']:entity['end']]
+            print(f"  - {entity_text} ({entity['label']}) - {entity['score']:.2f}")
     except Exception as e:
         print(f"OpenMed detection failed: {e}")
     
@@ -198,7 +201,7 @@ def example_2_ml_detection_engines():
     result = pipeline.redact(text)
     
     print(f"Statistical Result: {result['text'][:100]}...")
-    print(f"Pattern anomalies found: {len(result['entities'])}")
+    print(f"Pattern anomalies found: {len(result['spans'])}")
     
     # Example 2.5: Multi-Engine Ensemble
     print_subsection("2.5 Multi-Engine Ensemble (Best Results)")
@@ -212,8 +215,8 @@ def example_2_ml_detection_engines():
     result = pipeline.redact(text)
     
     print(f"Ensemble Result: {result['text'][:100]}...")
-    print(f"Total entities found: {len(result['entities'])}")
-    print(f"Overall confidence: {result['confidence']:.2f}")
+    print(f"Total entities found: {len(result['spans'])}")
+    # print(f"Overall confidence: {result['confidence']:.2f}")
 
 
 # =============================================================================
@@ -230,38 +233,23 @@ def example_3_custom_entities():
     # Add custom patterns
     custom_detector.add_pattern(
         "EMPLOYEE_ID", 
-        r"EMP-\d{6}", 
-        confidence=0.95,
-        description="Employee ID format"
+        r"EMP-\d{6}"
     )
     
     custom_detector.add_pattern(
         "PROJECT_CODE", 
-        r"PROJ-[A-Z]{3}-\d{4}", 
-        confidence=0.9,
-        description="Project code format"
+        r"PROJ-[A-Z]{3}-\d{4}"
     )
     
     custom_detector.add_pattern(
         "INTERNAL_IP", 
-        r"192\.168\.\d{1,3}\.\d{1,3}", 
-        confidence=0.85,
-        description="Internal IP addresses"
-    )
-    
-    # Add contextual patterns
-    custom_detector.add_contextual_pattern(
-        "SALARY_INFO",
-        r"\$[\d,]+",
-        context_words=["salary", "pay", "compensation", "wage"],
-        confidence=0.9
+        r"192\.168\.\d{1,3}\.\d{1,3}"
     )
     
     # Sample text with custom entities
     text = """
-    Employee EMP-123456 is working on PROJ-ABC-2023 with salary $75,000.
+    Employee EMP-123456 is working on PROJ-ABC-2023.
     Server IP: 192.168.1.100, access code: AC-789123.
-    Project PROJ-XYZ-2024 budget: $150,000 allocated to team.
     """
     
     # Use custom detector
@@ -277,8 +265,9 @@ def example_3_custom_entities():
     print(f"Original: {text}")
     print(f"Redacted: {result['text']}")
     print("\nCustom entities detected:")
-    for entity in result['entities']:
-        print(f"  - {entity['text']} ({entity['label']}) - {entity['confidence']:.2f}")
+    for entity in result['spans']:
+        entity_text = text[entity['start']:entity['end']]
+        print(f"  - {entity_text} ({entity['label']}) - {entity['score']:.2f}")
 
 
 # =============================================================================
@@ -435,17 +424,25 @@ def example_6_performance_optimization():
         
         # Test caching
         text = "John Doe, SSN: 123-45-6789"
-        cache_key = f"redaction:{hash(text)}"
+        config_hash = "default_config"
         
-        print(f"Cache key: {cache_key}")
+        print(f"Text: {text}")
         print("Caching speeds up repeated redactions significantly")
         
         # Simulate cache usage
-        cached_result = cache.get(cache_key)
+        cached_result = cache.get(text, config_hash)
         if cached_result:
             print("Result retrieved from cache")
         else:
             print("Result not in cache, performing redaction")
+            # Simulate storing result
+            cache.set(text, config_hash, {"text": "REDACTED", "spans": []})
+            print("Result stored in cache")
+            
+        # Try getting again
+        cached_result = cache.get(text, config_hash)
+        if cached_result:
+            print("Result retrieved from cache (second attempt)")
             
     except Exception as e:
         print(f"Caching setup failed: {e}")
@@ -453,61 +450,64 @@ def example_6_performance_optimization():
     # Example 6.2: Batch Processing
     print_subsection("6.2 Batch Processing")
     
-    # Create batch processor
-    batch_processor = BatchProcessor(
-        batch_size=100,
-        max_workers=4,
-        use_async=True
-    )
-    
-    # Sample batch data
-    batch_texts = [
-        f"Person {i}: SSN: {123+i:03d}-{45+i:02d}-{6789+i:04d}" 
-        for i in range(10)
-    ]
-    
-    print(f"Processing batch of {len(batch_texts)} texts")
-    
-    # Simulate batch processing
-    config = RedactionConfig(country="US", detectors=["regex"])
-    
-    # Process in batches (simplified for demo)
-    for i, text in enumerate(batch_texts[:3]):  # Show first 3
-        pipeline = RedactionPipeline(config)
-        result = pipeline.redact(text)
-        print(f"  Batch item {i+1}: {result['text']}")
-    
-    print(f"Batch processing provides {4}x speedup with parallel workers")
+    try:
+        # Create batch processor
+        batch_processor = BatchProcessor(
+            batch_size=100,
+            max_workers=4,
+            use_process_pool=False
+        )
+        
+        # Sample batch data
+        batch_texts = [
+            f"Person {i}: SSN: {123+i:03d}-{45+i:02d}-{6789+i:04d}" 
+            for i in range(10)
+        ]
+        
+        print(f"Processing batch of {len(batch_texts)} texts")
+        
+        # Simulate batch processing
+        config = RedactionConfig(country="US", detectors=["regex"])
+        
+        for i, text in enumerate(batch_texts[:3]):  # Show first 3
+            pipeline = RedactionPipeline(config)
+            result = pipeline.redact(text)
+            print(f"  Batch item {i+1}: {result['text']}")
+        
+        print(f"Batch processing provides {4}x speedup with parallel workers")
+    except Exception as e:
+        print(f"Batch processing failed: {e}")
     
     # Example 6.3: Streaming Processing
     print_subsection("6.3 Stream Processing")
     
-    stream_processor = StreamProcessor(
-        chunk_size=1024,
-        overlap_size=100,  # Handle entities spanning chunks
-        buffer_size=10
-    )
-    
-    # Simulate large text stream
-    large_text = """
-    This is a large document with multiple people mentioned.
-    John Doe (SSN: 123-45-6789) works with Jane Smith (SSN: 987-65-4321).
-    They handle sensitive data including credit cards and phone numbers.
-    Contact information: john@company.com, jane@company.com.
-    Phone numbers: (555) 123-4567, (555) 987-6543.
-    """ * 100  # Repeat to make it large
-    
-    print(f"Stream processing {len(large_text):,} characters")
-    print("Stream processing enables real-time redaction of large documents")
-    
-    # Simulate streaming (show concept)
-    chunk_size = 200
-    chunks_processed = 0
-    for i in range(0, min(len(large_text), 1000), chunk_size):
-        chunk = large_text[i:i+chunk_size]
-        chunks_processed += 1
+    try:
+        stream_processor = StreamProcessor(
+            buffer_size=10
+        )
         
-    print(f"Processed {chunks_processed} chunks with overlap handling")
+        # Simulate large text stream
+        large_text = """
+        This is a large document with multiple people mentioned.
+        John Doe (SSN: 123-45-6789) works with Jane Smith (SSN: 987-65-4321).
+        They handle sensitive data including credit cards and phone numbers.
+        Contact information: john@company.com, jane@company.com.
+        Phone numbers: (555) 123-4567, (555) 987-6543.
+        """ * 100  # Repeat to make it large
+        
+        print(f"Stream processing {len(large_text):,} characters")
+        print("Stream processing enables real-time redaction of large documents")
+        
+        # Simulate streaming (show concept)
+        chunk_size = 200
+        chunks_processed = 0
+        for i in range(0, min(len(large_text), 1000), chunk_size):
+            chunk = large_text[i:i+chunk_size]
+            chunks_processed += 1
+            
+        print(f"Processed {chunks_processed} chunks")
+    except Exception as e:
+        print(f"Stream processing failed: {e}")
 
 
 # =============================================================================
@@ -523,82 +523,88 @@ def example_7_security_compliance():
     
     # Create audit logger
     audit_logger = SecureAuditLogger(
-        log_file="audit.log",
-        encryption_key=None,  # Will generate key
-        integrity_check=True
+        log_directory="audit_logs",
+        encryption_key=None
     )
     
     # Log redaction events
     events = [
         {
-            'action': 'redaction',
+            'operation': 'redaction',
             'user_id': 'user123',
             'text_length': 150,
             'entities_found': 3,
-            'confidence': 0.95,
-            'ip_address': '192.168.1.100'
+            'entity_types': ['PERSON', 'SSN'],
+            'additional_details': {'confidence': 0.95, 'ip_address': '192.168.1.100'}
         },
         {
-            'action': 'document_process',
+            'operation': 'document_process',
             'user_id': 'user456',
-            'file_type': 'pdf',
-            'file_size': 2048576,
-            'entities_redacted': 15
+            'text_length': 2048576, # Using text_length as proxy for file size
+            'entities_found': 15,
+            'entity_types': ['PERSON', 'EMAIL'],
+            'additional_details': {'file_type': 'pdf'}
         }
     ]
     
     for event in events:
-        audit_logger.log_event(**event)
-        print(f"Logged: {event['action']} by {event['user_id']}")
+        audit_logger.log_redaction_event(**event)
+        print(f"Logged: {event['operation']} by {event['user_id']}")
     
     print("Audit logs are encrypted and tamper-evident")
     
     # Example 7.2: Compliance Validation
     print_subsection("7.2 Compliance Validation")
     
-    compliance_validator = ComplianceValidator()
+    compliance_validator = ComplianceValidator(
+        standards=[ComplianceStandard.GDPR, ComplianceStandard.HIPAA]
+    )
     
-    # Check different compliance standards
-    standards = ['GDPR', 'HIPAA', 'PCI_DSS', 'SOX']
-    
-    for standard in standards:
-        try:
-            is_compliant = compliance_validator.validate_standard(
-                standard=standard,
-                data_types=['PII', 'PHI', 'PCI'] if standard == 'PCI_DSS' else ['PII'],
-                retention_days=365,
-                encryption_enabled=True,
-                audit_logging=True
-            )
-            status = "COMPLIANT" if is_compliant else "NON-COMPLIANT"
-            print(f"  {standard}: {status}")
-        except Exception as e:
-            print(f"  {standard}: Error - {e}")
-    
-    # Example 7.3: Zero Trust Validation
-    print_subsection("7.3 Zero Trust Security")
-    
-    zero_trust = ZeroTrustValidator()
-    
-    # Simulate security validation
-    security_context = {
-        'user_id': 'user123',
-        'device_id': 'device456',
-        'ip_address': '192.168.1.100',
-        'time_since_auth': 300,  # 5 minutes
-        'mfa_verified': True,
-        'device_trusted': True
+    # Check compliance for a request
+    request_data = {
+        "processing_purpose": "analytics",
+        "entity_types": ["PERSON", "MEDICAL_RECORD"]
     }
     
-    trust_score = zero_trust.calculate_trust_score(**security_context)
-    print(f"Trust Score: {trust_score:.2f}/100")
+    user_context = {
+        "lawful_basis": "consent",
+        "consent_obtained": True,
+        "authorized_user": True
+    }
     
-    if trust_score >= 80:
-        print("Access GRANTED - High trust score")
-    elif trust_score >= 60:
-        print("Access CONDITIONAL - Medium trust, additional verification required")
-    else:
-        print("Access DENIED - Low trust score")
+    validation_result = compliance_validator.validate_redaction_request(
+        request_data, user_context
+    )
+    
+    print(f"Compliance check result: {'Compliant' if validation_result['compliant'] else 'Non-Compliant'}")
+    if not validation_result['compliant']:
+        print("Violations:")
+        for violation in validation_result['violations']:
+            print(f"  - {violation}")
+    
+    # Example 7.3: Zero Trust Security
+    print_subsection("7.3 Zero Trust Security")
+    
+    zt_validator = ZeroTrustValidator()
+    
+    # Validate request context
+    request_context = {
+        "user_authenticated": True,
+        "mfa_verified": True,
+        "device_managed": True,
+        "internal_network": False,
+        "vpn_connection": True,
+        "data_classification": "SENSITIVE"
+    }
+    
+    zt_result = zt_validator.validate_request(request_context)
+    
+    print(f"Zero Trust Score: {zt_result['trust_score']:.1f}/100")
+    print(f"Access Granted: {zt_result['trusted']}")
+    print("Trust factors:")
+    for factor, score in zt_result['details'].items():
+        print(f"  - {factor}: {score}/10")
+
     
     # Example 7.4: Encryption at Rest
     print_subsection("7.4 Encryption at Rest")
