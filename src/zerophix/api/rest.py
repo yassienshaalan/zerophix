@@ -409,12 +409,14 @@ async def scan_text(
         # Format spans
         spans = []
         for entity in entities:
+            # Extract text from original string using start/end indices
+            entity_text = request.text[entity.start:entity.end]
             spans.append({
-                "text": entity.text,
+                "text": entity_text,
                 "start": entity.start,
                 "end": entity.end,
-                "entity_type": entity.entity_type,
-                "score": entity.score,
+                "entity_type": entity.label,
+                "score": float(entity.score),
                 "source": entity.source
             })
             
