@@ -11,10 +11,14 @@ Date: October 2025
 """
 
 import os
+import sys
 import asyncio
 import json
 from pathlib import Path
 from typing import Dict, List, Any
+
+# Add src to path to ensure we use local version if installed version is broken
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 # Core ZeroPhi imports
 from zerophix.pipelines.redaction import RedactionPipeline
