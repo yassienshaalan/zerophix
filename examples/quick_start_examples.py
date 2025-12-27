@@ -9,8 +9,8 @@ Perfect for getting started quickly with real-world scenarios.
 Run this file: python examples/quick_start_examples.py
 """
 
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
 
 
 def example_1_basic_text_redaction():
@@ -31,7 +31,7 @@ def example_1_basic_text_redaction():
     
     print(f"Original: {text}")
     print(f"Redacted: {result['text']}")
-    print(f"Found {len(result['entities'])} sensitive entities")
+    print(f"Found {len(result['spans'])} sensitive entities")
     print()
 
 
@@ -92,8 +92,8 @@ def example_3_advanced_detection():
             result = pipeline.redact(text)
             
             print(f"{name}:")
-            print(f"  Found {len(result['entities'])} entities")
-            print(f"  Confidence: {result['confidence']:.2f}")
+            print(f"  Found {len(result['spans'])} entities")
+            # print(f"  Confidence: {result['confidence']:.2f}")
             print(f"  Result: {result['text'][:80]}...")
             print()
             
@@ -121,7 +121,7 @@ def example_4_redaction_strategies():
         try:
             config = RedactionConfig(
                 country="US",
-                redaction_strategy=strategy,
+                masking_style=strategy,
                 mask_percentage=0.6 if strategy == "mask" else None
             )
             pipeline = RedactionPipeline(config)
@@ -180,7 +180,7 @@ def example_5_file_processing():
         
         print(f"Original file: {temp_file}")
         print(f"Redacted file: {redacted_file}")
-        print(f"Found {len(result['entities'])} sensitive entities")
+        print(f"Found {len(result['spans'])} sensitive entities")
         
         print("\nRedacted content:")
         print(result['text'])
@@ -207,15 +207,15 @@ def example_6_custom_patterns():
     """
     
     # Create custom detector
-    from zerophi.detectors.custom_detector import CustomEntityDetector
+    from zerophix.detectors.custom_detector import CustomEntityDetector
     
     custom_detector = CustomEntityDetector()
     
     # Add custom patterns
-    custom_detector.add_pattern("EMPLOYEE_ID", r"EMP-\d{6}", confidence=0.9)
-    custom_detector.add_pattern("PROJECT_CODE", r"PROJ-[A-Z]{3}-\d{4}", confidence=0.9)
-    custom_detector.add_pattern("INTERNAL_IP", r"192\.168\.\d{1,3}\.\d{1,3}", confidence=0.8)
-    custom_detector.add_pattern("ACCESS_CODE", r"AC-\d{6}", confidence=0.9)
+    custom_detector.add_pattern("EMPLOYEE_ID", r"EMP-\d{6}")
+    custom_detector.add_pattern("PROJECT_CODE", r"PROJ-[A-Z]{3}-\d{4}")
+    custom_detector.add_pattern("INTERNAL_IP", r"192\.168\.\d{1,3}\.\d{1,3}")
+    custom_detector.add_pattern("ACCESS_CODE", r"AC-\d{6}")
     
     # Use custom detector
     config = RedactionConfig(
@@ -230,9 +230,10 @@ def example_6_custom_patterns():
     print(f"Original: {text}")
     print(f"Redacted: {result['text']}")
     print("\nCustom entities found:")
-    for entity in result['entities']:
+    for entity in result['spans']:
         if entity['label'] in ['EMPLOYEE_ID', 'PROJECT_CODE', 'INTERNAL_IP', 'ACCESS_CODE']:
-            print(f"  - {entity['text']} ({entity['label']})")
+            entity_text = text[entity['start']:entity['end']]
+            print(f"  - {entity_text} ({entity['label']})")
 
 
 def example_7_batch_processing():
@@ -261,7 +262,7 @@ def example_7_batch_processing():
     for i, text in enumerate(texts, 1):
         result = pipeline.redact(text)
         results.append(result)
-        total_entities += len(result['entities'])
+        total_entities += len(result['spans'])
         
         print(f"Text {i}: {result['text']}")
     
@@ -281,24 +282,24 @@ def example_8_configuration_profiles():
         "Fast": RedactionConfig(
             country="US",
             detectors=["regex"],
-            redaction_strategy="replace"
+            masking_style="replace"
         ),
         "Balanced": RedactionConfig(
             country="US", 
             detectors=["regex", "spacy"],
-            confidence_threshold=0.8
+            # confidence_threshold=0.8  # Not a direct field, but in thresholds dict
         ),
         "Healthcare": RedactionConfig(
             country="US",
             detectors=["regex", "openmed"],
-            redaction_strategy="synthetic",
-            compliance_standards=["HIPAA"]
+            masking_style="synthetic",
+            # compliance_standards=["HIPAA"] # Not in config
         ),
         "High Security": RedactionConfig(
             country="US",
             detectors=["regex", "bert"],
-            redaction_strategy="encrypt",
-            min_confidence=0.95,
+            masking_style="encrypt",
+            encryption_key=b"some-key", # encryption_enabled is not a field, encryption_key is
             audit_logging=True
         )
     }
@@ -310,8 +311,8 @@ def example_8_configuration_profiles():
             
             print(f"{name} Profile:")
             print(f"  Result: {result['text']}")
-            print(f"  Entities: {len(result['entities'])}")
-            print(f"  Confidence: {result['confidence']:.2f}")
+            print(f"  Entities: {len(result['spans'])}")
+            # print(f"  Confidence: {result['confidence']:.2f}")
             print()
             
         except Exception as e:
