@@ -149,7 +149,7 @@ cython_debug/
 reports/
 *.html
 *.csv
-models/
+# models/  <-- Commented out because it ignores src/zerophix/models/
 .cache/
 *.bak
 
