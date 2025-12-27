@@ -3,10 +3,10 @@
 ZeroPhi Comprehensive Usage Examples
 ===================================
 
-This file demonstrates how to use every functionality in ZeroPhi step by step.
+This file demonstrates how to use every functionality in ZeroPhix step by step.
 Each section shows practical examples with real code that you can run.
 
-Author: ZeroPhi Team
+Author: ZeroPhix Team
 Date: October 2025
 """
 
