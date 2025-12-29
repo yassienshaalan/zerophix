@@ -1,6 +1,10 @@
 from typing import List, Dict
 from ..config import RedactionConfig
 from ..detectors.regex_detector import RegexDetector
+from ..detectors.spacy_detector import SpacyDetector
+from ..detectors.bert_detector import BertDetector
+from ..detectors.gliner_detector import GLiNERDetector
+from ..detectors.statistical_detector import StatisticalDetector
 from ..detectors.base import Span
 from .consensus import ConsensusModel
 from .context import ContextPropagator
@@ -25,6 +29,19 @@ class RedactionPipeline:
         self.cfg = cfg
         self.components = []
         self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
+        
+        if cfg.use_spacy:
+            self.components.append(SpacyDetector())
+
+        if cfg.use_bert:
+            self.components.append(BertDetector(confidence_threshold=cfg.min_confidence))
+
+        if cfg.use_gliner:
+            self.components.append(GLiNERDetector())
+
+        if cfg.use_statistical:
+            self.components.append(StatisticalDetector(confidence_threshold=cfg.min_confidence))
+
         if cfg.use_openmed:
             if OpenMedDetector is None:
                 # Try to give a more helpful error message if we know why it failed

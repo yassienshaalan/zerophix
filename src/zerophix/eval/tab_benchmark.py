@@ -50,10 +50,10 @@ def _load_tab_split(json_path: Path) -> List[TabDoc]:
                     continue  # not required to be masked
 
                 start = int(ent["start_offset"])
-            end = int(ent["end_offset"])
-            label = ent.get("entity_type") or "PHI"
+                end = int(ent["end_offset"])
+                label = ent.get("entity_type") or "PHI"
 
-            spans.append((doc_id, start, end, label))
+                spans.append((doc_id, start, end, label))
 
         docs.append(TabDoc(doc_id=doc_id, text=text, gold_spans=spans))
 
