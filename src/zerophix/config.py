@@ -19,6 +19,7 @@ class RedactionConfig(BaseModel):
     use_openmed: bool = Field(default=False, description="Enable OpenMed model detector")
     use_spacy: bool = Field(default=True, description="Enable spaCy NER detector")
     use_bert: bool = Field(default=False, description="Enable BERT-based NER detector")
+    use_gliner: bool = Field(default=False, description="Enable GLiNER zero-shot detector")
     use_statistical: bool = Field(default=False, description="Enable statistical pattern detector")
     use_contextual: bool = Field(default=True, description="Use contextual enhancement for ML detectors")
     
@@ -28,6 +29,7 @@ class RedactionConfig(BaseModel):
         default_factory=lambda: {
             "regex": 2.0,      # High precision
             "custom": 2.0,     # User defined
+            "gliner": 1.8,     # High accuracy zero-shot
             "openmed": 1.5,    # Specialized
             "bert": 1.2,       # General DL
             "spacy": 1.0,      # General ML
