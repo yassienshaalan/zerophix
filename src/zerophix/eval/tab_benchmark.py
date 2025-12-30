@@ -128,6 +128,37 @@ def run_tab_benchmark(
         gold_spans=gold_spans, pred_spans=pred_spans, ignore_label=ignore_label
     )
 
+    # --- Debug: Write mismatches to file ---
+    debug_file = ROOT / "eval" / "results" / "tab_debug.txt"
+    debug_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    gold_set = set((s[0], s[1], s[2]) for s in gold_spans)
+    pred_set = set((s[0], s[1], s[2]) for s in pred_spans)
+    
+    fp_list = list(pred_set - gold_set)[:20]
+    fn_list = list(gold_set - pred_set)[:20]
+    
+    with debug_file.open("w", encoding="utf-8") as f:
+        f.write(f"TAB Debug Info ({split})\n")
+        f.write("=" * 40 + "\n")
+        f.write(f"Metrics: {metrics.as_dict()}\n\n")
+        
+        f.write("Top 20 False Positives (Predicted but not in Gold):\n")
+        for item in fp_list:
+            # Find the text for this span
+            doc = next((d for d in docs if d.doc_id == item[0]), None)
+            text = doc.text[item[1]:item[2]] if doc else "???"
+            f.write(f"  {item} -> '{text}'\n")
+            
+        f.write("\nTop 20 False Negatives (In Gold but not Predicted):\n")
+        for item in fn_list:
+            doc = next((d for d in docs if d.doc_id == item[0]), None)
+            text = doc.text[item[1]:item[2]] if doc else "???"
+            f.write(f"  {item} -> '{text}'\n")
+            
+    print(f"[TAB] Debug info written to {debug_file}")
+    # ---------------------------------------
+
     return metrics, len(gold_spans), len(pred_spans)
 
 
