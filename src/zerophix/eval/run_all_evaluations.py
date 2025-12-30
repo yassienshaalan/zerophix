@@ -26,7 +26,7 @@ from zerophix.eval.pdf_deid_benchmark import run_pdf_deid_benchmark
 from zerophix.config import RedactionConfig
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 EVAL_DIR = ROOT / "eval"
 RESULTS_DIR = EVAL_DIR / "results"
 
@@ -67,18 +67,18 @@ def run_all() -> Dict[str, Any]:
     # ----------------------------------------------------------
     tab_config = RedactionConfig(
         country="EU",
-        detectors=["regex", "spacy", "bert", "gliner"],
-        use_bert=True,
-        use_spacy=True,
+        detectors=["regex", "gliner"],
+        use_bert=False,
+        use_spacy=False,
         use_gliner=True,
         use_statistical=False,
         enable_context_propagation=True,
         enable_ensemble_voting=True,
         redaction_strategy="replace",
-        min_confidence=0.3, # Lowered further for TAB
+        min_confidence=0.35,
         gliner_labels=[
-            "person", "organization", "location", "date", 
-            "judge", "lawyer", "court", "case number", "legal case"
+            "person", "date of birth", "address", "phone number", "email", 
+            "passport number", "social security number"
         ]
     )
     tab_metrics, tab_gold, tab_pred = run_tab_benchmark(
@@ -104,10 +104,10 @@ def run_all() -> Dict[str, Any]:
     # ----------------------------------------------------------
     pdf_config = RedactionConfig(
         country="US",
-        detectors=["regex", "spacy", "bert", "openmed", "gliner"],
+        detectors=["regex", "openmed", "gliner"],
         use_openmed=True,
-        use_spacy=True,
-        use_bert=True,
+        use_spacy=False,
+        use_bert=False,
         use_gliner=True,
         use_statistical=False,
         enable_context_propagation=True,
