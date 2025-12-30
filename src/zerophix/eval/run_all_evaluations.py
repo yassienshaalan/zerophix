@@ -75,10 +75,10 @@ def run_all() -> Dict[str, Any]:
         enable_context_propagation=True,
         enable_ensemble_voting=True,
         redaction_strategy="replace",
-        min_confidence=0.35,
+        min_confidence=0.3, # Lowered further for TAB
         gliner_labels=[
             "person", "organization", "location", "date", 
-            "profession", "legal case", "judge", "court", "lawyer"
+            "judge", "lawyer", "court", "case number", "legal case"
         ]
     )
     tab_metrics, tab_gold, tab_pred = run_tab_benchmark(
