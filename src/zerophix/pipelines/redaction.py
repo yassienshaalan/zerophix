@@ -37,7 +37,7 @@ class RedactionPipeline:
             self.components.append(BertDetector(confidence_threshold=cfg.min_confidence))
 
         if cfg.use_gliner:
-            self.components.append(GLiNERDetector())
+            self.components.append(GLiNERDetector(labels=cfg.gliner_labels))
 
         if cfg.use_statistical:
             self.components.append(StatisticalDetector(confidence_threshold=cfg.min_confidence))

@@ -47,6 +47,7 @@ class RedactionConfig(BaseModel):
     # Model specifications
     spacy_model: str = Field(default="en_core_web_sm", description="spaCy model name")
     bert_model: str = Field(default="dslim/bert-base-NER", description="BERT model for NER")
+    gliner_labels: Optional[List[str]] = Field(default=None, description="Custom labels for GLiNER detector")
     models_dir: str = Field(default=DEFAULT_MODELS_DIR, description="Model cache directory")
     
     # Detection thresholds

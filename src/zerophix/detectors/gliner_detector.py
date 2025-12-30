@@ -78,18 +78,16 @@ class GLiNERDetector(Detector):
     def __init__(self, 
                  model_name: str = "urchade/gliner_large-v2.1",
                  confidence_threshold: float = 0.5,
-                 device: Optional[str] = None):
+                 device: Optional[str] = None,
+                 labels: Optional[List[str]] = None):
         """
         Initialize GLiNER detector
         
         Args:
             model_name: GLiNER model from HuggingFace
-                       Options: 
-                       - urchade/gliner_large-v2.1 (best accuracy)
-                       - urchade/gliner_medium-v2.1 (balanced)
-                       - urchade/gliner_small-v2.1 (fastest)
             confidence_threshold: Minimum confidence score (0-1)
             device: 'cuda', 'cpu', or None (auto-detect)
+            labels: Custom list of entity types to detect
         """
         if not GLINER_AVAILABLE:
             raise ImportError(
@@ -98,6 +96,7 @@ class GLiNERDetector(Detector):
         
         self.model_name = model_name
         self.confidence_threshold = confidence_threshold
+        self.labels = labels if labels else self.DEFAULT_ENTITY_TYPES
         self.device = device
         
         # Load model (downloads automatically on first use)
@@ -149,7 +148,7 @@ class GLiNERDetector(Detector):
             spans = detector.detect(business_text, custom_types)
         """
         if entity_types is None:
-            entity_types = self.DEFAULT_ENTITY_TYPES
+            entity_types = getattr(self, 'labels', self.DEFAULT_ENTITY_TYPES)
         
         # Run zero-shot detection
         entities = self.model.predict_entities(

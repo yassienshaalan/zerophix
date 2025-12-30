@@ -67,15 +67,19 @@ def run_all() -> Dict[str, Any]:
     # ----------------------------------------------------------
     tab_config = RedactionConfig(
         country="EU",
-        detectors=["regex", "spacy", "bert", "gliner", "statistical"],
+        detectors=["regex", "spacy", "bert", "gliner"],
         use_bert=True,
         use_spacy=True,
         use_gliner=True,
-        use_statistical=True,
+        use_statistical=False,
         enable_context_propagation=True,
         enable_ensemble_voting=True,
         redaction_strategy="replace",
         min_confidence=0.35,
+        gliner_labels=[
+            "person", "organization", "location", "date", 
+            "profession", "legal case", "judge", "court", "lawyer"
+        ]
     )
     tab_metrics, tab_gold, tab_pred = run_tab_benchmark(
         config=tab_config, split="test", ignore_label=True
@@ -100,19 +104,23 @@ def run_all() -> Dict[str, Any]:
     # ----------------------------------------------------------
     pdf_config = RedactionConfig(
         country="US",
-        detectors=["regex", "spacy", "bert", "openmed", "gliner", "statistical"],
+        detectors=["regex", "spacy", "bert", "openmed", "gliner"],
         use_openmed=True,
         use_spacy=True,
         use_bert=True,
         use_gliner=True,
-        use_statistical=True,
+        use_statistical=False,
         enable_context_propagation=True,
         enable_ensemble_voting=True,
         redaction_strategy="replace",
         min_confidence=0.35,
         custom_patterns={
             "DATE_INTL": [r"\b(0?[1-9]|[12]\d|3[01])[./](0?[1-9]|1[0-2])[./](19|20)\d{2}\b"]
-        }
+        },
+        gliner_labels=[
+            "patient name", "doctor name", "hospital", "medical record number", 
+            "date", "age", "phone number", "address", "organization"
+        ]
     )
     pdf_metrics, pdf_gold, pdf_pred = run_pdf_deid_benchmark(
         config=pdf_config, ignore_label=True
