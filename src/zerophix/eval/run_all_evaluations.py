@@ -67,7 +67,7 @@ def run_all() -> Dict[str, Any]:
     # ----------------------------------------------------------
     tab_config = RedactionConfig(
         country="EU",
-        detectors=["regex", "spacy", "bert", "gliner"],
+        detectors=["spacy", "bert", "gliner"],
         use_bert=True,
         use_spacy=True,
         use_gliner=True,
