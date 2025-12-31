@@ -67,7 +67,7 @@ def run_all() -> Dict[str, Any]:
     # ----------------------------------------------------------
     tab_config = RedactionConfig(
         country="EU",
-        detectors=["spacy", "bert", "gliner"],
+        detectors=["regex", "spacy", "bert", "gliner"],
         use_bert=True,
         use_spacy=True,
         use_gliner=True,
@@ -76,8 +76,21 @@ def run_all() -> Dict[str, Any]:
         enable_ensemble_voting=True,
         redaction_strategy="replace",
         min_confidence=0.4,
+        allow_list=[
+            "The Court", "the Court", "European Court of Human Rights",
+            "The Government", "the Government",
+            "The applicant", "the applicant", "The applicants",
+            "Article", "Section", "Convention", "Protocol",
+            "Commission", "Chamber", "Grand Chamber",
+            "United Kingdom", "Turkey", "Russia", "Poland", "France", "Germany" # Countries are often not PII in this context
+        ],
+        custom_patterns={
+            "CASE_NUMBER": [r"\b\d{3,5}/\d{2}\b"], # E.g. 16757/90
+            "DATE_FULL": [r"\b\d{1,2}\s(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}\b"]
+        },
         gliner_labels=[
-            "person", "organization", "location", "date", "case number"
+            "person", "judge", "lawyer", "applicant", 
+            "organization", "location", "date"
         ]
     )
     tab_metrics, tab_gold, tab_pred = run_tab_benchmark(
