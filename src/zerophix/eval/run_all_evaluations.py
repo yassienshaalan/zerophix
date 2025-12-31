@@ -75,25 +75,27 @@ def run_all() -> Dict[str, Any]:
         enable_context_propagation=True,
         enable_ensemble_voting=True,
         redaction_strategy="replace",
-        min_confidence=0.45, # Increased slightly to reduce partial matches
+        min_confidence=0.5, # Increased to 0.5 to reduce partial matches
         allow_list=[
             "The Court", "the Court", "European Court of Human Rights",
-            "The Government", "the Government", "Ministry of Foreign Affairs",
+            "The Government", "the Government", "Ministry of Foreign Affairs", "Ministry of Justice",
             "The applicant", "the applicant", "The applicants",
-            "Article", "Section", "Convention", "Protocol", "Act",
+            "Article", "Section", "Convention", "Protocol", "Act", "Rule",
             "Commission", "Chamber", "Grand Chamber", "District Court", "High Court",
             "United Kingdom", "Turkey", "Russia", "Poland", "France", "Germany", "Cyprus",
             "Polish", "Turkish", "French", "German", "British",
-            "million", "billion", "fees", "costs"
+            "million", "billion", "fees", "costs", "Department of Work and Pensions",
+            "Convention for the Protection of Human Rights and Fundamental Freedoms"
         ],
         custom_patterns={
             "CASE_NUMBER": [r"\b\d{3,5}/\d{2}\b"], # E.g. 16757/90
             "DATE_FULL": [r"\b\d{1,2}\s(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}\b"],
-            "DATE_YEAR_ONLY": [r"\b(19|20)\d{2}\b"] # Catch standalone years like "1989"
+            "DATE_YEAR_ONLY": [r"\b(19|20)\d{2}\b"], # Catch standalone years like "1989"
+            "MONEY_GBP": [r"\bGBP\s[\d,]+\b"] # Catch "GBP 215"
         },
         gliner_labels=[
             "person", "judge", "lawyer", "applicant", 
-            "organization", "location", "date"
+            "organization", "location", "date", "money", "duration"
         ]
     )
     tab_metrics, tab_gold, tab_pred = run_tab_benchmark(
