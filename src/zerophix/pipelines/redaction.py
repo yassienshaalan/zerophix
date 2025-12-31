@@ -28,7 +28,9 @@ class RedactionPipeline:
     def __init__(self, cfg: RedactionConfig):
         self.cfg = cfg
         self.components = []
-        self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
+        
+        if "regex" in cfg.detectors:
+            self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
         
         if cfg.use_spacy:
             self.components.append(SpacyDetector())
