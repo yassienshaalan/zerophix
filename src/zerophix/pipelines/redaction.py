@@ -9,6 +9,7 @@ from ..detectors.base import Span
 from .consensus import ConsensusModel
 from .context import ContextPropagator
 from .allowlist import AllowListFilter
+from .post_processors import GarbageFilter
 
 try:
     from ..detectors.openmed_detector import OpenMedDetector
@@ -58,6 +59,7 @@ class RedactionPipeline:
         self.consensus = ConsensusModel(cfg)
         self.context_propagator = ContextPropagator(cfg)
         self.allow_list = AllowListFilter(cfg)
+        self.garbage_filter = GarbageFilter(cfg)
 
     @classmethod
     def from_config(cls, cfg: RedactionConfig):
@@ -98,7 +100,10 @@ class RedactionPipeline:
         propagated_spans = self.context_propagator.propagate(text, resolved_spans)
         
         # 3. Filter allow-listed terms
-        final_spans = self.allow_list.filter(text, propagated_spans)
+        allowed_spans = self.allow_list.filter(text, propagated_spans)
+        
+        # 4. Filter garbage (partial words, stopwords, etc.)
+        final_spans = self.garbage_filter.filter(text, allowed_spans)
         
         # Sort for final output
         final_spans.sort(key=lambda x: (x.start, -x.end))
