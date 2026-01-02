@@ -75,7 +75,7 @@ def run_all() -> Dict[str, Any]:
         enable_context_propagation=True,
         enable_ensemble_voting=True,
         redaction_strategy="replace",
-        min_confidence=0.5, # Increased to 0.5 to reduce partial matches
+        min_confidence=0.5,
         allow_list=[
             "The Court", "the Court", "European Court of Human Rights",
             "The Government", "the Government", "Ministry of Foreign Affairs", "Ministry of Justice",
@@ -85,7 +85,9 @@ def run_all() -> Dict[str, Any]:
             "United Kingdom", "Turkey", "Russia", "Poland", "France", "Germany", "Cyprus",
             "Polish", "Turkish", "French", "German", "British",
             "million", "billion", "fees", "costs", "Department of Work and Pensions",
-            "Convention for the Protection of Human Rights and Fundamental Freedoms"
+            "Convention for the Protection of Human Rights and Fundamental Freedoms",
+            "Rights and Fundamental Freedoms", "Foreign and Commonwealth Office",
+            "Republic of Poland", "Warsaw", "Istanbul", "İstanbul", "Adana", "Ankara"
         ],
         custom_patterns={
             "CASE_NUMBER": [r"\b\d{3,5}/\d{2}\b"], # E.g. 16757/90
@@ -95,7 +97,7 @@ def run_all() -> Dict[str, Any]:
         },
         gliner_labels=[
             "person", "judge", "lawyer", "applicant", 
-            "organization", "location", "date", "money", "duration"
+            "organization", "location", "date", "money", "duration", "age"
         ]
     )
     tab_metrics, tab_gold, tab_pred = run_tab_benchmark(
