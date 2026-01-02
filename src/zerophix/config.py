@@ -6,6 +6,7 @@ DEFAULT_MODELS_DIR = os.environ.get("ZEROPHIX_MODELS_DIR", os.path.expanduser("~
 
 class RedactionConfig(BaseModel):
     # Core configuration
+    mode: str = Field(default="manual", description="Operation mode: 'manual' or 'auto'")
     country: str = Field(default="AU", description="Country code for policy selection")
     company: Optional[str] = Field(default=None, description="Optional company policy overlay name")
     

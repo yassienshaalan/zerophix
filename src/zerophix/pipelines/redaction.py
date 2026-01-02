@@ -1,4 +1,5 @@
 from typing import List, Dict
+import re
 from ..config import RedactionConfig
 from ..detectors.regex_detector import RegexDetector
 from ..detectors.spacy_detector import SpacyDetector
@@ -30,30 +31,39 @@ class RedactionPipeline:
         self.cfg = cfg
         self.components = []
         
-        if "regex" in cfg.detectors:
+        is_auto = cfg.mode == "auto"
+        
+        # 1. Regex Detector
+        if is_auto or "regex" in cfg.detectors:
             self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
         
-        if cfg.use_spacy:
+        # 2. Spacy Detector
+        if is_auto or cfg.use_spacy:
             self.components.append(SpacyDetector())
 
-        if cfg.use_bert:
+        # 3. BERT Detector
+        if is_auto or cfg.use_bert:
             self.components.append(BertDetector(confidence_threshold=cfg.min_confidence))
 
-        if cfg.use_gliner:
+        # 4. GLiNER Detector
+        if is_auto or cfg.use_gliner:
             self.components.append(GLiNERDetector(labels=cfg.gliner_labels))
 
-        if cfg.use_statistical:
+        # 5. Statistical Detector (Skip in auto to reduce noise, unless explicitly enabled)
+        if not is_auto and cfg.use_statistical:
             self.components.append(StatisticalDetector(confidence_threshold=cfg.min_confidence))
 
-        if cfg.use_openmed:
-            if OpenMedDetector is None:
-                # Try to give a more helpful error message if we know why it failed
+        # 6. OpenMed Detector
+        if is_auto or cfg.use_openmed:
+            if OpenMedDetector is not None:
+                self.components.append(OpenMedDetector(models_dir=cfg.models_dir, conf=self.cfg.thresholds.get('ner_conf', 0.5)))
+            elif not is_auto:
+                # Only raise error if user explicitly asked for it and it failed
                 import sys
                 if 'transformers' not in sys.modules:
                      raise RuntimeError("OpenMed detector requested but transformers/torch not installed. Install zerophix[openmed].")
                 else:
                      raise RuntimeError("OpenMed detector requested but failed to import. Check logs for DEBUG messages.")
-            self.components.append(OpenMedDetector(models_dir=cfg.models_dir, conf=self.cfg.thresholds.get('ner_conf', 0.5)))
         
         # Initialize accuracy enhancement components
         self.consensus = ConsensusModel(cfg)
@@ -65,13 +75,78 @@ class RedactionPipeline:
     def from_config(cls, cfg: RedactionConfig):
         return cls(cfg)
 
+    def _detect_domain(self, text: str) -> str:
+        """
+        Intelligent layer to classify text domain.
+        """
+        text_lower = text.lower()
+        
+        # Medical Heuristics
+        medical_score = 0
+        medical_terms = ["patient", "doctor", "hospital", "diagnosis", "treatment", "clinical", "medical", "prescription", "symptoms", "ward", "clinic"]
+        for term in medical_terms:
+            if term in text_lower:
+                medical_score += 1
+        
+        if medical_score >= 2:
+            return "medical"
+            
+        # Legal Heuristics
+        legal_score = 0
+        legal_terms = ["court", "judge", "plaintiff", "defendant", "lawyer", "attorney", "case no", "v.", "jurisdiction", "article", "section", "applicant", "respondent"]
+        for term in legal_terms:
+            if term in text_lower:
+                legal_score += 1
+                
+        if legal_score >= 2:
+            return "legal"
+            
+        return "general"
+
     def scan(self, text: str) -> List[Span]:
         """
         Scan text for entities without redacting.
         Returns a list of detected Span objects.
         """
         spans: List[Span] = []
-        for comp in self.components:
+        
+        # Determine which components to run
+        active_components = self.components
+        
+        if self.cfg.mode == "auto":
+            domain = self._detect_domain(text)
+            active_components = []
+            
+            for comp in self.components:
+                # Always run Regex (it's fast and handles basics like emails/dates)
+                if isinstance(comp, RegexDetector):
+                    active_components.append(comp)
+                    continue
+                    
+                # Always run GLiNER (it's the smartest generalist)
+                if isinstance(comp, GLiNERDetector):
+                    active_components.append(comp)
+                    continue
+                
+                # Domain specific routing
+                if domain == "medical":
+                    if OpenMedDetector and isinstance(comp, OpenMedDetector):
+                        active_components.append(comp)
+                    # Keep Spacy for basic names
+                    elif isinstance(comp, SpacyDetector):
+                        active_components.append(comp)
+                        
+                elif domain == "legal":
+                    # In legal, Spacy and BERT are good. OpenMed is useless.
+                    if isinstance(comp, (SpacyDetector, BertDetector)):
+                        active_components.append(comp)
+                        
+                else: # General
+                    # Run everything except specialized
+                    if not (OpenMedDetector and isinstance(comp, OpenMedDetector)):
+                        active_components.append(comp)
+
+        for comp in active_components:
             spans.extend(comp.detect(text))
 
         # Apply advanced processing
