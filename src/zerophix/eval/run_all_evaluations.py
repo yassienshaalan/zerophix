@@ -89,17 +89,24 @@ def run_all() -> Dict[str, Any]:
             "million", "billion", "fees", "costs", "Department of Work and Pensions",
             "Convention for the Protection of Human Rights and Fundamental Freedoms",
             "Rights and Fundamental Freedoms", "Foreign and Commonwealth Office",
-            "Republic of Poland", "Warsaw", "Istanbul", "İstanbul", "Adana", "Ankara"
+            "Republic of Poland", "Warsaw", "Istanbul", "İstanbul", "Adana", "Ankara", "Kraków", "Izmir", "İzmir",
+            "United Kingdom of Great Britain", "United Kingdom of Great Britain and Northern Ireland",
+            "Northern Ireland", "Great Britain"
         ],
         custom_patterns={
             "CASE_NUMBER": [r"\b\d{3,5}/\d{2}\b"], # E.g. 16757/90
-            "DATE_FULL": [r"\b\d{1,2}\s(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}\b"],
+            "DATE_FULL": [
+                r"\b\d{1,2}\s(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}\b",
+                r"\b\d{1,2}(?:st|nd|rd|th)?\s+day\s+of\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b", # 27th day of September 1996
+                r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\b" # 25 August
+            ],
             "DATE_YEAR_ONLY": [r"\b(19|20)\d{2}\b"], # Catch standalone years like "1989"
             "MONEY_GBP": [r"\bGBP\s[\d,]+\b"] # Catch "GBP 215"
         },
         gliner_labels=[
-            "person", "judge", "lawyer", "applicant", 
-            "organization", "location", "date", "money", "duration", "age"
+            "person", "judge", "lawyer", "applicant", "police officer", "profession", "job title",
+            "organization", "location", "date", "money", "duration", "age",
+            "medical condition", "health status", "criminal charge"
         ]
     )
     tab_metrics_m, tab_gold_m, tab_pred_m = run_tab_benchmark(
