@@ -42,6 +42,7 @@ ZeroPhix employs a multi-stage pipeline designed for maximum accuracy and flexib
     *   **Regex Detector**: Finds patterns like emails, phone numbers, and IDs using country-specific rules.
     *   **ML Detector (OpenMed/Custom)**: Uses advanced Named Entity Recognition (NER) models to find context-dependent entities (e.g., names, organizations).
     *   **GLiNER (Optional)**: Zero-shot detection for arbitrary labels.
+    *   **Auto-Mode**: Automatically detects the document domain (Medical, Legal, General) and selects the optimal combination of detectors.
 
 2.  **Ensemble Voting (Consensus)**:
     *   When detectors disagree (e.g., Regex says "PHONE" but ML says "ID"), a weighted voting system resolves the conflict.
@@ -142,6 +143,25 @@ config = RedactionConfig(
         "TEMPORARY_CODE": [r"TEMP-\d{4}"]
     }
 )
+```
+
+### Intelligent Auto-Mode
+
+ZeroPhix can automatically detect the domain of your text (Medical, Legal, or General) and switch to the most appropriate set of detectors. This ensures high accuracy across different document types without manual reconfiguration.
+
+```python
+# Enable Auto-Mode
+config = RedactionConfig(
+    mode="auto",  # <--- Magic happens here
+    country="US"
+)
+pipeline = RedactionPipeline(config)
+
+# Process a medical report (Uses OpenMed + Spacy)
+pipeline.redact("Patient John Doe diagnosed with...")
+
+# Process a court document (Uses BERT + Spacy + Legal Rules)
+pipeline.redact("In the High Court of Justice, Case No. 123...")
 ```
 
 ## Installation
