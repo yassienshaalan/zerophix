@@ -454,6 +454,68 @@ class KAnonymityStrategy(RedactionStrategy):
     def get_strategy_name(self) -> str:
         return "k_anonymity"
 
+class ReplaceStrategy(RedactionStrategy):
+    """Simple replacement with entity type labels"""
+    
+    def __init__(self, template: str = "<{entity_type}>"):
+        self.template = template
+    
+    def redact(self, text: str, entity_type: str, metadata: Optional[Dict] = None) -> RedactionResult:
+        redacted = self.template.format(entity_type=entity_type)
+        
+        return RedactionResult(
+            redacted_text=redacted,
+            reversible=False,
+            metadata={"entity_type": entity_type}
+        )
+    
+    def get_strategy_name(self) -> str:
+        return "replace"
+
+class BracketsStrategy(RedactionStrategy):
+    """Simple [REDACTED] replacement"""
+    
+    def __init__(self, label: str = "REDACTED"):
+        self.label = label
+    
+    def redact(self, text: str, entity_type: str, metadata: Optional[Dict] = None) -> RedactionResult:
+        return RedactionResult(
+            redacted_text=f"[{self.label}]",
+            reversible=False,
+            metadata={"entity_type": entity_type}
+        )
+    
+    def get_strategy_name(self) -> str:
+        return "brackets"
+
+class AustralianPhoneStrategy(RedactionStrategy):
+    """Australian phone redaction preserving area code"""
+    
+    def redact(self, text: str, entity_type: str, metadata: Optional[Dict] = None) -> RedactionResult:
+        # Preserve first 2-3 digits (area code)
+        clean_text = ''.join(c for c in text if c.isdigit())
+        
+        if len(clean_text) >= 10:
+            # Mobile: 04XX XXX XXX
+            if clean_text.startswith('04'):
+                redacted = f"04XX-XXX-XXX"
+            # Landline: 0X XXXX XXXX
+            else:
+                area_code = clean_text[:2]
+                redacted = f"{area_code}XX-XXX-XXX"
+        else:
+            # Fallback to XX masking
+            redacted = "XX" + "X" * (len(clean_text) - 2)
+        
+        return RedactionResult(
+            redacted_text=redacted,
+            reversible=False,
+            metadata={"country": "AU", "area_code_preserved": True}
+        )
+    
+    def get_strategy_name(self) -> str:
+        return "au_phone"
+
 class RedactionStrategyManager:
     """Manager for different redaction strategies"""
     
@@ -463,10 +525,14 @@ class RedactionStrategyManager:
     
     def _register_default_strategies(self):
         """Register default redaction strategies"""
+        self.strategies['replace'] = ReplaceStrategy()
         self.strategies['mask'] = MaskingStrategy()
         self.strategies['hash'] = HashStrategy()
         self.strategies['synthetic'] = SyntheticDataStrategy()
         self.strategies['preserve_format'] = FormatPreservingStrategy()
+        self.strategies['brackets'] = BracketsStrategy()
+        self.strategies['redact'] = BracketsStrategy()  # Alias for brackets
+        self.strategies['au_phone'] = AustralianPhoneStrategy()
         
         if CRYPTO_AVAILABLE:
             self.strategies['encrypt'] = EncryptionStrategy()
