@@ -64,5 +64,4 @@ else:
 redacted_results = pipeline.redact(test_text)
 print("\n" + "=" * 60)
 print("Redacted Text:")
-print(redacted_results['redacted'])
-print(redacted)
+print(redacted_results['text'])
