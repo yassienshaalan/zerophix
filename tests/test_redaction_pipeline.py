@@ -211,3 +211,109 @@ def test_encryption_wrong_purpose_fails_or_changes():
         # assert wrong != original
         #
         manager.decrypt(encrypted, purpose="wrong-purpose")
+
+
+def test_scan_returns_detections(basic_pipeline: RedactionPipeline):
+    """Test that scan returns a dict with detections"""
+    text = "Contact john@example.com or call 555-1234"
+    result = basic_pipeline.scan(text)
+    
+    assert isinstance(result, dict)
+    assert "detections" in result
+    assert "total_detections" in result
+    assert "has_pii" in result
+    assert result["has_pii"] is True
+    assert result["total_detections"] > 0
+
+
+def test_scan_detects_email(basic_pipeline: RedactionPipeline):
+    """Test that scan detects email addresses"""
+    text = "Email me at test@example.com"
+    result = basic_pipeline.scan(text)
+    
+    emails = [d for d in result["detections"] if d["label"] == "EMAIL"]
+    assert len(emails) > 0
+    assert "test@example.com" in emails[0]["text"]
+
+
+def test_scan_detects_phone(basic_pipeline: RedactionPipeline):
+    """Test that scan detects phone numbers"""
+    text = "Call me at 555-123-4567"
+    result = basic_pipeline.scan(text)
+    
+    phones = [d for d in result["detections"] if "PHONE" in d["label"]]
+    assert len(phones) > 0
+
+
+def test_redact_batch_processes_multiple_texts(basic_pipeline: RedactionPipeline):
+    """Test batch redaction of multiple texts"""
+    texts = [
+        "Email: test1@example.com",
+        "Phone: 555-1234",
+        "Name: John Smith"
+    ]
+    results = basic_pipeline.redact_batch(texts)
+    
+    assert len(results) == 3
+    assert all("text" in r for r in results)
+    assert all("spans" in r for r in results)
+
+
+def test_scan_batch_processes_multiple_texts(basic_pipeline: RedactionPipeline):
+    """Test batch scanning of multiple texts"""
+    texts = [
+        "Email: test1@example.com",
+        "Phone: 555-1234",
+        "Contact: jane@test.com"
+    ]
+    results = basic_pipeline.scan_batch(texts)
+    
+    assert len(results) == 3
+    assert all("detections" in r for r in results)
+    assert all("has_pii" in r for r in results)
+
+
+def test_no_pii_returns_original_text(basic_pipeline: RedactionPipeline):
+    """Test that text without PII is returned unchanged"""
+    text = "The quick brown fox jumps over the lazy dog"
+    result = basic_pipeline.redact(text)
+    
+    assert result["text"] == text
+    assert len(result["spans"]) == 0
+
+
+def test_multiple_entities_same_type(basic_pipeline: RedactionPipeline):
+    """Test redaction of multiple entities of the same type"""
+    text = "Contact test1@example.com or test2@example.com"
+    result = basic_pipeline.redact(text)
+    
+    assert "test1@example.com" not in result["text"]
+    assert "test2@example.com" not in result["text"]
+    assert len(result["spans"]) >= 2
+
+
+def test_adjacent_entities(basic_pipeline: RedactionPipeline):
+    """Test redaction of adjacent entities"""
+    text = "john@example.com555-1234"
+    result = basic_pipeline.redact(text)
+    
+    assert "john@example.com" not in result["text"]
+    assert len(result["spans"]) > 0
+
+
+def test_entity_at_start(basic_pipeline: RedactionPipeline):
+    """Test entity at the start of text"""
+    text = "test@example.com is my email"
+    result = basic_pipeline.redact(text)
+    
+    assert "test@example.com" not in result["text"]
+    assert result["text"].endswith("is my email")
+
+
+def test_entity_at_end(basic_pipeline: RedactionPipeline):
+    """Test entity at the end of text"""
+    text = "My email is test@example.com"
+    result = basic_pipeline.redact(text)
+    
+    assert "test@example.com" not in result["text"]
+    assert result["text"].startswith("My email is")
