@@ -12,8 +12,8 @@ def azure_redact(text: str) -> Dict:
     return resp.json()
 
 def run_benchmark(samples: List[str]) -> List[Dict]:
-    from zerophi.config import RedactionConfig
-    from zerophi.pipelines.redaction import RedactionPipeline
+    from zerophix.config import RedactionConfig
+    from zerophix.pipelines.redaction import RedactionPipeline
     pipe = RedactionPipeline.from_config(RedactionConfig(country="AU", use_openmed=False))
     rows = []
     for t in samples:

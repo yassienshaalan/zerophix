@@ -1,7 +1,7 @@
 # EU GDPR-compliant PII patterns and policies
 regex_patterns:
   # Personal Identifiers
-  PERSON_NAME: '\b([A-Z][a-z]+\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b'
+  # PERSON_NAME: '\b([A-Z][a-z]+\s[A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\b'  <-- Too broad for legal text
   
   # Email Addresses
   EMAIL: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'

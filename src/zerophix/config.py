@@ -6,6 +6,7 @@ DEFAULT_MODELS_DIR = os.environ.get("ZEROPHIX_MODELS_DIR", os.path.expanduser("~
 
 class RedactionConfig(BaseModel):
     # Core configuration
+    mode: str = Field(default="manual", description="Operation mode: 'manual' or 'auto'")
     country: str = Field(default="AU", description="Country code for policy selection")
     company: Optional[str] = Field(default=None, description="Optional company policy overlay name")
     
@@ -19,6 +20,7 @@ class RedactionConfig(BaseModel):
     use_openmed: bool = Field(default=False, description="Enable OpenMed model detector")
     use_spacy: bool = Field(default=True, description="Enable spaCy NER detector")
     use_bert: bool = Field(default=False, description="Enable BERT-based NER detector")
+    use_gliner: bool = Field(default=False, description="Enable GLiNER zero-shot detector")
     use_statistical: bool = Field(default=False, description="Enable statistical pattern detector")
     use_contextual: bool = Field(default=True, description="Use contextual enhancement for ML detectors")
     
@@ -28,6 +30,7 @@ class RedactionConfig(BaseModel):
         default_factory=lambda: {
             "regex": 2.0,      # High precision
             "custom": 2.0,     # User defined
+            "gliner": 1.8,     # High accuracy zero-shot
             "openmed": 1.5,    # Specialized
             "bert": 1.2,       # General DL
             "spacy": 1.0,      # General ML
@@ -45,6 +48,7 @@ class RedactionConfig(BaseModel):
     # Model specifications
     spacy_model: str = Field(default="en_core_web_sm", description="spaCy model name")
     bert_model: str = Field(default="dslim/bert-base-NER", description="BERT model for NER")
+    gliner_labels: Optional[List[str]] = Field(default=None, description="Custom labels for GLiNER detector")
     models_dir: str = Field(default=DEFAULT_MODELS_DIR, description="Model cache directory")
     
     # Detection thresholds
