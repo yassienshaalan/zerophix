@@ -69,6 +69,18 @@ print(result['text'])
 # Output: [PERSON], SSN: XXX-XX-6789, Email: [EMAIL]
 ```
 
+### Australian Coverage Highlights 🇦🇺
+
+ZeroPhix has **deep Australian coverage** with mathematical checksum validation:
+
+- **40+ Australian entity types** (TFN, ABN, ACN, Medicare, driver licenses for all 8 states)
+- **Checksum validation** for government IDs (TFN mod 11, ABN mod 89, ACN mod 10, Medicare mod 10)
+- **92%+ precision** for Australian government identifiers
+- State-specific patterns (NSW, VIC, QLD, SA, WA, TAS, NT, ACT)
+- Healthcare, financial, and government identifiers
+
+See [AUSTRALIAN_COVERAGE.md](AUSTRALIAN_COVERAGE.md) for complete details.
+
 ### Command Line
 
 ```bash
@@ -80,6 +92,41 @@ zerophix redact-file --input document.pdf --output clean.pdf
 
 # Start API server
 python -m zerophix.api.rest
+```
+
+## Redaction Strategies
+
+ZeroPhix supports multiple redaction strategies to balance privacy and data utility:
+
+| Strategy | Description | Example | Use Case |
+|----------|-------------|---------|----------|
+| **replace** | Full replacement with entity type | `<SSN>` or `<AU_TFN>` | Maximum privacy, clear labeling |
+| **mask** | Partial masking | `29****3456` or `***-**-6789` | Data utility + privacy balance |
+| **hash** | Consistent hashing | `HASH_A1B2C3D4` | Record linking, de-duplication |
+| **encrypt** | Reversible encryption | `ENC_XYZ123` | Secure storage, de-anonymization |
+| **brackets** / **redact** | Simple [REDACTED] | `[REDACTED]` | Document redaction, printouts |
+| **synthetic** | Realistic fake data | `Alex Smith` / `555-1234` | Testing, demos, data sharing |
+| **preserve_format** | Format-preserving | `K8d-2L-m9P3` (for SSN) | Schema compatibility |
+| **au_phone** | Keep AU area code | `04XX-XXX-XXX` | Australian context preservation |
+| **differential_privacy** | Statistical noise | Original ± noise | Research, analytics |
+| **k_anonymity** | Generalization | `<30` (age) / `20XX` (postcode) | Privacy-preserving analytics |
+
+**Usage:**
+```python
+# Choose your strategy
+config = RedactionConfig(
+    country="AU",
+    masking_style="hash"  # or: replace, mask, encrypt, synthetic, etc.
+)
+pipeline = RedactionPipeline(config)
+result = pipeline.redact(text)
+
+# Strategy-specific options
+config = RedactionConfig(
+    masking_style="mask",
+    mask_percentage=0.7,  # Mask 70% of characters
+    preserve_format=True
+)
 ```
 
 ## Core Features
