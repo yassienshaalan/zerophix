@@ -150,27 +150,85 @@ class GLiNERDetector(Detector):
         if entity_types is None:
             entity_types = getattr(self, 'labels', self.DEFAULT_ENTITY_TYPES)
         
-        # Run zero-shot detection
-        entities = self.model.predict_entities(
-            text, 
-            entity_types,
-            flat_ner=flat_ner,
-            threshold=self.confidence_threshold
-        )
+        # For long texts (>1500 chars ~= 384 tokens), chunk to avoid truncation
+        # GLiNER has 384 token limit, roughly 1500-2000 characters
+        MAX_CHUNK_SIZE = 1500
+        OVERLAP = 200  # Overlap to catch entities at chunk boundaries
         
-        # Convert to Span objects
-        spans = []
-        for entity in entities:
-            span = Span(
-                start=entity["start"],
-                end=entity["end"],
-                label=entity["label"].upper().replace(" ", "_"),
-                score=entity["score"],
-                source="gliner"
+        all_spans = []
+        
+        if len(text) > MAX_CHUNK_SIZE:
+            # Process in overlapping chunks
+            offset = 0
+            while offset < len(text):
+                chunk_end = min(offset + MAX_CHUNK_SIZE, len(text))
+                chunk = text[offset:chunk_end]
+                
+                # Run detection on chunk
+                entities = self.model.predict_entities(
+                    chunk, 
+                    entity_types,
+                    flat_ner=flat_ner,
+                    threshold=self.confidence_threshold
+                )
+                
+                # Convert to Span objects with adjusted positions
+                for entity in entities:
+                    span = Span(
+                        start=entity["start"] + offset,
+                        end=entity["end"] + offset,
+                        label=entity["label"].upper().replace(" ", "_"),
+                        score=entity["score"],
+                        source="gliner"
+                    )
+                    all_spans.append(span)
+                
+                # Move to next chunk with overlap
+                offset += MAX_CHUNK_SIZE - OVERLAP
+                if chunk_end >= len(text):
+                    break
+            
+            # Deduplicate overlapping detections
+            all_spans = self._deduplicate_spans(all_spans)
+        else:
+            # Short text - process directly
+            entities = self.model.predict_entities(
+                text, 
+                entity_types,
+                flat_ner=flat_ner,
+                threshold=self.confidence_threshold
             )
-            spans.append(span)
+            
+            for entity in entities:
+                span = Span(
+                    start=entity["start"],
+                    end=entity["end"],
+                    label=entity["label"].upper().replace(" ", "_"),
+                    score=entity["score"],
+                    source="gliner"
+                )
+                all_spans.append(span)
         
-        return spans
+        return all_spans
+    
+    def _deduplicate_spans(self, spans: List[Span]) -> List[Span]:
+        """Remove duplicate spans from overlapping chunks, keep highest confidence"""
+        if not spans:
+            return spans
+        
+        # Sort by position then confidence
+        spans = sorted(spans, key=lambda s: (s.start, s.end, -s.score))
+        
+        deduplicated = []
+        seen_positions = set()
+        
+        for span in spans:
+            pos_key = (span.start, span.end, span.label)
+            if pos_key not in seen_positions:
+                deduplicated.append(span)
+                seen_positions.add(pos_key)
+        
+        return deduplicated
     
     def detect_with_context(self, 
                            text: str,
