@@ -131,6 +131,9 @@ class FileRedactionRequest(BaseModel):
     enable_context_propagation: bool = Field(default=True, description="Propagate high-confidence entities across document")
     allow_list: List[str] = Field(default_factory=list, description="List of terms to never redact")
 
+# Initialize API configuration
+api_config = APIConfig()
+
 # API App
 app = FastAPI(
     title="ZeroPhi PII Redaction API",
