@@ -58,8 +58,43 @@ try:
 except ImportError:
     print("  Pandas not installed - skipping")
 
-# 5. PySpark DataFrame
-print("\n✓ Test 5: PySpark DataFrame")
+# 5. CSV Processing (via Pandas)
+print("\n✓ Test 5: CSV File")
+try:
+    import pandas as pd
+    from zerophix.processors import redact_pandas
+    import tempfile
+    import os
+    
+    # Create temp CSV file
+    temp_csv = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, newline='')
+    temp_csv.write('name,email,phone\n')
+    temp_csv.write('John Smith,john@test.com,555-1234\n')
+    temp_csv.write('Jane Doe,jane@test.com,555-5678\n')
+    temp_csv.close()
+    
+    # Read, redact, save
+    df = pd.read_csv(temp_csv.name)
+    df_clean = redact_pandas(df, columns=['name', 'email', 'phone'])
+    
+    output_csv = temp_csv.name.replace('.csv', '_redacted.csv')
+    df_clean.to_csv(output_csv, index=False)
+    
+    print(f"  Input CSV:  {os.path.basename(temp_csv.name)}")
+    print(f"  Output CSV: {os.path.basename(output_csv)}")
+    print(f"  Redacted {len(df_clean)} rows, {len(df_clean.columns)} columns")
+    
+    # Cleanup
+    os.unlink(temp_csv.name)
+    os.unlink(output_csv)
+    
+except ImportError:
+    print("  Pandas not installed - skipping")
+except Exception as e:
+    print(f"  CSV test failed: {e}")
+
+# 6. PySpark DataFrame
+print("\n✓ Test 6: PySpark DataFrame")
 try:
     from pyspark.sql import SparkSession
     from zerophix.processors import redact_spark
@@ -95,7 +130,10 @@ print("  • Single string: pipeline.redact(text)")
 print("  • Batch strings: pipeline.redact_batch(texts)")
 print("  • Scan mode: pipeline.scan(text)")
 print("  • Pandas: redact_pandas(df, columns=[])")
+print("  • CSV files: Read with Pandas, redact, save")
 print("  • PySpark: redact_spark(spark_df, columns=[])")
 print("\nFor file processing, use:")
 print("  • PDF: PDFProcessor().redact_file(input, output, pipeline)")
 print("  • Excel: ExcelProcessor().redact_file(input, output, pipeline)")
+print("\nTo install PySpark:")
+print("  pip install pyspark")
