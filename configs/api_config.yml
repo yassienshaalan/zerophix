@@ -1,0 +1,261 @@
+# ZeroPhi API Configuration Examples
+# 
+# This file demonstrates different deployment configurations for the ZeroPhi API.
+# These settings can also be configured via environment variables (see .env.example)
+
+# =============================================================================
+# Development Configuration
+# =============================================================================
+development:
+  # Server settings
+  host: "127.0.0.1"  # Localhost only
+  port: 8000
+  workers: 1
+  reload: true  # Auto-reload on code changes
+  
+  # CORS settings (permissive for development)
+  cors_enabled: true
+  cors_origins: 
+    - "*"
+  cors_credentials: true
+  
+  # Security settings (relaxed for development)
+  require_auth: false
+  api_keys: []
+  
+  # SSL/TLS (disabled for local development)
+  ssl_enabled: false
+  
+  # Deployment settings
+  environment: "development"
+  log_level: "debug"
+  access_log: true
+  
+  # API documentation (enabled)
+  docs_enabled: true
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  
+  # Performance settings
+  max_request_size: 10485760  # 10 MB
+  timeout: 60
+  keep_alive: 5
+
+# =============================================================================
+# Staging Configuration
+# =============================================================================
+staging:
+  # Server settings
+  host: "0.0.0.0"  # All interfaces
+  port: 8000
+  workers: 2
+  reload: false
+  
+  # CORS settings (restricted)
+  cors_enabled: true
+  cors_origins:
+    - "https://staging.example.com"
+    - "https://staging-app.example.com"
+  cors_credentials: true
+  
+  # Security settings (authentication required)
+  require_auth: true
+  api_keys:
+    - "staging-key-1234567890"
+    - "staging-key-0987654321"
+  
+  # SSL/TLS (enabled with Let's Encrypt certificates)
+  ssl_enabled: true
+  ssl_keyfile: "/etc/letsencrypt/live/staging-api.example.com/privkey.pem"
+  ssl_certfile: "/etc/letsencrypt/live/staging-api.example.com/fullchain.pem"
+  
+  # Deployment settings
+  environment: "staging"
+  log_level: "info"
+  access_log: true
+  
+  # API documentation (enabled)
+  docs_enabled: true
+  docs_url: "/docs"
+  redoc_url: "/redoc"
+  
+  # Performance settings
+  max_request_size: 10485760  # 10 MB
+  timeout: 120
+  keep_alive: 10
+  
+  # Proxy settings (behind nginx)
+  proxy_headers: true
+  forwarded_allow_ips: "*"
+
+# =============================================================================
+# Production Configuration
+# =============================================================================
+production:
+  # Server settings
+  host: "0.0.0.0"  # All interfaces
+  port: 8443  # HTTPS port
+  workers: 4  # Based on CPU cores
+  reload: false
+  
+  # CORS settings (strict whitelist)
+  cors_enabled: true
+  cors_origins:
+    - "https://app.example.com"
+    - "https://dashboard.example.com"
+  cors_credentials: true
+  cors_methods:
+    - "GET"
+    - "POST"
+    - "OPTIONS"
+  
+  # Security settings (strict authentication)
+  require_auth: true
+  api_keys:
+    # Use strong, randomly generated keys in production
+    # These should be stored in environment variables or secrets manager
+    - "prod-key-CHANGE-THIS-TO-RANDOM-STRING"
+  
+  # SSL/TLS (required for production)
+  ssl_enabled: true
+  ssl_keyfile: "/etc/ssl/private/api.example.com.key"
+  ssl_certfile: "/etc/ssl/certs/api.example.com.crt"
+  ssl_ca_certs: "/etc/ssl/certs/ca-bundle.crt"
+  
+  # Deployment settings
+  environment: "production"
+  log_level: "warning"  # Less verbose in production
+  access_log: true
+  
+  # API documentation (disabled for production security)
+  docs_enabled: false
+  docs_url: null
+  redoc_url: null
+  
+  # Performance settings
+  max_request_size: 52428800  # 50 MB for production
+  timeout: 300  # 5 minutes for large files
+  keep_alive: 15
+  
+  # Rate limiting (enabled)
+  rate_limit_enabled: true
+  rate_limit_requests: 100
+  rate_limit_window: 60
+  
+  # Proxy settings (behind load balancer)
+  proxy_headers: true
+  forwarded_allow_ips: "10.0.0.0/8"  # Internal network
+
+# =============================================================================
+# Docker Container Configuration
+# =============================================================================
+docker:
+  # Server settings
+  host: "0.0.0.0"  # Bind to all interfaces in container
+  port: 8000
+  workers: 2
+  reload: false
+  
+  # CORS settings
+  cors_enabled: true
+  cors_origins:
+    - "${ALLOWED_ORIGIN_1}"  # Read from environment
+    - "${ALLOWED_ORIGIN_2}"
+  cors_credentials: true
+  
+  # Security settings
+  require_auth: true
+  api_keys: []  # Read from ZEROPHIX_API_KEYS environment variable
+  
+  # SSL/TLS (typically handled by ingress/load balancer)
+  ssl_enabled: false
+  
+  # Deployment settings
+  environment: "${ZEROPHIX_ENV:-production}"
+  log_level: "${ZEROPHIX_LOG_LEVEL:-info}"
+  access_log: true
+  
+  # API documentation
+  docs_enabled: "${ZEROPHIX_DOCS_ENABLED:-false}"
+  
+  # Performance settings
+  max_request_size: 20971520  # 20 MB
+  timeout: 180
+  keep_alive: 10
+  
+  # Proxy settings
+  proxy_headers: true
+  forwarded_allow_ips: "*"
+
+# =============================================================================
+# Cloud Platform Configurations
+# =============================================================================
+
+# AWS Elastic Beanstalk / ECS
+aws:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  environment: "production"
+  proxy_headers: true
+  forwarded_allow_ips: "*"  # AWS ALB/ELB IPs
+  ssl_enabled: false  # SSL terminated at ALB
+  
+# Azure App Service
+azure:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 2
+  environment: "production"
+  proxy_headers: true
+  ssl_enabled: false  # SSL terminated at App Service
+  
+# Google Cloud Run
+gcp:
+  host: "0.0.0.0"
+  port: 8080  # Cloud Run default
+  workers: 1  # Cloud Run handles scaling
+  environment: "production"
+  proxy_headers: true
+  ssl_enabled: false  # SSL terminated at load balancer
+
+# Heroku
+heroku:
+  host: "0.0.0.0"
+  port: "${PORT}"  # Heroku assigns port dynamically
+  workers: 2
+  environment: "production"
+  proxy_headers: true
+  ssl_enabled: false  # SSL terminated by Heroku
+
+# =============================================================================
+# Kubernetes Configuration
+# =============================================================================
+kubernetes:
+  # Server settings
+  host: "0.0.0.0"
+  port: 8000
+  workers: 2
+  reload: false
+  
+  # CORS (handled by Ingress)
+  cors_enabled: false
+  
+  # Security (handled by Ingress/Service Mesh)
+  require_auth: false  # Auth handled at ingress level
+  
+  # SSL/TLS (handled by Ingress)
+  ssl_enabled: false
+  
+  # Deployment settings
+  environment: "production"
+  log_level: "info"
+  access_log: true
+  
+  # Proxy settings
+  proxy_headers: true
+  forwarded_allow_ips: "10.0.0.0/8,172.16.0.0/12"  # Pod network ranges
+  
+  # Health checks
+  timeout: 30
+  keep_alive: 5

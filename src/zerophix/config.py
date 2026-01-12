@@ -109,3 +109,150 @@ class RedactionConfig(BaseModel):
     
     class Config:
         extra = "allow"  # Allow additional configuration options
+
+
+class APIConfig(BaseModel):
+    """Configuration for the ZeroPhi REST API server"""
+    
+    # Server settings
+    host: str = Field(
+        default=os.environ.get("ZEROPHIX_API_HOST", "127.0.0.1"),
+        description="Host to bind the API server to (e.g., '0.0.0.0' for all interfaces)"
+    )
+    port: int = Field(
+        default=int(os.environ.get("ZEROPHIX_API_PORT", "8000")),
+        description="Port to bind the API server to"
+    )
+    workers: int = Field(
+        default=int(os.environ.get("ZEROPHIX_API_WORKERS", "1")),
+        description="Number of worker processes (for production deployment)"
+    )
+    reload: bool = Field(
+        default=os.environ.get("ZEROPHIX_API_RELOAD", "false").lower() == "true",
+        description="Enable auto-reload on code changes (development only)"
+    )
+    
+    # CORS settings
+    cors_enabled: bool = Field(
+        default=os.environ.get("ZEROPHIX_CORS_ENABLED", "true").lower() == "true",
+        description="Enable CORS middleware"
+    )
+    cors_origins: List[str] = Field(
+        default_factory=lambda: os.environ.get(
+            "ZEROPHIX_CORS_ORIGINS", "*"
+        ).split(",") if os.environ.get("ZEROPHIX_CORS_ORIGINS") else ["*"],
+        description="Allowed CORS origins (comma-separated in env var)"
+    )
+    cors_credentials: bool = Field(
+        default=os.environ.get("ZEROPHIX_CORS_CREDENTIALS", "true").lower() == "true",
+        description="Allow credentials in CORS requests"
+    )
+    cors_methods: List[str] = Field(
+        default_factory=lambda: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        description="Allowed HTTP methods for CORS"
+    )
+    cors_headers: List[str] = Field(
+        default_factory=lambda: ["*"],
+        description="Allowed headers for CORS"
+    )
+    
+    # Security settings
+    api_key_header: str = Field(
+        default="Authorization",
+        description="HTTP header name for API key authentication"
+    )
+    require_auth: bool = Field(
+        default=os.environ.get("ZEROPHIX_REQUIRE_AUTH", "false").lower() == "true",
+        description="Require authentication for all endpoints"
+    )
+    api_keys: List[str] = Field(
+        default_factory=lambda: os.environ.get("ZEROPHIX_API_KEYS", "").split(",") if os.environ.get("ZEROPHIX_API_KEYS") else [],
+        description="Valid API keys (comma-separated in env var)"
+    )
+    
+    # TLS/SSL settings
+    ssl_enabled: bool = Field(
+        default=os.environ.get("ZEROPHIX_SSL_ENABLED", "false").lower() == "true",
+        description="Enable SSL/TLS"
+    )
+    ssl_keyfile: Optional[str] = Field(
+        default=os.environ.get("ZEROPHIX_SSL_KEYFILE"),
+        description="Path to SSL private key file"
+    )
+    ssl_certfile: Optional[str] = Field(
+        default=os.environ.get("ZEROPHIX_SSL_CERTFILE"),
+        description="Path to SSL certificate file"
+    )
+    ssl_ca_certs: Optional[str] = Field(
+        default=os.environ.get("ZEROPHIX_SSL_CA_CERTS"),
+        description="Path to CA certificates file"
+    )
+    
+    # Deployment settings
+    environment: str = Field(
+        default=os.environ.get("ZEROPHIX_ENV", "development"),
+        description="Deployment environment: development, staging, production"
+    )
+    log_level: str = Field(
+        default=os.environ.get("ZEROPHIX_LOG_LEVEL", "info"),
+        description="Logging level: debug, info, warning, error, critical"
+    )
+    access_log: bool = Field(
+        default=os.environ.get("ZEROPHIX_ACCESS_LOG", "true").lower() == "true",
+        description="Enable access logging"
+    )
+    
+    # API documentation settings
+    docs_enabled: bool = Field(
+        default=os.environ.get("ZEROPHIX_DOCS_ENABLED", "true").lower() == "true",
+        description="Enable /docs and /redoc endpoints"
+    )
+    docs_url: Optional[str] = Field(
+        default="/docs" if os.environ.get("ZEROPHIX_DOCS_ENABLED", "true").lower() == "true" else None,
+        description="URL path for OpenAPI docs"
+    )
+    redoc_url: Optional[str] = Field(
+        default="/redoc" if os.environ.get("ZEROPHIX_DOCS_ENABLED", "true").lower() == "true" else None,
+        description="URL path for ReDoc documentation"
+    )
+    
+    # Performance settings
+    max_request_size: int = Field(
+        default=int(os.environ.get("ZEROPHIX_MAX_REQUEST_SIZE", str(10 * 1024 * 1024))),  # 10 MB
+        description="Maximum request size in bytes"
+    )
+    timeout: int = Field(
+        default=int(os.environ.get("ZEROPHIX_TIMEOUT", "60")),
+        description="Request timeout in seconds"
+    )
+    keep_alive: int = Field(
+        default=int(os.environ.get("ZEROPHIX_KEEP_ALIVE", "5")),
+        description="Keep-alive timeout in seconds"
+    )
+    
+    # Rate limiting
+    rate_limit_enabled: bool = Field(
+        default=os.environ.get("ZEROPHIX_RATE_LIMIT_ENABLED", "false").lower() == "true",
+        description="Enable rate limiting"
+    )
+    rate_limit_requests: int = Field(
+        default=int(os.environ.get("ZEROPHIX_RATE_LIMIT_REQUESTS", "100")),
+        description="Maximum requests per time window"
+    )
+    rate_limit_window: int = Field(
+        default=int(os.environ.get("ZEROPHIX_RATE_LIMIT_WINDOW", "60")),
+        description="Rate limit time window in seconds"
+    )
+    
+    # Proxy settings (for deployment behind reverse proxy)
+    proxy_headers: bool = Field(
+        default=os.environ.get("ZEROPHIX_PROXY_HEADERS", "false").lower() == "true",
+        description="Trust X-Forwarded-* headers (enable when behind proxy)"
+    )
+    forwarded_allow_ips: Optional[str] = Field(
+        default=os.environ.get("ZEROPHIX_FORWARDED_ALLOW_IPS", "*"),
+        description="Allowed IPs for forwarded headers"
+    )
+    
+    class Config:
+        extra = "allow"  # Allow additional configuration options

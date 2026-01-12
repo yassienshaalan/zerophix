@@ -328,21 +328,78 @@ result = pipeline.redact(text)
 ```
 
 #### REST API Server
+
+**Quick Start (localhost:8000):**
+```bash
+python -m zerophix.api.rest
+# Access docs at http://localhost:8000/docs
+```
+
+**Production Deployment (configurable via environment variables):**
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Configure for your environment (host, port, CORS, auth, SSL, etc.)
+# See .env.example and configs/api_config.yml for all options
+
+# Run with configuration
+python -m zerophix.api.rest
+```
+
+**Programmatic Configuration:**
 ```python
-from zerophix.api.rest import app
+from zerophix.config import APIConfig
+from zerophix.api import create_app
 import uvicorn
 
-# Run enterprise API server
-if __name__ == "__main__":
-    uvicorn.run(
-        app, 
-        host="0.0.0.0", 
-        port=8000,
-        workers=4,
-        ssl_keyfile="./ssl/key.pem",
-        ssl_certfile="./ssl/cert.pem"
-    )
+# Configure for production
+config = APIConfig(
+    host="0.0.0.0",
+    port=8000,
+    workers=4,
+    cors_origins=["https://app.example.com"],
+    require_auth=True,
+    api_keys=["your-secret-key"],
+    ssl_enabled=True,
+    ssl_keyfile="./ssl/key.pem",
+    ssl_certfile="./ssl/cert.pem",
+    environment="production",
+    docs_enabled=False  # Disable in production
+)
+
+app = create_app(config)
+uvicorn.run(app, host=config.host, port=config.port)
 ```
+
+**Key Configuration Options (Environment Variables):**
+- `ZEROPHIX_API_HOST` - Bind address (default: `127.0.0.1`, use `0.0.0.0` for network)
+- `ZEROPHIX_API_PORT` - Port number (default: `8000`)
+- `ZEROPHIX_API_WORKERS` - Worker processes (default: `1`)
+- `ZEROPHIX_CORS_ORIGINS` - Allowed origins (default: `*`)
+- `ZEROPHIX_REQUIRE_AUTH` - Require API keys (default: `false`)
+- `ZEROPHIX_API_KEYS` - Valid API keys (comma-separated)
+- `ZEROPHIX_SSL_ENABLED` - Enable SSL/TLS (default: `false`)
+- `ZEROPHIX_ENV` - Environment: development/staging/production
+- `ZEROPHIX_DOCS_ENABLED` - Enable API docs (default: `true`)
+
+**Docker Deployment:**
+```yaml
+# docker-compose.yml
+version: '3.8'
+services:
+  api:
+    image: zerophi-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ZEROPHIX_API_HOST=0.0.0.0
+      - ZEROPHIX_ENV=production
+      - ZEROPHIX_REQUIRE_AUTH=true
+      - ZEROPHIX_API_KEYS=${API_KEYS}
+```
+
+**Supports all major platforms:** AWS, GCP, Azure, Heroku, Kubernetes. See [docs/API_DEPLOYMENT.md](docs/API_DEPLOYMENT.md) for detailed guides.
 
 ## Multi-Country Support
 

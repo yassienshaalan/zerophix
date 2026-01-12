@@ -10,7 +10,7 @@ from datetime import datetime
 import hashlib
 import uuid
 
-from ..config import RedactionConfig
+from ..config import RedactionConfig, APIConfig
 from ..pipelines.redaction import RedactionPipeline
 from ..performance.optimization import BatchProcessor, StreamProcessor
 from ..security import SecureAuditLogger, ComplianceValidator, ZeroTrustValidator, ComplianceStandard
@@ -106,23 +106,27 @@ class FileRedactionRequest(BaseModel):
     masking_style: str = Field(default="hash", description="Redaction strategy")
     preserve_formatting: bool = Field(default=True, description="Preserve document formatting")
 
+# Initialize API configuration
+api_config = APIConfig()
+
 # API App
 app = FastAPI(
     title="ZeroPhi PII Redaction API",
     description="Enterprise-grade PII/PSI/PHI redaction service with security and compliance",
     version="0.2.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
+    docs_url=api_config.docs_url,
+    redoc_url=api_config.redoc_url
 )
 
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS middleware (configurable)
+if api_config.cors_enabled:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=api_config.cors_origins,
+        allow_credentials=api_config.cors_credentials,
+        allow_methods=api_config.cors_methods,
+        allow_headers=api_config.cors_headers,
+    )
 
 # Security
 security = HTTPBearer(auto_error=False)
@@ -141,10 +145,14 @@ app_state = {
 async def get_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[str]:
     """Validate API key (customize based on your auth system)"""
     if not credentials:
+        if api_config.require_auth:
+            raise HTTPException(status_code=401, detail="Authentication required")
         return None
     
-    # In production, validate against your auth system
-    # For now, accept any non-empty token
+    # Validate against configured API keys
+    if api_config.api_keys and credentials.credentials not in api_config.api_keys:
+        raise HTTPException(status_code=403, detail="Invalid API key")
+    
     return credentials.credentials if credentials.credentials else None
 
 # Dependency for pipeline
@@ -558,6 +566,51 @@ async def websocket_redact(websocket):
     finally:
         await websocket.close()
 
+def create_app(config: Optional[APIConfig] = None) -> FastAPI:
+    """Factory function to create app with custom configuration"""
+    global api_config
+    if config:
+        api_config = config
+    return app
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, api_config.log_level.upper()),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # Prepare uvicorn configuration
+    uvicorn_config = {
+        "app": "zerophix.api.rest:app",
+        "host": api_config.host,
+        "port": api_config.port,
+        "workers": api_config.workers if api_config.environment == "production" else 1,
+        "reload": api_config.reload,
+        "access_log": api_config.access_log,
+        "timeout_keep_alive": api_config.keep_alive,
+        "log_level": api_config.log_level.lower(),
+    }
+    
+    # Add SSL configuration if enabled
+    if api_config.ssl_enabled:
+        uvicorn_config.update({
+            "ssl_keyfile": api_config.ssl_keyfile,
+            "ssl_certfile": api_config.ssl_certfile,
+            "ssl_ca_certs": api_config.ssl_ca_certs,
+        })
+    
+    # Add proxy headers if configured
+    if api_config.proxy_headers:
+        uvicorn_config["proxy_headers"] = True
+        uvicorn_config["forwarded_allow_ips"] = api_config.forwarded_allow_ips
+    
+    logging.info(f"Starting ZeroPhi API on {api_config.host}:{api_config.port}")
+    logging.info(f"Environment: {api_config.environment}")
+    logging.info(f"CORS enabled: {api_config.cors_enabled}")
+    logging.info(f"Authentication required: {api_config.require_auth}")
+    logging.info(f"Documentation available at: http://{api_config.host}:{api_config.port}{api_config.docs_url if api_config.docs_enabled else ' (disabled)'}")
+    
+    uvicorn.run(**uvicorn_config)
