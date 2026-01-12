@@ -1,13 +1,69 @@
 regex_patterns:
+  # Personal Identifiers
   PERSON_NAME: '\b([A-Z][a-z]+\s[A-Z][a-z]+)\b'
-  DOB_ISO: '\b(19|20)\d{2}-([0][1-9]|1[0-2])-([0][1-9]|[12]\d|3[01])\b'
-  PHONE_AU: '\b0[23478]\d{2}\s?\d{3}\s?\d{3}\b|\b\+61\s?\d{1,2}\s?\d{3}\s?\d{3}\b'
-  MEDICARE: '\b(\d{4}\s?\d{5}\s?[1-9]-\d)\b'
-  TFN: '\b(\d{3}\s?\d{3}\s?\d{3})\b'
-  ABN: '\b(\d{2}\s?\d{3}\s?\d{3}\s?\d{3})\b'
+  
+  # Tax & Business Numbers
+  TFN: '\b(\d{3}[\s-]?\d{3}[\s-]?\d{3})\b'  # Tax File Number (with checksum validation)
+  ABN: '\b(\d{2}[\s-]?\d{3}[\s-]?\d{3}[\s-]?\d{3})\b'  # Australian Business Number
+  ACN: '\b(\d{3}[\s-]?\d{3}[\s-]?\d{3})\b'  # Australian Company Number
+  
+  # Healthcare Identifiers
+  MEDICARE: '\b(\d{4}[\s-]?\d{5}[\s-]?[1-9][\s-]?\d)\b'  # Medicare number with IRN
+  IHI: '\b(800360\d{10})\b'  # Individual Healthcare Identifier
+  DVA: '\b([NQVWST][A-Z]\d{6}[A-Z]?)\b'  # DVA File Number
+  PBS_CARD: '\b(\d{10})\b'  # Pharmaceutical Benefits Scheme
+  
+  # Driver License (State variations)
+  DRIVER_LICENSE_NSW: '\b(\d{8})\b'  # NSW
+  DRIVER_LICENSE_VIC: '\b(\d{7,10})\b'  # VIC
+  DRIVER_LICENSE_QLD: '\b(\d{9})\b'  # QLD
+  DRIVER_LICENSE_SA: '\b([A-Z]\d{6})\b'  # SA
+  DRIVER_LICENSE_WA: '\b(\d{7})\b'  # WA
+  DRIVER_LICENSE_TAS: '\b(\d{7,8})\b'  # TAS
+  DRIVER_LICENSE_ACT: '\b(\d{8})\b'  # ACT
+  DRIVER_LICENSE_NT: '\b(\d{8})\b'  # NT
+  
+  # Passport
+  PASSPORT_AU: '\b([A-Z]\d{7}|[A-Z]{2}\d{6})\b'  # Australian Passport
+  
+  # Financial
+  BSB: '\b(\d{3}[\s-]?\d{3})\b'  # Bank State Branch
+  CREDIT_CARD: '\b(?:\d{4}[\s-]?){3}\d{4}\b'  # Credit Card
+  BANK_ACCOUNT: '\b(\d{6,10})\b'  # Bank Account Number
+  
+  # Contact Information
+  PHONE_AU: '\b0[23478]\d{2}[\s-]?\d{3}[\s-]?\d{3}\b|\b\+61[\s-]?\d{1}[\s-]?\d{4}[\s-]?\d{4}\b|\b1[38]00[\s-]?\d{3}[\s-]?\d{3}\b'
+  MOBILE_AU: '\b04\d{2}[\s-]?\d{3}[\s-]?\d{3}\b|\b\+61[\s-]?4\d{2}[\s-]?\d{3}[\s-]?\d{3}\b'
   EMAIL: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}'
-  ADDRESS_HINT: '\b(Street|St|Road|Rd|Avenue|Ave|Lane|Ln|VIC|NSW|QLD|SA|WA|TAS|ACT|NT)\b'
-  IHI: '\b(800360\d{9})\b'
+  
+  # Dates
+  DOB_ISO: '\b(19|20)\d{2}-([0][1-9]|1[0-2])-([0][1-9]|[12]\d|3[01])\b'
+  DOB_AU: '\b([0][1-9]|[12]\d|3[01])[/-]([0][1-9]|1[0-2])[/-](19|20)\d{2}\b'  # DD/MM/YYYY
+  
+  # Addresses (Enhanced)
+  POSTCODE_AU: '\b([0-2]\d{3}|[3-9]\d{3})\b'
+  ADDRESS_STREET: '\b\d+[A-Za-z]?\s+([A-Z][a-z]+\s)*?(Street|St|Road|Rd|Avenue|Ave|Drive|Dr|Lane|Ln|Court|Ct|Place|Pl|Crescent|Cres|Circuit|Cct|Way|Boulevard|Bvd|Terrace|Tce|Highway|Hwy|Close|Cl|Grove|Gr)\b'
+  ADDRESS_STATE: '\b(New\s+South\s+Wales|NSW|Victoria|VIC|Queensland|QLD|South\s+Australia|SA|Western\s+Australia|WA|Tasmania|TAS|Australian\s+Capital\s+Territory|ACT|Northern\s+Territory|NT)\b'
+  SUBURB_AU: '\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(?:VIC|NSW|QLD|SA|WA|TAS|ACT|NT)\s+\d{4}\b'
+  
+  # Employment & Education
+  EMPLOYEE_ID_AU: '\b(?:EMP|EMPL|STAFF|EMPLOYEE)[\s-]?\d{4,8}\b'
+  STUDENT_ID_AU: '\b(?:STU|STUD|STUDENT)[\s-]?\d{6,10}\b'
+  
+  # Government & Legal
+  CENTRELINK_CRN: '\b(\d{9}[A-Z])\b'  # Centrelink Customer Reference Number
+  IMMIGRATION_VISA: '\b([A-Z]{3}\d{9})\b'  # Visa Grant Number
+  
+  # Vehicle & Property
+  VEHICLE_REGO_NSW: '\b([A-Z]{2}[\s-]?\d{2}[\s-]?[A-Z]{2})\b'  # NSW Rego
+  VEHICLE_REGO_VIC: '\b(\d[A-Z]{2}[\s-]?\d[A-Z]{2})\b'  # VIC Rego
+  VEHICLE_VIN: '\b([A-HJ-NPR-Z0-9]{17})\b'  # Vehicle Identification Number
+  
+  # Titles & Prefixes (Australian context)
+  AU_TITLE: '\b(Mr|Mrs|Ms|Miss|Dr|Prof|Hon|Rev|Sir|Dame|Justice)\b\.?'
+  
+  # Organizations (Common Australian suffixes)
+  AU_ORGANIZATION: '\b([A-Z][A-Za-z\s&]+(?:Pty|Ltd|Proprietary|Limited|Corporation|Corp|Company|Co|Group|Holdings|Trust|Partnership|Foundation|Institute|University|College|Hospital|Clinic|Centre|Center)\.?)\b'
 
 actions:
   default: 'mask'
