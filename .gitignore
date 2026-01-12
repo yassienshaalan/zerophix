@@ -153,6 +153,12 @@ reports/
 .cache/
 *.bak
 
+# Runtime generated files
+audit_logs/
+keys/
+secure_data/
+sample_documents/
+
 # Azure credentials
 .azure/
 

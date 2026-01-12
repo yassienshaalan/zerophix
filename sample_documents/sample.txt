@@ -1,4 +1,0 @@
-John Doe
-SSN: 123-45-6789
-Email: john@example.com
-Phone: (555) 123-4567
