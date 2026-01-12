@@ -109,15 +109,15 @@ if self.country == "AU" and AU_VALIDATION_AVAILABLE:
 
 | Feature | 7-Layer System | ZeroPhix (Enhanced) |
 |---------|---------------|---------------------|
-| Entity Types | 40+ | 40+ ✓ |
-| TFN Validation | Mod 11 | Mod 11 ✓ |
-| ABN Validation | Mod 89 | Mod 89 ✓ |
-| ACN Validation | Mod 10 | Mod 10 ✓ |
-| Medicare Validation | Mod 10 | Mod 10 ✓ |
-| State Driver Licenses | ✓ | 8 states ✓ |
-| Multi-Detector Consensus | ✗ | ✓ (6 detectors) |
-| Context Propagation | ✗ | ✓ |
-| ML Models | ✗ | BERT, GLiNER ✓ |
+| Entity Types | 40+ | 40+ (Yes) |
+| TFN Validation | Mod 11 | Mod 11 (Yes) |
+| ABN Validation | Mod 89 | Mod 89 (Yes) |
+| ACN Validation | Mod 10 | Mod 10 (Yes) |
+| Medicare Validation | Mod 10 | Mod 10 (Yes) |
+| State Driver Licenses | Yes | 8 states (Yes) |
+| Multi-Detector Consensus | No | Yes (6 detectors) |
+| Context Propagation | No | Yes |
+| ML Models | No | BERT, GLiNER (Yes) |
 | Precision | 92% | 92%+ (with validation) |
 
 **ZeroPhix Advantages:**
@@ -164,12 +164,12 @@ python test_au_detector.py
 ```
 
 Expected output:
-- Valid TFN (123-456-782) detected: ✓
-- Invalid TFN (123-456-789) rejected: ✓
-- Valid ABN (51 824 753 556) detected: ✓
-- Invalid ABN (51 824 753 557) rejected: ✓
-- Valid ACN (000-000-019) detected: ✓
-- Invalid ACN (000-000-018) rejected: ✓
+- Valid TFN (123-456-782) detected: Pass
+- Invalid TFN (123-456-789) rejected: Pass
+- Valid ABN (51 824 753 556) detected: Pass
+- Invalid ABN (51 824 753 557) rejected: Pass
+- Valid ACN (000-000-019) detected: Pass
+- Invalid ACN (000-000-018) rejected: Pass
 
 ## Usage Example
 
@@ -211,13 +211,13 @@ entities = detector.detect(text)
 
 ## Production Readiness
 
-✓ Mathematical algorithms match official specifications
-✓ Handles formatted and unformatted inputs
-✓ Comprehensive test coverage
-✓ Automatic validation in detection pipeline
-✓ Graceful fallback if validators unavailable
-✓ Zero performance impact (<1ms per validation)
-✓ Compatible with existing policy framework
+- Mathematical algorithms match official specifications
+- Handles formatted and unformatted inputs
+- Comprehensive test coverage
+- Automatic validation in detection pipeline
+- Graceful fallback if validators unavailable
+- Zero performance impact (<1ms per validation)
+- Compatible with existing policy framework
 
 ## Next Steps
 
