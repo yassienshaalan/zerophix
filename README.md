@@ -7,6 +7,22 @@
 [![Security: Enterprise](https://img.shields.io/badge/Security-Enterprise%20Grade-red.svg)](#security--compliance)
 [![Compliance: Multi-Standard](https://img.shields.io/badge/Compliance-GDPR%20|%20HIPAA%20|%20PCI%20DSS-blue.svg)](#compliance-standards)
 
+## What is ZeroPhix?
+
+**ZeroPhix** is an enterprise-grade tool for detecting and redacting sensitive information from text, documents, and data streams. It automatically identifies and removes:
+
+- **PII** (Personally Identifiable Information) - names, addresses, emails, phone numbers
+- **PHI** (Protected Health Information) - medical records, patient data, health identifiers  
+- **PSI** (Personal Sensitive Information) - financial data, credentials, government IDs
+- **Custom sensitive data** - proprietary identifiers, internal codes, API keys
+
+### Name Origin
+
+The name **ZeroPhix** reflects its core mission:
+- **Zero** = eliminate, remove, redact
+- **Phi** = from PHI (Protected Health Information)
+- **x** = extensible to PII, PSI, and any other sensitive data types
+
 ## Why ZeroPhix?
 
 ### **High Performance & Accuracy**
