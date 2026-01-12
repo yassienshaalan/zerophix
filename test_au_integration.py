@@ -49,15 +49,15 @@ valid_abn_found = any('51 824 753 556' in test_text[e['start']:e['end']] and e['
 invalid_abn_found = any('51 824 753 557' in test_text[e['start']:e['end']] and e['type'] == 'ABN' for e in results)
 
 print("\nValidation Results:")
-print(f"✓ Valid TFN detected: {valid_tfn_found}")
-print(f"✓ Invalid TFN rejected: {not invalid_tfn_found}")
-print(f"✓ Valid ABN detected: {valid_abn_found}")
-print(f"✓ Invalid ABN rejected: {not invalid_abn_found}")
+print(f"[PASS] Valid TFN detected: {valid_tfn_found}")
+print(f"[PASS] Invalid TFN rejected: {not invalid_tfn_found}")
+print(f"[PASS] Valid ABN detected: {valid_abn_found}")
+print(f"[PASS] Invalid ABN rejected: {not invalid_abn_found}")
 
 if valid_tfn_found and not invalid_tfn_found and valid_abn_found and not invalid_abn_found:
-    print("\n✓ ALL CHECKSUM VALIDATIONS PASSED!")
+    print("\n[SUCCESS] ALL CHECKSUM VALIDATIONS PASSED!")
 else:
-    print("\n✗ Some validation checks failed")
+    print("\n[FAIL] Some validation checks failed")
 
 # Redact the text
 redacted = pipeline.redact(test_text)

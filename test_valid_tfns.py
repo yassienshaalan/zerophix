@@ -9,9 +9,9 @@ invalid_tfns = ["123456789", "111111111", "000000000"]
 print("Testing Valid TFNs:")
 for tfn in valid_tfns:
     result = validate_tfn(tfn)
-    print(f"  {tfn}: {result} {'✓' if result else '✗'}")
+    print(f"  {tfn}: {result} {'[PASS]' if result else '[FAIL]'}")
 
 print("\nTesting Invalid TFNs:")
 for tfn in invalid_tfns:
     result = validate_tfn(tfn)
-    print(f"  {tfn}: {result} {'✓' if not result else '✗'}")
+    print(f"  {tfn}: {result} {'[PASS]' if not result else '[FAIL]'}")
