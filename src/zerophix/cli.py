@@ -10,12 +10,14 @@ from rich.table import Table
 console = Console()
 
 @click.group()
+@click.version_option(version="0.2.0", prog_name="zerophix")
 def app():
-    """Redaction CLI and utilities for zerophix"""
+    """ZeroPhix - Enterprise PII/PSI/PHI Redaction"""
     pass
 
 @app.command()
-@click.option("--text", type=str, help="Text to redact (use --infile for files)")
+@click.argument("text", required=False)
+@click.option("--text", "text_opt", type=str, help="Text to redact (alternative to positional arg)")
 @click.option("--infile", type=click.Path(exists=True), help="Path to input text file")
 @click.option("--country", default="AU", show_default=True)
 @click.option("--company", default=None)
@@ -23,9 +25,9 @@ def app():
 @click.option("--masking-style", default="hash", type=click.Choice(["hash","mask","replace","brackets"]))
 @click.option("--report", type=click.Choice(["json","markdown","html","csv","text"]), default=None, help="Generate a report in the specified format")
 @click.option("--report-output", type=str, default=None, help="Save report to file (default: print to stdout)")
-def redact(text, infile, country, company, use_openmed, masking_style, report, report_output):
+def redact(text, text_opt, infile, country, company, use_openmed, masking_style, report, report_output):
     """Redact a text string or file"""
-    data = text or (open(infile, "r", encoding="utf-8").read() if infile else None)
+    data = text or text_opt or (open(infile, "r", encoding="utf-8").read() if infile else None)
     if not data:
         print("[red]Provide --text or --infile[/red]")
         sys.exit(2)
@@ -50,7 +52,8 @@ def redact(text, infile, country, company, use_openmed, masking_style, report, r
             print(report_content)
 
 @app.command()
-@click.option("--text", type=str, help="Text to scan (use --infile for files)")
+@click.argument("text", required=False)
+@click.option("--text", "text_opt", type=str, help="Text to scan (alternative to positional arg)")
 @click.option("--infile", type=click.Path(exists=True), help="Path to input text file")
 @click.option("--country", default="AU", show_default=True)
 @click.option("--company", default=None)
@@ -59,8 +62,8 @@ def redact(text, infile, country, company, use_openmed, masking_style, report, r
 @click.option("--output", "output_file", default=None, help="Save report to file (default: print to stdout)")
 @click.option("--stats-only", is_flag=True, default=False, help="Show only statistics summary")
 @click.option("--verbose", is_flag=True, default=False, help="Show detailed detection information")
-def scan(text, infile, country, company, use_openmed, output_format, output_file, stats_only, verbose):
-    """Scan text for PII/PHI without redacting"""
+def scan(text, text_opt, infile, country, company, use_openmed, output_format, output_file, stats_only, verbose):
+    data = text or text_opt or (open(infile, "r", encoding="utf-8").read() if infile else None)
     data = text or (open(infile, "r", encoding="utf-8").read() if infile else None)
     if not data:
         print("[red]Provide --text or --infile[/red]")
