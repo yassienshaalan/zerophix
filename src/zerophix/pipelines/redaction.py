@@ -185,7 +185,52 @@ class RedactionPipeline:
         
         return final_spans
 
+    def redact_batch(self, texts: List[str]) -> List[Dict[str, object]]:
+        """
+        Batch redact multiple texts efficiently
+        
+        Args:
+            texts: List of text strings to redact
+            
+        Returns:
+            List of redaction results, same format as redact()
+            
+        Example:
+            texts = [
+                "John Smith, SSN: 123-45-6789",
+                "Jane Doe, email: jane@example.com",
+                "Bob Wilson, phone: 555-123-4567"
+            ]
+            results = pipeline.redact_batch(texts)
+            for i, result in enumerate(results):
+                print(f"Text {i+1}: {result['text']}")
+        """
+        return [self.redact(text) for text in texts]
+    
+    def scan_batch(self, texts: List[str]) -> List[Dict[str, object]]:
+        """
+        Batch scan multiple texts for PII/PHI
+        
+        Args:
+            texts: List of text strings to scan
+            
+        Returns:
+            List of scan results, same format as scan()
+        """
+        return [self.scan(text) for text in texts]
+
     def redact(self, text: str, user_context: Dict = None, session_id: str = None) -> Dict[str, object]:
+        """
+        Redact PII/PHI from text
+        
+        Args:
+            text: Input text (str, required)
+            user_context: Optional user context
+            session_id: Optional session identifier
+            
+        Returns:
+            Dictionary with 'text' (redacted) and 'spans' (detected entities)
+        """
         spans: List[Span] = []
         for comp in self.components:
             spans.extend(comp.detect(text))

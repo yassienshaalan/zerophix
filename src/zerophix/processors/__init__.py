@@ -10,6 +10,12 @@ from .documents import (
     CSVProcessor
 )
 
+from .dataframes import (
+    DataFrameProcessor,
+    redact_pandas,
+    redact_spark
+)
+
 __all__ = [
     'DocumentProcessor',
     'DocumentProcessorFactory', 
@@ -18,5 +24,8 @@ __all__ = [
     'PDFProcessor',
     'DOCXProcessor',
     'ExcelProcessor',
-    'CSVProcessor'
+    'CSVProcessor',
+    'DataFrameProcessor',
+    'redact_pandas',
+    'redact_spark',
 ]
