@@ -1,7 +1,7 @@
 """
 Manual test of Australian validators
 """
-from src.zerophix.detectors.au_validators import (
+from zerophix.detectors.au_validators import (
     validate_tfn,
     validate_abn,
     validate_acn,

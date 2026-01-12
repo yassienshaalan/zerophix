@@ -1,7 +1,7 @@
 """
 Test valid TFNs
 """
-from src.zerophix.detectors.au_validators import validate_tfn
+from zerophix.detectors.au_validators import validate_tfn
 
 valid_tfns = ["123456782", "876543210", "324567899"]
 invalid_tfns = ["123456789", "111111111", "000000000"]
