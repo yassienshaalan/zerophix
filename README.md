@@ -50,6 +50,10 @@ pip install "zerophix[all]"
 
 # Or select specific features
 pip install "zerophix[gliner,documents,api]"
+
+# For DataFrame support
+pip install "zerophix[all]" pandas  # For Pandas
+pip install "zerophix[all]" pyspark  # For PySpark
 ```
 
 ### One-Time Model Setup (Optional)
@@ -84,6 +88,43 @@ result = pipeline.redact(text)
 
 print(result['text'])
 # Output: [PERSON], SSN: XXX-XX-6789, Email: [EMAIL]
+```
+
+### Supported Input Types
+
+ZeroPhix handles all common data formats:
+
+```python
+# 1. Single String
+result = pipeline.redact("John Smith, SSN: 123-45-6789")
+
+# 2. List of Strings (Batch)
+texts = ["text 1 with PII", "text 2 with PHI", "text 3"]
+results = pipeline.redact_batch(texts)
+
+# 3. Pandas DataFrame
+from zerophix.processors import redact_pandas
+df_clean = redact_pandas(df, columns=['name', 'email', 'ssn'], country='US')
+
+# 4. PySpark DataFrame
+from zerophix.processors import redact_spark
+spark_df_clean = redact_spark(spark_df, columns=['patient_name', 'mrn'], country='US')
+
+# 5. Files (PDF, DOCX, Excel)
+from zerophix.processors import PDFProcessor
+PDFProcessor().redact_file('input.pdf', 'output.pdf', pipeline)
+
+# 6. Scanning (detect without redacting)
+scan_result = pipeline.scan(text)  # Returns entities found
+```
+
+**Quick Test:**
+```bash
+# Test all interfaces
+python examples/test_all_interfaces.py
+
+# Comprehensive examples
+python examples/all_interfaces_demo.py
 ```
 
 ### Australian Coverage Highlights
@@ -767,6 +808,8 @@ zerophix scan --infile document.txt --format html --output report.html
 
 | Example | Description |
 |---------|-------------|
+| [test_all_interfaces.py](examples/test_all_interfaces.py) | Quick test of all input types (string, batch, DataFrame, files) |
+| [all_interfaces_demo.py](examples/all_interfaces_demo.py) | Comprehensive demo of all interfaces with detailed examples |
 | [gliner_examples.py](examples/gliner_examples.py) | Zero-shot custom entity detection |
 | [quick_start_examples.py](examples/quick_start_examples.py) | Basic usage patterns |
 | [comprehensive_usage_examples.py](examples/comprehensive_usage_examples.py) | All features demonstrated |
