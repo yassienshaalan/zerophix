@@ -33,23 +33,21 @@ pipeline = RedactionPipeline(cfg)
 
 # Scan for entities
 scan_results = pipeline.scan(test_text)
-results = scan_results['entities']
+results = scan_results['detections']
 
 print(f"\nDetected {len(results)} entities:")
 print("-" * 60)
 for i, entity in enumerate(results, 1):
-    text_span = test_text[entity['start']:entity['end']]
-    print(f"{i}. {entity['type']:<20} | {text_span:<25} | Score: {entity['score']:.3f}")
-    if 'validated' in entity:
-        print(f"   {'Checksum validated' if entity['validated'] else 'Checksum INVALID'}")
+    text_span = entity['text']
+    print(f"{i}. {entity['label']:<20} | {text_span:<25} | Score: {entity['score']:.3f}")
 
 print("\n" + "=" * 60)
 
 # Verify that invalid checksums were rejected
-valid_tfn_found = any('123-456-782' in test_text[e['start']:e['end']] and e['type'] == 'TFN' for e in results)
-invalid_tfn_found = any('123-456-789' in test_text[e['start']:e['end']] and e['type'] == 'TFN' for e in results)
-valid_abn_found = any('51 824 753 556' in test_text[e['start']:e['end']] and e['type'] == 'ABN' for e in results)
-invalid_abn_found = any('51 824 753 557' in test_text[e['start']:e['end']] and e['type'] == 'ABN' for e in results)
+valid_tfn_found = any('123-456-782' in entity['text'] and entity['label'] == 'TFN' for entity in results)
+invalid_tfn_found = any('123-456-789' in entity['text'] and entity['label'] == 'TFN' for entity in results)
+valid_abn_found = any('51 824 753 556' in entity['text'] and entity['label'] == 'ABN' for entity in results)
+invalid_abn_found = any('51 824 753 557' in entity['text'] and entity['label'] == 'ABN' for entity in results)
 
 print("\nValidation Results:")
 print(f"[PASS] Valid TFN detected: {valid_tfn_found}")
