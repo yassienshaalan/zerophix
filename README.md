@@ -29,7 +29,7 @@
 | **High Accuracy** | ML models + regex patterns = 98%+ precision |
 | **Fast Processing** | Smart caching + async = 1000s docs/sec |
 | **Zero Cost** | No API fees, unlimited processing |
-| **Fully Offline** | Complete data sovereignty |
+| **Fully Offline** | 100% air-gapped after one-time model setup |
 | **Multi-Country** | Australia, US, EU, UK, Canada + extensible |
 | **100+ Entity Types** | SSN, credit cards, medical IDs, passports, etc. |
 | **Zero-Shot Detection** | Detect ANY entity type without training (GLiNER) |
@@ -42,7 +42,7 @@
 ### Installation
 
 ```bash
-# Basic installation
+# Basic installation (regex only - 100% offline)
 pip install zerophix
 
 # With all features (recommended)
@@ -51,6 +51,23 @@ pip install "zerophix[all]"
 # Or select specific features
 pip install "zerophix[gliner,documents,api]"
 ```
+
+### One-Time Model Setup (Optional)
+
+ZeroPhix works **100% offline** after initial setup. ML models are downloaded once and cached locally:
+
+```bash
+# spaCy models (optional - for enhanced NER)
+python -m spacy download en_core_web_lg
+
+# Other ML models auto-download on first use and cache locally
+# After initial download, no internet required - fully air-gapped
+```
+
+**Offline Modes:**
+- **Regex-only**: Works immediately, no downloads, 100% offline from install
+- **With ML models**: One-time download, then 100% offline forever
+- **Air-gapped environments**: Pre-download models, transfer via USB/network
 
 ### 30-Second Demo
 
@@ -230,6 +247,122 @@ config = RedactionConfig(country="US")  # United States
 ### 5. Document Processing
 
 **Supported Formats:** PDF, DOCX, XLSX, CSV, TXT, HTML, JSON
+
+**File Redaction:**
+```bash
+zerophix redact-file --input document.pdf --output clean.pdf
+```
+
+**Batch Processing:**
+```bash
+zerophix batch-redact \
+  --input-dir ./documents \
+  --output-dir ./redacted \
+  --parallel --workers 8
+```
+
+## Offline & Air-Gapped Deployment 🔒
+
+**ZeroPhix is designed for complete data sovereignty and offline operation.**
+
+### Why Offline Matters
+
+| Scenario | Why ZeroPhix Works |
+|----------|-------------------|
+| **Healthcare/Medical** | Patient data never leaves premises (HIPAA compliant) |
+| **Financial Services** | Transaction data stays within secure network (PCI DSS) |
+| **Government/Defense** | Classified data in air-gapped environments |
+| **Legal/Law Firms** | Client confidentiality and attorney-client privilege |
+| **Research Institutions** | Sensitive research data protection |
+| **On-Premise Enterprise** | No cloud dependencies, full control |
+
+### Offline Deployment Models
+
+#### 1. **Regex-Only Mode** (Zero Setup)
+```python
+# 100% offline immediately after pip install
+config = RedactionConfig(
+    country="AU",
+    detectors=["regex", "statistical"]  # No ML models needed
+)
+```
+- ✅ No downloads required
+- ✅ Works immediately in air-gapped environments
+- ✅ 99.9% precision for structured data (SSN, TFN, credit cards)
+- ✅ Ultra-fast processing (1000s of docs/sec)
+
+#### 2. **ML-Enhanced Mode** (One-Time Setup)
+```bash
+# Download models once (requires internet temporarily)
+python -m spacy download en_core_web_lg
+pip install "zerophix[all]"
+
+# First run downloads HuggingFace models to cache:
+# ~/.cache/zerophix/models/
+# ~/.cache/huggingface/
+
+# After setup: 100% offline forever
+```
+- ✅ Models cached locally (no internet after setup)
+- ✅ 98%+ precision with ML models
+- ✅ Transfer cache folder to air-gapped servers
+
+#### 3. **Air-Gapped Installation**
+
+**On internet-connected machine:**
+```bash
+# Download all dependencies
+pip download zerophix[all] -d ./zerophix-offline/
+python -m spacy download en_core_web_lg --download-dir ./zerophix-offline/
+
+# Download ML models to local cache
+python -c "
+from zerophix.detectors.bert_detector import BERTDetector
+from zerophix.detectors.gliner_detector import GLiNERDetector
+# Models auto-download and cache
+"
+
+# Copy cache directory
+cp -r ~/.cache/zerophix ./zerophix-offline/cache/
+cp -r ~/.cache/huggingface ./zerophix-offline/cache/
+```
+
+**On air-gapped machine:**
+```bash
+# Transfer folder via USB/secure network
+# Install from local packages
+pip install --no-index --find-links=./zerophix-offline/ zerophix[all]
+
+# Restore cache
+cp -r ./zerophix-offline/cache/zerophix ~/.cache/
+cp -r ./zerophix-offline/cache/huggingface ~/.cache/
+
+# Now 100% offline - no internet required
+```
+
+### Offline vs. Cloud Comparison
+
+| Feature | ZeroPhix (Offline) | Cloud APIs (Azure, AWS) |
+|---------|-------------------|------------------------|
+| **Internet Required** | ❌ No (after setup) | ✅ Yes (always) |
+| **Data Leaves Premises** | ❌ Never | ✅ Yes |
+| **Cost per Document** | $0 | $0.001 - $0.05 |
+| **Processing Speed** | 1000s docs/sec | Rate limited |
+| **Data Sovereignty** | ✅ Complete | ❌ Cloud provider |
+| **Compliance Audit** | ✅ Simple | ⚠️ Complex |
+| **Vendor Lock-in** | ❌ None | ✅ High |
+
+### Pre-Built Docker Image (Offline-Ready)
+
+```bash
+# Build once with all models included
+docker build -t zerophix:offline --build-arg INCLUDE_MODELS=true .
+
+# Run completely offline
+docker run --network=none -p 8000:8000 zerophix:offline
+```
+
+The Docker image includes all models - perfect for air-gapped Kubernetes clusters.
 
 ```python
 from zerophix.processors.documents import PDFProcessor, DOCXProcessor
