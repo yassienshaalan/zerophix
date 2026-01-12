@@ -5,6 +5,7 @@ import sys
 sys.path.insert(0, 'src')
 
 from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
 
 # Test text with Australian entities
 test_text = """
@@ -27,7 +28,8 @@ print(test_text)
 print("=" * 60)
 
 # Initialize pipeline with Australian policy
-pipeline = RedactionPipeline(policy='au')
+cfg = RedactionConfig(policy='au')
+pipeline = RedactionPipeline(cfg)
 
 # Detect entities
 results = pipeline.detect(test_text)
