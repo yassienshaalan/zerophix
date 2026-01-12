@@ -42,6 +42,7 @@ ZeroPhix employs a multi-stage pipeline designed for maximum accuracy and flexib
     *   **Regex Detector**: Finds patterns like emails, phone numbers, and IDs using country-specific rules.
     *   **ML Detector (OpenMed/Custom)**: Uses advanced Named Entity Recognition (NER) models to find context-dependent entities (e.g., names, organizations).
     *   **GLiNER (Optional)**: Zero-shot detection for arbitrary labels.
+    *   **Auto-Mode**: Automatically detects the document domain (Medical, Legal, General) and selects the optimal combination of detectors.
 
 2.  **Ensemble Voting (Consensus)**:
     *   When detectors disagree (e.g., Regex says "PHONE" but ML says "ID"), a weighted voting system resolves the conflict.
@@ -67,6 +68,101 @@ python scripts/finetune_model.py --train_file data.jsonl --output_dir ./my_model
 ```
 
 Then update your config to point to `./my_model`.
+
+## Cloud Logging Integration
+
+ZeroPhix supports sending audit logs to major cloud providers (Azure, AWS, GCP) for centralized monitoring and compliance.
+
+### Configuration
+
+Enable cloud logging by setting the following environment variables:
+
+#### Azure Monitor (Application Insights)
+```bash
+export AZURE_LOGGING_ENABLED=true
+export AZURE_APPLICATION_INSIGHTS_CONNECTION_STRING="InstrumentationKey=..."
+```
+*Requires `pip install opencensus-ext-azure`*
+
+#### AWS CloudWatch
+```bash
+export AWS_LOGGING_ENABLED=true
+export AWS_REGION="us-east-1"          # Default: us-east-1
+export AWS_LOG_GROUP="zerophix-audit"  # Default: zerophix-audit
+export AWS_LOG_STREAM="audit-stream"   # Default: audit-stream
+```
+*Requires `pip install watchtower boto3`*
+
+#### Google Cloud Logging
+```bash
+export GCP_LOGGING_ENABLED=true
+# Ensure GOOGLE_APPLICATION_CREDENTIALS is set or environment is authenticated
+```
+*Requires `pip install google-cloud-logging`*
+
+## Customization
+
+### Custom Regex Patterns (Company Policies)
+
+You can define custom regex patterns specific to your organization (e.g., Employee IDs, Project Codes) by creating a company policy file.
+
+1.  **Create a YAML file** (e.g., `acme.yml`) in your config directory (default: `configs/company/`).
+2.  **Define your patterns** under `regex_patterns`.
+
+**Example: `configs/company/acme.yml`**
+```yaml
+regex_patterns:
+  EMPLOYEE_ID: '(?i)\bEMP-\d{5}\b'
+  PROJECT_CODE: '(?i)\bPRJ-[A-Z]{3}-\d{3}\b'
+  INTERNAL_IP: '\b10\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
+```
+
+3.  **Use the policy** when initializing the pipeline or making API requests.
+
+**Python:**
+```python
+config = RedactionConfig(country="AU", company="acme")
+pipeline = RedactionPipeline(config)
+```
+
+**API:**
+```bash
+curl -X POST "http://localhost:8000/redact" \
+     -H "Content-Type: application/json" \
+     -d '{"text": "User EMP-12345 accessed PRJ-XYZ-001", "company": "acme"}'
+```
+
+### Dynamic Custom Patterns (Runtime)
+
+You can also pass custom patterns dynamically at runtime via the `RedactionConfig` if you are using the Python library directly.
+
+```python
+config = RedactionConfig(
+    country="AU",
+    custom_patterns={
+        "TEMPORARY_CODE": [r"TEMP-\d{4}"]
+    }
+)
+```
+
+### Intelligent Auto-Mode
+
+ZeroPhix can automatically detect the domain of your text (Medical, Legal, or General) and switch to the most appropriate set of detectors. This ensures high accuracy across different document types without manual reconfiguration.
+
+```python
+# Enable Auto-Mode
+config = RedactionConfig(
+    mode="auto",  # <--- Magic happens here
+    country="US"
+)
+pipeline = RedactionPipeline(config)
+
+# Process a medical report (Uses OpenMed + Spacy)
+pipeline.redact("Patient John Doe diagnosed with...")
+
+# Process a court document (Uses BERT + Spacy + Legal Rules)
+pipeline.redact("In the High Court of Justice, Case No. 123...")
+```
 
 ## Installation
 
@@ -128,6 +224,118 @@ git clone https://github.com/yassienshaalan/zerophix.git
 cd zerophix
 pip install -e ".[all]"
 ```
+
+## REST API Usage
+
+ZeroPhix provides a high-performance REST API for integrating redaction capabilities into your applications.
+
+### 1. Installation & Startup
+
+```bash
+# Install dependencies
+pip install "zerophix[api]"
+
+# Start the server (Linux/Mac)
+export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+uvicorn zerophix.api.rest:app --reload
+
+# Start the server (Windows PowerShell)
+$env:PYTHONPATH="src"; uvicorn zerophix.api.rest:app --reload
+```
+
+The server will start at `http://127.0.0.1:8000`.
+Interactive documentation (Swagger UI) is available at `http://127.0.0.1:8000/docs`.
+
+### 2. API Endpoints
+
+#### Health Check
+`GET /health` - Check service status and stats.
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+#### Redact Text
+`POST /redact` - Redact PII/PHI from text.
+
+**Request:**
+```json
+{
+  "text": "Patient John Smith (DOB: 12/05/1980) was admitted.",
+  "country": "AU",
+  "masking_style": "replace",
+  "detectors": ["regex", "custom", "spacy"],
+  "include_confidence": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "redacted_text": "Patient <PERSON> (DOB: <DATE>) was admitted.",
+  "entities_found": 2,
+  "processing_time": 0.045,
+  "spans": [
+    { "start": 8, "end": 18, "label": "PERSON", "score": 0.95 },
+    { "start": 25, "end": 35, "label": "DATE", "score": 1.0 }
+  ],
+  "request_id": "a1b2c3d4-..."
+}
+```
+
+#### Batch Redaction
+`POST /batch/redact` - Process multiple texts in parallel.
+```json
+{
+  "texts": ["Text 1...", "Text 2..."],
+  "country": "US"
+}
+```
+
+## Testing & Benchmarking
+
+ZeroPhix includes tools to verify functionality and benchmark accuracy against state-of-the-art (SOTA) baselines.
+
+### 1. Running Examples
+Verify the system is working correctly with the provided examples.
+
+**JSON Examples:**
+Runs a set of complex JSON-defined test cases.
+```bash
+python scripts/run_json_examples.py
+```
+
+**File Processing Demo:**
+Demonstrates end-to-end processing of CSV, Excel, and PDF files.
+```bash
+python examples/file_tests_pii.py
+```
+
+### 2. SOTA Benchmarking
+Compare ZeroPhix accuracy against public datasets and cloud providers.
+
+**Public Datasets (TAB, PDF Deid):**
+1.  Download the benchmark datasets:
+    ```bash
+    python scripts/download_benchmarks.py
+    ```
+2.  Run the evaluation suite:
+    ```bash
+    python -m zerophix.eval.run_all_evaluations
+    ```
+    Results will be saved to `eval/results/`.
+
+**Azure Text Analytics Comparison:**
+Compare ZeroPhix results directly against Azure AI Language (requires Azure subscription).
+1.  Set your Azure credentials:
+    ```bash
+    export ZEROPHIX_AZURE_ENDPOINT="https://your-resource.cognitiveservices.azure.com/"
+    export ZEROPHIX_AZURE_KEY="your-api-key"
+    ```
+2.  Run the benchmark:
+    ```bash
+    python scripts/bench_against_azure.py --infile examples/samples.txt
+    ```
 
 ## Quick Start
 

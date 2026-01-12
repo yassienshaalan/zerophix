@@ -9,7 +9,7 @@ from zerophix.pipelines.redaction import RedactionPipeline
 from zerophix.eval.metrics import Span, compute_span_metrics
 
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 TAB_DIR = ROOT / "data" / "benchmarks" / "tab"
 
 
@@ -38,16 +38,22 @@ def _load_tab_split(json_path: Path) -> List[TabDoc]:
         annotations = doc["annotations"]
 
         spans: List[Span] = []
-        for ent in annotations.values():
-            identifier_type = ent.get("identifier_type")
-            if identifier_type not in ("DIRECT", "QUASI"):
-                continue  # not required to be masked
+        
+        for annot_group in annotations.values():
+            # Each annotation group contains a list of entity mentions
+            mentions = annot_group.get("entity_mentions", [])
+            
+            for ent in mentions:
+                identifier_type = ent.get("identifier_type")
+                
+                if identifier_type not in ("DIRECT", "QUASI"):
+                    continue  # not required to be masked
 
-            start = int(ent["start_offset"])
-            end = int(ent["end_offset"])
-            label = ent.get("entity_type") or "PHI"
+                start = int(ent["start_offset"])
+                end = int(ent["end_offset"])
+                label = ent.get("entity_type") or "PHI"
 
-            spans.append((doc_id, start, end, label))
+                spans.append((doc_id, start, end, label))
 
         docs.append(TabDoc(doc_id=doc_id, text=text, gold_spans=spans))
 
@@ -80,7 +86,7 @@ def _predict_spans(
     preds: List[Span] = []
     for d in docs:
         result = pipeline.redact(d.text)
-        for ent in result.get("entities", []):
+        for ent in result.get("spans", []):
             start = int(ent.get("start", 0))
             end = int(ent.get("end", 0))
             label = ent.get("label") or ent.get("entity_type") or "PHI"
@@ -121,6 +127,37 @@ def run_tab_benchmark(
     metrics = compute_span_metrics(
         gold_spans=gold_spans, pred_spans=pred_spans, ignore_label=ignore_label
     )
+
+    # --- Debug: Write mismatches to file ---
+    debug_file = ROOT / "eval" / "results" / "tab_debug.txt"
+    debug_file.parent.mkdir(parents=True, exist_ok=True)
+    
+    gold_set = set((s[0], s[1], s[2]) for s in gold_spans)
+    pred_set = set((s[0], s[1], s[2]) for s in pred_spans)
+    
+    fp_list = list(pred_set - gold_set)[:20]
+    fn_list = list(gold_set - pred_set)[:20]
+    
+    with debug_file.open("w", encoding="utf-8") as f:
+        f.write(f"TAB Debug Info ({split})\n")
+        f.write("=" * 40 + "\n")
+        f.write(f"Metrics: {metrics.as_dict()}\n\n")
+        
+        f.write("Top 20 False Positives (Predicted but not in Gold):\n")
+        for item in fp_list:
+            # Find the text for this span
+            doc = next((d for d in docs if d.doc_id == item[0]), None)
+            text = doc.text[item[1]:item[2]] if doc else "???"
+            f.write(f"  {item} -> '{text}'\n")
+            
+        f.write("\nTop 20 False Negatives (In Gold but not Predicted):\n")
+        for item in fn_list:
+            doc = next((d for d in docs if d.doc_id == item[0]), None)
+            text = doc.text[item[1]:item[2]] if doc else "???"
+            f.write(f"  {item} -> '{text}'\n")
+            
+    print(f"[TAB] Debug info written to {debug_file}")
+    # ---------------------------------------
 
     return metrics, len(gold_spans), len(pred_spans)
 

@@ -8,11 +8,11 @@ def main():
 
     try:
         from zerophix.config import RedactionConfig
-        from zerophi.pipelines.redaction import RedactionPipeline
+        from zerophix.pipelines.redaction import RedactionPipeline
     except ModuleNotFoundError:
         sys.path.insert(0, "src")
-        from zerophi.config import RedactionConfig
-        from zerophi.pipelines.redaction import RedactionPipeline
+        from zerophix.config import RedactionConfig
+        from zerophix.pipelines.redaction import RedactionPipeline
 
     files = sorted(glob.glob(os.path.join(args.dir, "*.json")))
     if not files:

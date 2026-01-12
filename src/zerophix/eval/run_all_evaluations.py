@@ -63,56 +63,159 @@ def run_all() -> Dict[str, Any]:
     }
 
     # ----------------------------------------------------------
-    # 1) TAB benchmark (EU-ish legal text)
+    # 1) TAB benchmark (EU-ish legal text) - MANUAL
     # ----------------------------------------------------------
-    tab_config = RedactionConfig(
+    print("\n[EVAL] Running TAB (Manual Config)...")
+    tab_config_manual = RedactionConfig(
+        mode="manual",
         country="EU",
-        detectors=["regex", "spacy"],  # tune as needed
+        detectors=["regex", "spacy", "bert", "gliner"],
+        use_bert=True,
+        use_spacy=True,
+        use_gliner=True,
+        use_statistical=False,
+        enable_context_propagation=True,
+        enable_ensemble_voting=True,
         redaction_strategy="replace",
         min_confidence=0.5,
+        allow_list=[
+            "The Court", "the Court", "European Court of Human Rights",
+            "The Government", "the Government", "Ministry of Foreign Affairs", "Ministry of Justice",
+            "The applicant", "the applicant", "The applicants",
+            "Article", "Section", "Convention", "Protocol", "Act", "Rule",
+            "Commission", "Chamber", "Grand Chamber", "District Court", "High Court",
+            "United Kingdom", "Turkey", "Russia", "Poland", "France", "Germany", "Cyprus",
+            "Polish", "Turkish", "French", "German", "British",
+            "million", "billion", "fees", "costs", "Department of Work and Pensions",
+            "Convention for the Protection of Human Rights and Fundamental Freedoms",
+            "Rights and Fundamental Freedoms", "Foreign and Commonwealth Office",
+            "Republic of Poland", "Warsaw", "Istanbul", "İstanbul", "Adana", "Ankara", "Kraków", "Izmir", "İzmir",
+            "United Kingdom of Great Britain", "United Kingdom of Great Britain and Northern Ireland",
+            "Northern Ireland", "Great Britain"
+        ],
+        custom_patterns={
+            "CASE_NUMBER": [r"\b\d{3,5}/\d{2}\b"], # E.g. 16757/90
+            "DATE_FULL": [
+                r"\b\d{1,2}\s(?:January|February|March|April|May|June|July|August|September|October|November|December)\s\d{4}\b",
+                r"\b\d{1,2}(?:st|nd|rd|th)?\s+day\s+of\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}\b", # 27th day of September 1996
+                r"\b\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\b" # 25 August
+            ],
+            "DATE_YEAR_ONLY": [r"\b(19|20)\d{2}\b"], # Catch standalone years like "1989"
+            "MONEY_GBP": [r"\bGBP\s[\d,]+\b"] # Catch "GBP 215"
+        },
+        gliner_labels=[
+            "person", "judge", "lawyer", "applicant", "police officer", "profession", "job title",
+            "organization", "location", "date", "money", "duration", "age",
+            "medical condition", "health status", "criminal charge"
+        ]
     )
-    tab_metrics, tab_gold, tab_pred = run_tab_benchmark(
-        config=tab_config, split="test", ignore_label=True
+    tab_metrics_m, tab_gold_m, tab_pred_m = run_tab_benchmark(
+        config=tab_config_manual, split="test", ignore_label=True
     )
 
-    results["benchmarks"]["tab"] = {
+    results["benchmarks"]["tab_manual"] = {
         "dataset": "TAB",
+        "mode": "manual",
         "split": "test",
         "ignore_label": True,
-        "n_gold_spans": tab_gold,
-        "n_pred_spans": tab_pred,
-        "metrics": tab_metrics.as_dict(),
-        "config": {
-            "country": tab_config.country,
-            "detectors": tab_config.detectors,
-            "redaction_strategy": tab_config.redaction_strategy,
-        },
+        "n_gold_spans": tab_gold_m,
+        "n_pred_spans": tab_pred_m,
+        "metrics": tab_metrics_m.as_dict(),
+        "config": tab_config_manual.dict()
     }
 
     # ----------------------------------------------------------
-    # 2) PDF Deid benchmark (synthetic medical PDFs)
+    # 2) TAB benchmark (EU-ish legal text) - AUTO
     # ----------------------------------------------------------
-    pdf_config = RedactionConfig(
-        country="US",
-        detectors=["regex"],  # you can change to ensemble later
+    print("\n[EVAL] Running TAB (Auto Config)...")
+    tab_config_auto = RedactionConfig(
+        mode="auto",
+        country="EU",
         redaction_strategy="replace",
         min_confidence=0.5,
+        # Auto mode should figure out detectors, but we can still provide hints/allowlists
+        allow_list=tab_config_manual.allow_list,
+        custom_patterns=tab_config_manual.custom_patterns,
+        gliner_labels=tab_config_manual.gliner_labels
     )
-    pdf_metrics, pdf_gold, pdf_pred = run_pdf_deid_benchmark(
-        config=pdf_config, ignore_label=True
+    tab_metrics_a, tab_gold_a, tab_pred_a = run_tab_benchmark(
+        config=tab_config_auto, split="test", ignore_label=True
     )
 
-    results["benchmarks"]["pdf_deid"] = {
-        "dataset": "PDF Deid",
+    results["benchmarks"]["tab_auto"] = {
+        "dataset": "TAB",
+        "mode": "auto",
+        "split": "test",
         "ignore_label": True,
-        "n_gold_spans": pdf_gold,
-        "n_pred_spans": pdf_pred,
-        "metrics": pdf_metrics.as_dict(),
-        "config": {
-            "country": pdf_config.country,
-            "detectors": pdf_config.detectors,
-            "redaction_strategy": pdf_config.redaction_strategy,
+        "n_gold_spans": tab_gold_a,
+        "n_pred_spans": tab_pred_a,
+        "metrics": tab_metrics_a.as_dict(),
+        "config": tab_config_auto.dict()
+    }
+
+    # ----------------------------------------------------------
+    # 3) PDF Deid benchmark (synthetic medical PDFs) - MANUAL
+    # ----------------------------------------------------------
+    print("\n[EVAL] Running PDF Deid (Manual Config)...")
+    pdf_config_manual = RedactionConfig(
+        mode="manual",
+        country="US",
+        detectors=["regex", "spacy", "bert", "openmed", "gliner"],
+        use_openmed=True,
+        use_spacy=True,
+        use_bert=True,
+        use_gliner=True,
+        use_statistical=False,
+        enable_context_propagation=True,
+        enable_ensemble_voting=True,
+        redaction_strategy="replace",
+        min_confidence=0.35,
+        custom_patterns={
+            "DATE_INTL": [r"\b(0?[1-9]|[12]\d|3[01])[./](0?[1-9]|1[0-2])[./](19|20)\d{2}\b"]
         },
+        gliner_labels=[
+            "patient name", "doctor name", "hospital", "medical record number", 
+            "date", "age", "phone number", "address", "organization"
+        ]
+    )
+    pdf_metrics_m, pdf_gold_m, pdf_pred_m = run_pdf_deid_benchmark(
+        config=pdf_config_manual, ignore_label=True
+    )
+
+    results["benchmarks"]["pdf_deid_manual"] = {
+        "dataset": "PDF Deid",
+        "mode": "manual",
+        "ignore_label": True,
+        "n_gold_spans": pdf_gold_m,
+        "n_pred_spans": pdf_pred_m,
+        "metrics": pdf_metrics_m.as_dict(),
+        "config": pdf_config_manual.dict()
+    }
+
+    # ----------------------------------------------------------
+    # 4) PDF Deid benchmark (synthetic medical PDFs) - AUTO
+    # ----------------------------------------------------------
+    print("\n[EVAL] Running PDF Deid (Auto Config)...")
+    pdf_config_auto = RedactionConfig(
+        mode="auto",
+        country="US",
+        redaction_strategy="replace",
+        min_confidence=0.35,
+        custom_patterns=pdf_config_manual.custom_patterns,
+        gliner_labels=pdf_config_manual.gliner_labels
+    )
+    pdf_metrics_a, pdf_gold_a, pdf_pred_a = run_pdf_deid_benchmark(
+        config=pdf_config_auto, ignore_label=True
+    )
+
+    results["benchmarks"]["pdf_deid_auto"] = {
+        "dataset": "PDF Deid",
+        "mode": "auto",
+        "ignore_label": True,
+        "n_gold_spans": pdf_gold_a,
+        "n_pred_spans": pdf_pred_a,
+        "metrics": pdf_metrics_a.as_dict(),
+        "config": pdf_config_auto.dict()
     }
 
     return results
