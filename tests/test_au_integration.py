@@ -31,8 +31,9 @@ print("=" * 60)
 cfg = RedactionConfig(policy='au')
 pipeline = RedactionPipeline(cfg)
 
-# Detect entities
-results = pipeline.detect(test_text)
+# Scan for entities
+scan_results = pipeline.scan(test_text)
+results = scan_results['entities']
 
 print(f"\nDetected {len(results)} entities:")
 print("-" * 60)
@@ -62,7 +63,8 @@ else:
     print("\n[FAIL] Some validation checks failed")
 
 # Redact the text
-redacted = pipeline.redact(test_text)
+redacted_results = pipeline.redact(test_text)
 print("\n" + "=" * 60)
 print("Redacted Text:")
+print(redacted_results['redacted'])
 print(redacted)
