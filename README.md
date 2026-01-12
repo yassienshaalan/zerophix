@@ -897,15 +897,75 @@ spec:
 
 ## Testing
 
+ZeroPhix includes comprehensive unit tests covering all core functionality.
+
+### Running Tests
+
 ```bash
-# Unit tests
-pytest tests/
+# Install pytest
+pip install pytest pytest-cov
 
-# API tests
-pytest tests/test_api_config.py -v
+# Run all tests
+pytest tests/ -v
 
-# Benchmarking
+# Run with coverage report
+pytest tests/ --cov=zerophix --cov-report=html
+
+# Run specific test file
+pytest tests/test_basic.py -v
+
+# Run tests matching pattern
+pytest tests/ -k "test_au" -v
+```
+
+### Test Coverage
+
+**Core Functionality:**
+- `test_basic.py` - Basic redaction pipeline
+- `test_redaction_pipeline.py` - Comprehensive pipeline tests (40+ test cases)
+- `test_accuracy_features.py` - Ensemble voting, context propagation
+
+**Australian Entity Validation:**
+- `test_au_validators.py` - Checksum validation (TFN, ABN, ACN, Medicare)
+- `test_au_detector.py` - Australian entity detection
+- `test_au_integration.py` - End-to-end Australian redaction
+
+**API & Configuration:**
+- `test_api_config.py` - API configuration, environment variables, SSL
+
+**Benchmarks:**
+- `test_eval_snapshot.py` - Evaluation snapshot tests
+
+### Example Test Results
+
+```
+tests/test_basic.py::test_basic_redact PASSED
+tests/test_au_validators.py::test_valid_tfn PASSED
+tests/test_au_validators.py::test_valid_abn PASSED
+tests/test_au_validators.py::test_valid_acn PASSED
+tests/test_au_validators.py::test_valid_medicare PASSED
+tests/test_api_config.py::test_default_configuration PASSED
+tests/test_redaction_pipeline.py::test_email_and_phone_are_redacted PASSED
+...
+=================== 50+ tests passed ====================
+```
+
+**Test Results:** See [tests/README.md](tests/README.md) for detailed testing documentation.
+
+### Quick Validation
+
+Test all input interfaces:
+```bash
+python examples/test_all_interfaces.py
+```
+
+### Benchmarking
+
+```bash
+# Run evaluation suite
 python -m zerophix.eval.run_all_evaluations
+
+# Benchmark against Azure
 python scripts/bench_against_azure.py
 ```
 
