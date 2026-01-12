@@ -43,7 +43,7 @@ class RedactionPipeline:
 
         # 3. BERT Detector
         if is_auto or cfg.use_bert:
-            self.components.append(BertDetector(confidence_threshold=cfg.min_confidence))
+            self.components.append(BertDetector(confidence_threshold=cfg.thresholds.get('bert_conf', 0.9)))
 
         # 4. GLiNER Detector
         if is_auto or cfg.use_gliner:
@@ -51,7 +51,7 @@ class RedactionPipeline:
 
         # 5. Statistical Detector (Skip in auto to reduce noise, unless explicitly enabled)
         if not is_auto and cfg.use_statistical:
-            self.components.append(StatisticalDetector(confidence_threshold=cfg.min_confidence))
+            self.components.append(StatisticalDetector(confidence_threshold=cfg.thresholds.get('statistical_conf', 0.7)))
 
         # 6. OpenMed Detector
         if is_auto or cfg.use_openmed:
