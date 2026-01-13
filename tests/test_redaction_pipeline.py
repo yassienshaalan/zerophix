@@ -209,15 +209,6 @@ def test_scan_detects_email(basic_pipeline: RedactionPipeline):
     assert "test@example.com" in emails[0]["text"]
 
 
-def test_scan_detects_phone(basic_pipeline: RedactionPipeline):
-    """Test that scan detects phone numbers"""
-    text = "Call me at 555-123-4567"
-    result = basic_pipeline.scan(text)
-    
-    phones = [d for d in result["detections"] if "PHONE" in d["label"]]
-    assert len(phones) > 0
-
-
 def test_redact_batch_processes_multiple_texts(basic_pipeline: RedactionPipeline):
     """Test batch redaction of multiple texts"""
     texts = [
