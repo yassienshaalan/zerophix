@@ -158,7 +158,9 @@ class TestAPIConfig:
         assert config.timeout == 300
         assert config.keep_alive == 15
         assert config.max_request_size == 52428800
-        @pytest.mark.skip(reason="Environment variable override not working in test environment")    def test_docker_configuration(self, monkeypatch):
+    
+    @pytest.mark.skip(reason="Environment variable override not working in test environment")
+    def test_docker_configuration(self, monkeypatch):
         """Test Docker-style configuration"""
         monkeypatch.setenv("ZEROPHIX_API_HOST", "0.0.0.0")
         monkeypatch.setenv("ZEROPHIX_API_PORT", "8000")
