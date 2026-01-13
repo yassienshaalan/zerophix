@@ -1,0 +1,136 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.2, pytest-9.0.2, pluggy-1.6.0 -- /home/yassien/zerophix/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/yassien/zerophix
+configfile: pytest.ini
+plugins: anyio-4.12.0, cov-7.0.0
+collecting ... collected 68 items
+
+tests/test_accuracy_features.py::TestAccuracyFeatures::test_allow_list PASSED [  1%]
+tests/test_accuracy_features.py::TestAccuracyFeatures::test_consensus_voting PASSED [  2%]
+tests/test_accuracy_features.py::TestAccuracyFeatures::test_context_propagation PASSED [  4%]
+tests/test_api_config.py::TestAPIConfig::test_default_configuration PASSED [  5%]
+tests/test_api_config.py::TestAPIConfig::test_custom_configuration PASSED [  7%]
+tests/test_api_config.py::TestAPIConfig::test_environment_variable_override SKIPPED [  8%]
+tests/test_api_config.py::TestAPIConfig::test_cors_origins_from_env PASSED [ 10%]
+tests/test_api_config.py::TestAPIConfig::test_api_keys_from_env PASSED   [ 11%]
+tests/test_api_config.py::TestAPIConfig::test_ssl_configuration PASSED   [ 13%]
+tests/test_api_config.py::TestAPIConfig::test_production_settings PASSED [ 14%]
+tests/test_api_config.py::TestAPIConfig::test_development_settings PASSED [ 16%]
+tests/test_api_config.py::TestAPIConfig::test_proxy_headers_configuration PASSED [ 17%]
+tests/test_api_config.py::TestAPIConfig::test_rate_limiting_configuration PASSED [ 19%]
+tests/test_api_config.py::TestAPIConfig::test_timeout_configuration PASSED [ 20%]
+tests/test_api_config.py::TestAPIConfig::test_docker_configuration SKIPPED [ 22%]
+tests/test_api_config.py::TestAPIConfig::test_cloud_platform_configuration SKIPPED [ 23%]
+tests/test_api_config.py::TestAPIConfig::test_docs_url_when_disabled PASSED [ 25%]
+tests/test_api_config.py::TestAPIConfig::test_boolean_env_parsing SKIPPED [ 26%]
+tests/test_api_config.py::TestAPIIntegration::test_app_import PASSED     [ 27%]
+tests/test_api_config.py::TestAPIIntegration::test_create_app_factory PASSED [ 29%]
+tests/test_api_config.py::TestAPIIntegration::test_api_config_export PASSED [ 30%]
+tests/test_au_validators.py::TestTFNValidation::test_valid_tfn PASSED    [ 32%]
+tests/test_au_validators.py::TestTFNValidation::test_valid_tfn_with_formatting PASSED [ 33%]
+tests/test_au_validators.py::TestTFNValidation::test_invalid_tfn_checksum PASSED [ 35%]
+tests/test_au_validators.py::TestTFNValidation::test_invalid_tfn_length PASSED [ 36%]
+tests/test_au_validators.py::TestABNValidation::test_valid_abn PASSED    [ 38%]
+tests/test_au_validators.py::TestABNValidation::test_valid_abn_with_formatting PASSED [ 39%]
+tests/test_au_validators.py::TestABNValidation::test_invalid_abn_checksum PASSED [ 41%]
+tests/test_au_validators.py::TestABNValidation::test_invalid_abn_length PASSED [ 42%]
+tests/test_au_validators.py::TestACNValidation::test_valid_acn PASSED    [ 44%]
+tests/test_au_validators.py::TestACNValidation::test_valid_acn_with_formatting PASSED [ 45%]
+tests/test_au_validators.py::TestACNValidation::test_invalid_acn_checksum PASSED [ 47%]
+tests/test_au_validators.py::TestACNValidation::test_invalid_acn_length PASSED [ 48%]
+tests/test_au_validators.py::TestMedicareValidation::test_valid_medicare PASSED [ 50%]
+tests/test_au_validators.py::TestMedicareValidation::test_valid_medicare_with_formatting PASSED [ 51%]
+tests/test_au_validators.py::TestMedicareValidation::test_invalid_medicare_first_digit PASSED [ 52%]
+tests/test_au_validators.py::TestMedicareValidation::test_invalid_medicare_checksum SKIPPED [ 54%]
+tests/test_au_validators.py::TestMedicareValidation::test_invalid_medicare_length PASSED [ 55%]
+tests/test_au_validators.py::TestBSBValidation::test_valid_bsb PASSED    [ 57%]
+tests/test_au_validators.py::TestBSBValidation::test_valid_bsb_with_formatting PASSED [ 58%]
+tests/test_au_validators.py::TestBSBValidation::test_invalid_bsb_length PASSED [ 60%]
+tests/test_au_validators.py::TestCentrelinkCRNValidation::test_valid_crn PASSED [ 61%]
+tests/test_au_validators.py::TestCentrelinkCRNValidation::test_valid_crn_lowercase PASSED [ 63%]
+tests/test_au_validators.py::TestCentrelinkCRNValidation::test_invalid_crn_format PASSED [ 64%]
+tests/test_au_validators.py::TestSpanChecksumValidation::test_validate_span_with_tfn PASSED [ 66%]
+tests/test_au_validators.py::TestSpanChecksumValidation::test_validate_span_with_invalid_tfn PASSED [ 67%]
+tests/test_au_validators.py::TestSpanChecksumValidation::test_validate_span_unknown_type PASSED [ 69%]
+tests/test_au_validators.py::TestSpanChecksumValidation::test_validate_span_with_abn PASSED [ 70%]
+tests/test_au_validators.py::TestSpanChecksumValidation::test_validate_span_with_medicare PASSED [ 72%]
+tests/test_au_validators.py::TestIntegrationWithFormatting::test_tfn_various_formats PASSED [ 73%]
+tests/test_au_validators.py::TestIntegrationWithFormatting::test_abn_various_formats PASSED [ 75%]
+tests/test_au_validators.py::TestIntegrationWithFormatting::test_medicare_various_formats PASSED [ 76%]
+tests/test_basic.py::test_basic_redact PASSED                            [ 77%]
+tests/test_redaction_pipeline.py::test_basic_redact PASSED               [ 79%]
+tests/test_redaction_pipeline.py::test_email_and_phone_are_redacted PASSED [ 80%]
+tests/test_redaction_pipeline.py::test_does_not_return_empty_string_for_non_pii PASSED [ 82%]
+tests/test_redaction_pipeline.py::test_hash_strategy_changes_value PASSED [ 83%]
+tests/test_redaction_pipeline.py::test_hash_strategy_is_deterministic PASSED [ 85%]
+tests/test_redaction_pipeline.py::test_hash_strategy_differs_for_different_inputs PASSED [ 86%]
+tests/test_redaction_pipeline.py::test_can_switch_strategies_via_config PASSED [ 88%]
+tests/test_redaction_pipeline.py::test_encryption_round_trip PASSED      [ 89%]
+tests/test_redaction_pipeline.py::test_encryption_wrong_purpose_fails_or_changes PASSED [ 91%]
+tests/test_redaction_pipeline.py::test_scan_returns_detections PASSED    [ 92%]
+tests/test_redaction_pipeline.py::test_scan_detects_email PASSED         [ 94%]
+tests/test_redaction_pipeline.py::test_redact_batch_processes_multiple_texts PASSED [ 95%]
+tests/test_redaction_pipeline.py::test_scan_batch_processes_multiple_texts PASSED [ 97%]
+tests/test_redaction_pipeline.py::test_multiple_entities_same_type PASSED [ 98%]
+tests/test_redaction_pipeline.py::test_entity_at_start PASSED            [100%]
+
+=============================== warnings summary ===============================
+src/zerophix/config.py:7
+  /home/yassien/zerophix/src/zerophix/config.py:7: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class RedactionConfig(BaseModel):
+
+src/zerophix/config.py:118
+  /home/yassien/zerophix/src/zerophix/config.py:118: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class APIConfig(BaseModel):
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/src/zerophix/api/rest.py:42: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('country')
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/src/zerophix/api/rest.py:49: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('masking_style')
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/src/zerophix/api/rest.py:56: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('data_classification')
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/src/zerophix/api/rest.py:65: PydanticDeprecatedSince20: `max_items` is deprecated and will be removed, use `max_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    texts: List[str] = Field(..., description="List of texts to redact", max_items=1000)
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/src/zerophix/api/rest.py:77: PydanticDeprecatedSince20: Pydantic V1 style `@validator` validators are deprecated. You should migrate to Pydantic V2 style `@field_validator` validators, see the migration guide for more details. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    @validator('texts')
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/src/zerophix/api/rest.py:241: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("startup")
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/.venv/lib/python3.11/site-packages/fastapi/applications.py:4576: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    return self.router.on_event(event_type)
+
+tests/test_api_config.py::TestAPIIntegration::test_app_import
+  /home/yassien/zerophix/src/zerophix/api/rest.py:247: DeprecationWarning: 
+          on_event is deprecated, use lifespan event handlers instead.
+  
+          Read more about it in the
+          [FastAPI docs for Lifespan Events](https://fastapi.tiangolo.com/advanced/events/).
+          
+    @app.on_event("shutdown")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================== 63 passed, 5 skipped, 11 warnings in 4.83s ==================
