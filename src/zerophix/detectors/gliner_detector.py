@@ -150,18 +150,38 @@ class GLiNERDetector(Detector):
         if entity_types is None:
             entity_types = getattr(self, 'labels', self.DEFAULT_ENTITY_TYPES)
         
-        # For long texts (>1500 chars ~= 384 tokens), chunk to avoid truncation
-        # GLiNER has 384 token limit, roughly 1500-2000 characters
-        MAX_CHUNK_SIZE = 1500
-        OVERLAP = 200  # Overlap to catch entities at chunk boundaries
+        # Optimized chunking for long documents
+        # GLiNER has 384 token limit (~1500 chars, ~4 chars/token average)
+        # Increased chunk size for better context, smart overlap for entity boundaries
+        MAX_CHUNK_SIZE = 2000  # Increased from 1500 for better context
+        OVERLAP = 300  # Increased overlap to better catch split entities
         
         all_spans = []
         
         if len(text) > MAX_CHUNK_SIZE:
-            # Process in overlapping chunks
+            # Process in overlapping chunks with optimized boundaries
             offset = 0
+            chunks_processed = 0
+            
             while offset < len(text):
                 chunk_end = min(offset + MAX_CHUNK_SIZE, len(text))
+                
+                # Smart boundary: try to break at sentence/paragraph boundaries
+                # to avoid splitting entities mid-sentence
+                if chunk_end < len(text):
+                    # Look for sentence boundary in last 200 chars of chunk
+                    search_start = max(chunk_end - 200, offset)
+                    boundary_chars = ['.\n', '\n\n', '. ', '! ', '? ']
+                    best_boundary = chunk_end
+                    
+                    for boundary in boundary_chars:
+                        pos = text.rfind(boundary, search_start, chunk_end)
+                        if pos != -1:
+                            best_boundary = pos + len(boundary)
+                            break
+                    
+                    chunk_end = best_boundary
+                
                 chunk = text[offset:chunk_end]
                 
                 # Run detection on chunk
@@ -183,12 +203,17 @@ class GLiNERDetector(Detector):
                     )
                     all_spans.append(span)
                 
+                chunks_processed += 1
+                
                 # Move to next chunk with overlap
-                offset += MAX_CHUNK_SIZE - OVERLAP
+                # Reduce overlap for last chunks to avoid unnecessary processing
+                actual_overlap = OVERLAP if chunk_end < len(text) - OVERLAP else 0
+                offset += (chunk_end - offset) - actual_overlap
+                
                 if chunk_end >= len(text):
                     break
             
-            # Deduplicate overlapping detections
+            # Deduplicate overlapping detections from chunk boundaries
             all_spans = self._deduplicate_spans(all_spans)
         else:
             # Short text - process directly
