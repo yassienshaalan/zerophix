@@ -232,6 +232,143 @@ spans = detector.detect(text, entity_types=["employee id", "project code", "api 
 config = RedactionConfig(mode="auto")  # Auto-selects best detectors
 ```
 
+## Choosing the Right Configuration
+
+### Decision Tree: What Should You Use?
+
+**The best configuration is always empirical** - it depends on your specific use case, data characteristics, accuracy requirements, and performance constraints. We strongly recommend testing multiple configurations on your actual data to determine what works best.
+
+#### Quick Decision Guide
+
+```
+START HERE
+│
+├─ Need MAXIMUM SPEED (real-time, high-volume)?
+│  └─ Use: mode='fast' (regex only)
+│     ✓ 1000+ docs/sec
+│     ✓ 99.9% precision on structured IDs
+│     ✓ Best for: emails, phones, SSN, TFN, ABN, credit cards
+│     ⚠ May miss: names in unstructured text, context-dependent entities
+│
+├─ Need MAXIMUM ACCURACY (compliance-critical)?
+│  └─ Use: mode='accurate' (regex + all ML models)
+│     ✓ 87-92% recall (catches more PII)
+│     ✓ Best for: healthcare PHI, legal discovery, GDPR compliance
+│     ⚠ Slower: 100-500 docs/sec
+│     ⚠ Higher memory: 500MB-2GB
+│
+├─ Structured data ONLY (CSV, forms, databases)?
+│  └─ Use: mode='fast' with validation
+│     ✓ Checksum validation for TFN/ABN/Medicare
+│     ✓ Format-specific patterns
+│     ✓ Near-perfect precision
+│
+├─ Unstructured text (emails, documents, notes)?
+│  └─ Use: mode='accurate' OR custom ensemble
+│     ✓ Combines regex + spaCy + BERT/GLiNER
+│     ✓ Catches names, context-dependent entities
+│     ✓ Better recall on varied text
+│
+├─ Healthcare/Medical data?
+│  └─ Use: mode='accurate' + use_openmed=True
+│     ✓ PHI-optimized models
+│     ✓ Medical terminology awareness
+│     ✓ HIPAA compliance focus (87.5% recall benchmark)
+│
+├─ Custom entity types (not standard PII)?
+│  └─ Use: GLiNER with custom labels
+│     ✓ Zero-shot detection - no training needed
+│     ✓ Just name what you want: "employee ID", "project code"
+│     ✓ Works on domain-specific identifiers
+│
+└─ Not sure? Testing multiple datasets?
+   └─ Use: mode='auto'
+      ✓ Intelligently selects detectors per document
+      ✓ Good starting point
+      ⚠ Then benchmark and tune based on your results
+```
+
+### Configuration Examples by Use Case
+
+**High-Volume Transaction Processing:**
+```python
+config = RedactionConfig(
+    mode='fast',
+    use_spacy=False,
+    use_bert=False,
+    enable_checksum_validation=True  # TFN/ABN validation
+)
+# Prioritizes: Speed, low memory, structured data
+```
+
+**Healthcare Records (HIPAA Compliance):**
+```python
+config = RedactionConfig(
+    mode='accurate',
+    use_spacy=True,
+    use_openmed=True,
+    use_bert=True,
+    recall_threshold=0.85  # Prioritize not missing PHI
+)
+# Prioritizes: High recall, medical PHI, compliance
+```
+
+**Legal Document Review:**
+```python
+config = RedactionConfig(
+    mode='accurate',
+    use_spacy=True,
+    use_bert=True,
+    use_gliner=True,
+    precision_threshold=0.90  # Reduce false positives
+)
+# Prioritizes: Accuracy, names, case numbers, dates
+```
+
+**Customer Support Logs (Mixed Content):**
+```python
+config = RedactionConfig(
+    mode='balanced',  # Medium speed + accuracy
+    use_spacy=True,
+    use_bert=False,  # Skip if speed matters
+    batch_size=100
+)
+# Prioritizes: Balanced speed/accuracy, emails, phones, names
+```
+
+### Testing Recommendations
+
+**Always benchmark on YOUR data:**
+
+1. **Start with 'auto' mode** - Get baseline performance
+2. **Test 'fast' mode** - Measure speed vs accuracy trade-off
+3. **Test 'accurate' mode** - Measure recall improvement
+4. **Try custom combinations** - Enable/disable specific detectors
+5. **Measure what matters to YOU:**
+   - False negatives (missed PII) → Increase recall threshold, add more detectors
+   - False positives (over-redaction) → Increase precision threshold, tune regex patterns
+   - Speed (docs/sec) → Disable slower ML models, use batch processing
+   - Memory usage → Lazy-load models, reduce batch size
+
+**Sample Evaluation Script:**
+```python
+from zerophix.eval.metrics import evaluate_detection
+
+configs = [
+    {'mode': 'fast'},
+    {'mode': 'balanced'},
+    {'mode': 'accurate'},
+    {'mode': 'accurate', 'use_openmed': True}  # If healthcare data
+]
+
+for cfg in configs:
+    pipeline = RedactionPipeline(RedactionConfig(**cfg))
+    metrics = evaluate_detection(pipeline, your_test_data)
+    print(f"{cfg}: Precision={metrics['precision']:.2f}, Recall={metrics['recall']:.2f}")
+```
+
+**Key Takeaway:** There is no one-size-fits-all configuration. The "best" setup depends on your data type, accuracy requirements, speed constraints, and compliance needs. Empirical testing is essential.
+
 ## Benchmark Performance & Evaluation Results
 
 ZeroPhix has been rigorously evaluated on standard public benchmarks for PII/PHI detection and redaction.
