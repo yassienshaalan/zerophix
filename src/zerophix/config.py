@@ -58,10 +58,31 @@ class RedactionConfig(BaseModel):
             "bert_conf": 0.90,
             "spacy_conf": 0.80,
             "statistical_conf": 0.70,
-            "custom_conf": 0.85
+            "custom_conf": 0.85,
+            "gliner_conf": 0.50
         },
         description="Confidence thresholds for different detectors"
     )
+    
+    # Label-specific thresholds for fine-grained control
+    label_thresholds: Dict[str, float] = Field(
+        default_factory=lambda: {
+            'MEDICATION': 0.3,      # Lower for drugs (prioritize recall)
+            'DRUG': 0.3,
+            'MEDICAL_CONDITION': 0.4,
+            'DISEASE': 0.4,
+            'PERSON': 0.7,          # Higher for names (prioritize precision)
+            'PERSON_NAME': 0.7,
+            'PHONE_NUMBER': 0.5,
+        },
+        description="Entity-specific confidence thresholds"
+    )
+    
+    # Consensus and accuracy tuning
+    consensus_threshold: float = Field(default=0.5, description="Majority vote threshold for conflict resolution")
+    use_context_propagation: bool = Field(default=True, description="Enable cross-reference entity detection")
+    aggressive_medical: bool = Field(default=False, description="Prioritize recall over precision for medical entities")
+    filter_stopwords: bool = Field(default=True, description="Filter common stopwords from detections")
     
     # Redaction strategies
     masking_style: str = Field(
