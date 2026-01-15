@@ -15,7 +15,7 @@ Benefits:
     - Fast inference (100ms per doc)
 """
 
-from typing import List, Optional
+from typing import List, Optional, Dict
 from .base import Detector, Span
 
 try:
