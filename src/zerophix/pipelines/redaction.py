@@ -47,7 +47,12 @@ class RedactionPipeline:
 
         # 4. GLiNER Detector
         if is_auto or cfg.use_gliner:
-            self.components.append(GLiNERDetector(labels=cfg.gliner_labels))
+            gliner_threshold = cfg.thresholds.get('gliner_conf', 0.5)
+            self.components.append(GLiNERDetector(
+                labels=cfg.gliner_labels,
+                confidence_threshold=gliner_threshold,
+                label_thresholds=cfg.label_thresholds
+            ))
 
         # 5. Statistical Detector (Skip in auto to reduce noise, unless explicitly enabled)
         if not is_auto and cfg.use_statistical:
@@ -74,6 +79,52 @@ class RedactionPipeline:
     @classmethod
     def from_config(cls, cfg: RedactionConfig):
         return cls(cfg)
+    
+    def optimize_for_medical(self):
+        """
+        Optimize pipeline configuration for medical text accuracy.
+        Improves recall for medications and conditions while reducing person name false positives.
+        
+        Returns:
+            self for method chaining
+        """
+        # Lower thresholds for medical entities
+        self.cfg.label_thresholds.update({
+            'MEDICATION': 0.3,
+            'DRUG': 0.3,
+            'MEDICAL_CONDITION': 0.3,
+            'DISEASE': 0.3,
+            'DIAGNOSIS': 0.3,
+            'TREATMENT': 0.3,
+        })
+        
+        # Increase threshold for person names to reduce false positives
+        self.cfg.label_thresholds.update({
+            'PERSON': 0.75,
+            'PERSON_NAME': 0.75,
+        })
+        
+        # Update GLiNER detector if present
+        for i, comp in enumerate(self.components):
+            if isinstance(comp, GLiNERDetector):
+                comp.confidence_threshold = 0.3
+                comp.label_thresholds = self.cfg.label_thresholds
+                
+                # Add medical-specific labels if not already present
+                medical_labels = [
+                    "person", "drug", "medication", "pharmaceutical",
+                    "medical_condition", "disease", "diagnosis", "symptom",
+                    "treatment", "procedure", "dosage",
+                    "organization", "location", "facility", "hospital",
+                    "date", "phone_number", "identifier"
+                ]
+                comp.labels = medical_labels
+        
+        # Make garbage filter more permissive for medical terms
+        self.cfg.min_entity_length = 2
+        self.cfg.filter_stopwords = False
+        
+        return self
 
     def _detect_domain(self, text: str) -> str:
         """

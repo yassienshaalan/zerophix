@@ -79,7 +79,8 @@ class GLiNERDetector(Detector):
                  model_name: str = "urchade/gliner_large-v2.1",
                  confidence_threshold: float = 0.5,
                  device: Optional[str] = None,
-                 labels: Optional[List[str]] = None):
+                 labels: Optional[List[str]] = None,
+                 label_thresholds: Optional[Dict[str, float]] = None):
         """
         Initialize GLiNER detector
         
@@ -88,6 +89,7 @@ class GLiNERDetector(Detector):
             confidence_threshold: Minimum confidence score (0-1)
             device: 'cuda', 'cpu', or None (auto-detect)
             labels: Custom list of entity types to detect
+            label_thresholds: Entity-specific confidence thresholds
         """
         if not GLINER_AVAILABLE:
             raise ImportError(
@@ -98,6 +100,7 @@ class GLiNERDetector(Detector):
         self.confidence_threshold = confidence_threshold
         self.labels = labels if labels else self.DEFAULT_ENTITY_TYPES
         self.device = device
+        self.label_thresholds = label_thresholds or {}
         
         # Load model (downloads automatically on first use)
         print(f"Loading GLiNER model: {model_name}...")
@@ -194,10 +197,18 @@ class GLiNERDetector(Detector):
                 
                 # Convert to Span objects with adjusted positions
                 for entity in entities:
+                    label = entity["label"].upper().replace(" ", "_")
+                    score = float(entity.get("score", 0.0))
+                    
+                    # Apply label-specific threshold if available
+                    min_score = self.label_thresholds.get(label, self.confidence_threshold)
+                    if score < min_score:
+                        continue
+                    
                     span = Span(
                         start=entity["start"] + offset,
                         end=entity["end"] + offset,
-                        label=entity["label"].upper().replace(" ", "_"),
+                        label=label,
                         score=entity["score"],
                         source="gliner"
                     )

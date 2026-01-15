@@ -138,6 +138,19 @@ class GarbageFilter:
                 if clean_text.lower() in {"email", "phone", "patient", "tfn", "abn", "medicare", "ssn", "address"}:
                     continue
                 
+                # Filter medical terms misidentified as person names
+                medical_false_positives = [
+                    r'^(?:Type|diabetes|mellitus|prescribed|diagnosed|treated|increase)$',
+                    r'^\d+(?:mg|ml|mcg|g|l|BD|TDS|QD|daily)$',
+                    r'^(?:Chief|Complaint|Treatment|Medication|Condition)$',
+                ]
+                if any(re.match(pattern, clean_text, re.IGNORECASE) for pattern in medical_false_positives):
+                    continue
+                
+                # Require higher confidence for person names (reduce false positives)
+                if span.score < 0.7:
+                    continue
+                
             # 6. Filter spans starting with lowercase (for Person/Org/Location)
             # This is a strong heuristic for legal text which is usually well-formatted.
             # We skip this for 'date' or 'email' which might be lowercase.
