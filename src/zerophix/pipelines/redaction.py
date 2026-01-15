@@ -77,30 +77,75 @@ class RedactionPipeline:
 
     def _detect_domain(self, text: str) -> str:
         """
-        Intelligent layer to classify text domain.
+        Entity-based domain classification using detector outputs.
+        More robust than keyword matching.
         """
-        text_lower = text.lower()
+        # First do a quick preliminary scan with detectors
+        preliminary_spans = []
+        for comp in self.components:
+            preliminary_spans.extend(comp.detect(text))
         
-        # Medical Heuristics
-        medical_score = 0
-        medical_terms = ["patient", "doctor", "hospital", "diagnosis", "treatment", "clinical", "medical", "prescription", "symptoms", "ward", "clinic"]
-        for term in medical_terms:
-            if term in text_lower:
-                medical_score += 1
+        if not preliminary_spans:
+            return "general"
         
-        if medical_score >= 2:
+        # Count entity types to determine domain
+        label_counts = {}
+        for span in preliminary_spans:
+            label_counts[span.label] = label_counts.get(span.label, 0) + 1
+        
+        total_entities = len(preliminary_spans)
+        
+        # Medical domain indicators (entity-based)
+        medical_labels = {
+            "DRUG", "MEDICATION", "MEDICAL_CONDITION", "DISEASE", "DIAGNOSIS",
+            "PROCEDURE", "TREATMENT", "SYMPTOM", "ANATOMY"
+        }
+        medical_count = sum(label_counts.get(label, 0) for label in medical_labels)
+        medical_density = medical_count / total_entities if total_entities > 0 else 0
+        
+        # Legal domain indicators (entity-based)
+        legal_labels = {
+            "JUDGE", "LAWYER", "COURT", "CASE_NUMBER", "PLAINTIFF", "DEFENDANT",
+            "JURISDICTION", "STATUTE", "ARTICLE", "SECTION"
+        }
+        legal_count = sum(label_counts.get(label, 0) for label in legal_labels)
+        legal_density = legal_count / total_entities if total_entities > 0 else 0
+        
+        # Pattern-based fallback if entities are ambiguous
+        if medical_density < 0.15 and legal_density < 0.15:
+            # Use phrase pattern matching (more specific than single words)
+            medical_phrases = [
+                r'\bpatient\s+(?:presents|diagnosed|admitted)\b',
+                r'\b(?:prescribed|medication|treatment|dosage)\b',
+                r'\b(?:doctor|physician|clinician|surgeon)\b.*\b(?:examined|treated|prescribed)\b',
+                r'\b(?:hospital|clinic|ward|emergency)\s+(?:admission|visit|stay)\b',
+                r'\b(?:mg|ml|mcg)\b',  # Dosage units
+                r'\b(?:blood pressure|heart rate|temperature)\b',
+            ]
+            
+            legal_phrases = [
+                r'\b(?:plaintiff|defendant)\s+(?:alleges|claims|argues)\b',
+                r'\b(?:court|tribunal)\s+(?:finds|rules|orders|holds)\b',
+                r'\bcase\s+no\.?\s*\d+\b',
+                r'\b(?:section|article|clause)\s+\d+\b',
+                r'\b(?:hereby|whereas|pursuant|aforementioned)\b',
+                r'\b(?:jurisdiction|venue|statute)\b',
+            ]
+            
+            medical_pattern_score = sum(1 for p in medical_phrases if re.search(p, text, re.IGNORECASE))
+            legal_pattern_score = sum(1 for p in legal_phrases if re.search(p, text, re.IGNORECASE))
+            
+            if medical_pattern_score >= 2:
+                return "medical"
+            if legal_pattern_score >= 2:
+                return "legal"
+        
+        # Final decision based on entity density
+        if medical_density >= 0.15:
             return "medical"
-            
-        # Legal Heuristics
-        legal_score = 0
-        legal_terms = ["court", "judge", "plaintiff", "defendant", "lawyer", "attorney", "case no", "v.", "jurisdiction", "article", "section", "applicant", "respondent"]
-        for term in legal_terms:
-            if term in text_lower:
-                legal_score += 1
-                
-        if legal_score >= 2:
+        if legal_density >= 0.15:
             return "legal"
-            
+        
         return "general"
 
     def scan(self, text: str) -> List[Span]:

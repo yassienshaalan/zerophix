@@ -30,13 +30,87 @@ class GarbageFilter:
             # Common metadata
             "date time", "time zone", "file name", "file path", "user name", "user type"
         }
+        
+        # Medical entity labels that should never be filtered
+        self.medical_labels = {
+            "DRUG", "MEDICATION", "MEDICINE", "MEDICAL_CONDITION", "DISEASE",
+            "DIAGNOSIS", "PROCEDURE", "TREATMENT", "SYMPTOM", "ANATOMY"
+        }
+        
+        # Medication suffix patterns (pattern-based detection instead of fixed list)
+        self.medication_patterns = [
+            r'\b\w+mycin\b',      # Antibiotics: erythromycin, azithromycin
+            r'\b\w+cillin\b',     # Penicillins: amoxicillin, penicillin
+            r'\b\w+statin\b',     # Statins: atorvastatin, simvastatin
+            r'\b\w+pril\b',       # ACE inhibitors: lisinopril, enalapril
+            r'\b\w+sartan\b',     # ARBs: losartan, valsartan
+            r'\b\w+olol\b',       # Beta blockers: metoprolol, atenolol
+            r'\b\w+prazole\b',    # PPIs: omeprazole, lansoprazole
+            r'\b\w+dipine\b',     # Calcium channel blockers: amlodipine
+            r'\b\w+zolam\b',      # Benzodiazepines: alprazolam, diazepam
+            r'\b\w+pam\b',        # Benzodiazepines: diazepam, lorazepam
+            r'\b\w+barbital\b',   # Barbiturates
+            r'\b\w+caine\b',      # Local anesthetics: lidocaine
+            r'\b\w+adol\b',       # Analgesics: tramadol
+            r'\b\w+formin\b',     # Antidiabetics: metformin
+            r'\b\w+flurane\b',    # Anesthetics: sevoflurane
+            r'\b\w+oxacin\b',     # Fluoroquinolones: ciprofloxacin
+            r'\b\w+tidine\b',     # H2 blockers: ranitidine
+            r'\b\w+cycline\b',    # Tetracyclines: doxycycline
+        ]
+        
+        # Medical condition suffix patterns
+        self.condition_patterns = [
+            r'\b\w+itis\b',       # Inflammation: arthritis, hepatitis
+            r'\b\w+oma\b',        # Tumors: carcinoma, lymphoma
+            r'\b\w+osis\b',       # Conditions: cirrhosis, osteoporosis
+            r'\b\w+pathy\b',      # Diseases: neuropathy, nephropathy
+            r'\b\w+emia\b',       # Blood conditions: anemia, leukemia
+            r'\b\w+algia\b',      # Pain: neuralgia, myalgia
+            r'\b\w+plegia\b',     # Paralysis: paraplegia, hemiplegia
+            r'\b\w+trophy\b',     # Growth disorders: hypertrophy, atrophy
+        ]
+        
+        # Compile patterns for efficiency
+        self.medication_regex = [re.compile(p, re.IGNORECASE) for p in self.medication_patterns]
+        self.condition_regex = [re.compile(p, re.IGNORECASE) for p in self.condition_patterns]
 
+    def _is_medical_entity(self, text: str, span: Span) -> bool:
+        """
+        Pattern-based detection of medical entities using suffix patterns.
+        More robust than hardcoded lists.
+        """
+        # Check if label indicates medical entity
+        if span.label in self.medical_labels:
+            return True
+        
+        # Check medication patterns
+        for pattern in self.medication_regex:
+            if pattern.search(text):
+                return True
+        
+        # Check condition patterns
+        for pattern in self.condition_regex:
+            if pattern.search(text):
+                return True
+        
+        # Check if it contains medical dosage patterns (e.g., "1000mg", "5mg", "100ml")
+        if re.search(r'\d+\s*(mg|ml|mcg|g|l|cc|iu|units?)\b', text, re.IGNORECASE):
+            return True
+        
+        return False
+    
     def filter(self, text: str, spans: List[Span]) -> List[Span]:
         filtered_spans = []
         
         for span in spans:
             entity_text = text[span.start:span.end]
             clean_text = entity_text.strip()
+            
+            # 0. NEVER filter medical entities (pattern-based detection)
+            if self._is_medical_entity(clean_text, span):
+                filtered_spans.append(span)
+                continue
             
             # 1. Filter empty or whitespace-only
             if not clean_text:
