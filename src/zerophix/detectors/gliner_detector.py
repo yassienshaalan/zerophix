@@ -46,7 +46,7 @@ class GLiNERDetector(Detector):
         spans = detector.detect(text, entity_types=custom_entities)
     """
     
-    name = "gliner"
+    name = "GLiNERDetector"
     
     # Default entity types for PII/PHI detection
     DEFAULT_ENTITY_TYPES = [
@@ -77,7 +77,7 @@ class GLiNERDetector(Detector):
     
     def __init__(self, 
                  model_name: str = "urchade/gliner_large-v2.1",
-                 confidence_threshold: float = 0.5,
+                 confidence_threshold: float = 0.35,
                  device: Optional[str] = None,
                  labels: Optional[List[str]] = None,
                  label_thresholds: Optional[Dict[str, float]] = None):
@@ -155,9 +155,9 @@ class GLiNERDetector(Detector):
         
         # Optimized chunking for long documents
         # GLiNER has 384 token limit (~1500 chars, ~4 chars/token average)
-        # Increased chunk size for better context, smart overlap for entity boundaries
-        MAX_CHUNK_SIZE = 2000  # Increased from 1500 for better context
-        OVERLAP = 300  # Increased overlap to better catch split entities
+        # Increased chunk size for better context, reduced overlap for speed
+        MAX_CHUNK_SIZE = 3000  # Increased from 2000 for better context
+        OVERLAP = 150  # Reduced from 300 for better performance
         
         all_spans = []
         
@@ -210,7 +210,7 @@ class GLiNERDetector(Detector):
                         end=entity["end"] + offset,
                         label=label,
                         score=entity["score"],
-                        source="gliner"
+                        source="GLiNERDetector"
                     )
                     all_spans.append(span)
                 
@@ -241,7 +241,7 @@ class GLiNERDetector(Detector):
                     end=entity["end"],
                     label=entity["label"].upper().replace(" ", "_"),
                     score=entity["score"],
-                    source="gliner"
+                    source="GLiNERDetector"
                 )
                 all_spans.append(span)
         
