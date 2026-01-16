@@ -449,6 +449,7 @@ class RedactionPipeline:
                 "end": s.end,
                 "label": s.label,
                 "score": s.score,
+                "source": s.source,
                 "text": text[s.start:s.end],
                 "context": text[max(0, s.start-20):min(len(text), s.end+20)]
             })
