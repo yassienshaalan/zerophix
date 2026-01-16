@@ -15,6 +15,11 @@ class GarbageFilter:
     """
     def __init__(self, config: RedactionConfig):
         self.min_len = 3
+        # Labels that are allowed to be very short (1-2 chars)
+        self.short_allowed_labels = {
+            "USERNAME", "BUILDING", "AGE", "TIME", "STATE", 
+            "TITLE", "POSTCODE", "COUNTRY", "IDCARD"
+        }
         # Common English stopwords that should rarely be entities on their own
         self.stopwords = {
             "the", "and", "of", "to", "in", "a", "is", "that", "for", "on", "with", "as", "by", "at", "an", "be", "this", "which", "or", "from"
@@ -116,8 +121,12 @@ class GarbageFilter:
             if not clean_text:
                 continue
                 
-            # 2. Filter very short spans (unless they look like initials e.g. "J.")
+            # 2. Filter very short spans (unless allowed for specific labels)
             if len(clean_text) < self.min_len:
+                # Allow short entities for specific labels
+                if span.label.upper() in self.short_allowed_labels:
+                    filtered_spans.append(span)
+                    continue
                 # Allow if it looks like an initial (e.g. "J.") or a number
                 if not (re.match(r"^[A-Z]\.?$", clean_text) or clean_text.isdigit()):
                     continue
