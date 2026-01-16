@@ -77,7 +77,7 @@ class GLiNERDetector(Detector):
     
     def __init__(self, 
                  model_name: str = "urchade/gliner_large-v2.1",
-                 confidence_threshold: float = 0.35,
+                 confidence_threshold: float = 0.20,
                  device: Optional[str] = None,
                  labels: Optional[List[str]] = None,
                  label_thresholds: Optional[Dict[str, float]] = None):
