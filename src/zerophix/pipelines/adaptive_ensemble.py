@@ -508,6 +508,106 @@ class ConfigurationOptimizer:
         
         return suggestions
     
+    def calibrate_with_validation(self,
+                                   train_texts: List[str],
+                                   train_ground_truth: List[List[Tuple[int, int, str]]],
+                                   val_texts: List[str],
+                                   val_ground_truth: List[List[Tuple[int, int, str]]],
+                                   max_gap_threshold: float = 0.15) -> Dict:
+        """
+        Calibrate with generalization validation on held-out data
+        
+        Args:
+            train_texts: Calibration texts (for learning weights)
+            train_ground_truth: Calibration ground truth
+            val_texts: Validation texts (unseen, for checking generalization)
+            val_ground_truth: Validation ground truth
+            max_gap_threshold: Maximum acceptable F1 gap (default: 0.15)
+        
+        Returns:
+            Dictionary with calibration results and validation metrics
+        """
+        # Step 1: Calibrate on training set
+        train_results = self.calibrate(train_texts, train_ground_truth)
+        
+        # Step 2: Get normalizer
+        normalizer = train_results.get("label_normalizer") or LabelNormalizer()
+        
+        # Step 3: Test on validation set (unseen data)
+        val_tp = val_fp = val_fn = 0
+        
+        for text, gt in zip(val_texts, val_ground_truth):
+            # Get predictions from pipeline
+            predictions = []
+            for component in self.pipeline.components:
+                predictions.extend(component.detect(text))
+            
+            # Normalize
+            predictions = normalizer.normalize_spans(predictions)
+            gt_normalized = [(s, e, normalizer.normalize(l)) for s, e, l in gt]
+            
+            # Apply pipeline processing (consensus, etc.)
+            processed = self.pipeline._process_spans(text, predictions)
+            
+            # Calculate matches
+            pred_set = {(s.start, s.end, s.label) for s in processed}
+            gt_set = set(gt_normalized)
+            
+            val_tp += len(pred_set & gt_set)
+            val_fp += len(pred_set - gt_set)
+            val_fn += len(gt_set - pred_set)
+        
+        # Calculate validation metrics
+        val_precision = val_tp / (val_tp + val_fp) if (val_tp + val_fp) > 0 else 0
+        val_recall = val_tp / (val_tp + val_fn) if (val_tp + val_fn) > 0 else 0
+        val_f1 = 2 * val_precision * val_recall / (val_precision + val_recall) if (val_precision + val_recall) > 0 else 0
+        
+        # Calculate generalization gap
+        train_perf = train_results.get("performance_summary", {})
+        train_tp = sum(m.get("true_positives", 0) for m in train_perf.values())
+        train_fp = sum(m.get("false_positives", 0) for m in train_perf.values())
+        train_fn = sum(m.get("false_negatives", 0) for m in train_perf.values())
+        
+        train_precision = train_tp / (train_tp + train_fp) if (train_tp + train_fp) > 0 else 0
+        train_f1 = 2 * train_precision * (train_tp / (train_tp + train_fn)) / (train_precision + (train_tp / (train_tp + train_fn))) if (train_tp + train_fn) > 0 and (train_precision + (train_tp / (train_tp + train_fn))) > 0 else 0
+        
+        precision_gap = abs(train_precision - val_precision)
+        f1_gap = abs(train_f1 - val_f1)
+        
+        # Determine generalization status
+        if f1_gap < 0.10:
+            status = "excellent"
+            message = "✅ Excellent generalization - weights are highly reliable"
+        elif f1_gap < max_gap_threshold:
+            status = "good"
+            message = "✅ Good generalization - weights are reliable"
+        elif f1_gap < 0.20:
+            status = "acceptable"
+            message = "⚠️  Acceptable generalization - some drift detected"
+        else:
+            status = "poor"
+            message = "❌ Poor generalization - increase calibration samples"
+        
+        # Add validation info to results
+        train_results["validation_metrics"] = {
+            "precision": val_precision,
+            "recall": val_recall,
+            "f1": val_f1,
+            "true_positives": val_tp,
+            "false_positives": val_fp,
+            "false_negatives": val_fn,
+        }
+        
+        train_results["generalization"] = {
+            "precision_gap": precision_gap,
+            "f1_gap": f1_gap,
+            "status": status,
+            "message": message,
+            "threshold": max_gap_threshold
+        }
+        
+        return train_results
+    
     def grid_search_thresholds(self,
                                texts: List[str],
                                ground_truth: List[List[Tuple[int, int, str]]],
