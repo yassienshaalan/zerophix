@@ -8,6 +8,7 @@ from ..detectors.gliner_detector import GLiNERDetector
 from ..detectors.statistical_detector import StatisticalDetector
 from ..detectors.base import Span
 from .consensus import ConsensusModel
+from .adaptive_ensemble import AdaptiveConsensusModel, PerformanceTracker, LabelNormalizer, ConfigurationOptimizer
 from .context import ContextPropagator
 from .allowlist import AllowListFilter
 from .post_processors import GarbageFilter
@@ -71,7 +72,30 @@ class RedactionPipeline:
                      raise RuntimeError("OpenMed detector requested but failed to import. Check logs for DEBUG messages.")
         
         # Initialize accuracy enhancement components
-        self.consensus = ConsensusModel(cfg)
+        # Use adaptive consensus if enabled, otherwise standard consensus
+        if cfg.enable_adaptive_weights or cfg.enable_label_normalization:
+            self.performance_tracker = PerformanceTracker() if cfg.track_detector_performance else None
+            self.label_normalizer = LabelNormalizer() if cfg.enable_label_normalization else None
+            
+            # Load pre-calibrated weights if file provided
+            if cfg.calibration_file and self.performance_tracker:
+                try:
+                    weights = self.performance_tracker.load_metrics(cfg.calibration_file)
+                    # Update config weights with calibrated weights
+                    cfg.detector_weights.update(weights)
+                except Exception as e:
+                    print(f"Warning: Could not load calibration file {cfg.calibration_file}: {e}")
+            
+            self.consensus = AdaptiveConsensusModel(
+                cfg, 
+                tracker=self.performance_tracker,
+                normalizer=self.label_normalizer
+            )
+        else:
+            self.performance_tracker = None
+            self.label_normalizer = None
+            self.consensus = ConsensusModel(cfg)
+        
         self.context_propagator = ContextPropagator(cfg)
         self.allow_list = AllowListFilter(cfg)
         self.garbage_filter = GarbageFilter(cfg)
@@ -426,6 +450,56 @@ class RedactionPipeline:
             serializable_spans.append(d)
             
         return {"text": "".join(out_text), "spans": serializable_spans}
+    
+    def calibrate(self, 
+                  validation_texts: List[str],
+                  validation_ground_truth: List[List[tuple]],
+                  save_path: str = None) -> Dict:
+        """
+        Calibrate the pipeline on labeled validation data
+        
+        Args:
+            validation_texts: List of text samples
+            validation_ground_truth: List of ground truth annotations [(start, end, label), ...]
+            save_path: Optional path to save calibration results
+        
+        Returns:
+            Dictionary with optimized configuration and performance metrics
+        
+        Example:
+            >>> texts = ["John Smith has diabetes", "Call 555-1234"]
+            >>> ground_truth = [
+            ...     [(0, 10, "PERSON_NAME"), (15, 23, "DISEASE")],
+            ...     [(5, 13, "PHONE_NUMBER")]
+            ... ]
+            >>> results = pipeline.calibrate(texts, ground_truth, "calibration.json")
+            >>> print(f"Optimized weights: {results['detector_weights']}")
+        """
+        optimizer = ConfigurationOptimizer(self)
+        results = optimizer.calibrate(validation_texts, validation_ground_truth)
+        
+        if save_path and self.performance_tracker:
+            self.performance_tracker.save_metrics(save_path)
+        
+        # Update pipeline with optimized configuration
+        if self.performance_tracker:
+            self.cfg.detector_weights = results["detector_weights"]
+            self.cfg.label_thresholds.update(results["label_thresholds"])
+            
+            # Update consensus model with new weights
+            if isinstance(self.consensus, AdaptiveConsensusModel):
+                self.consensus.update_weights_from_tracker()
+        
+        return results
+    
+    def get_performance_summary(self) -> Dict:
+        """
+        Get current performance metrics for all detectors
+        Requires track_detector_performance=True in config
+        """
+        if self.performance_tracker:
+            return self.performance_tracker.get_summary()
+        return {"error": "Performance tracking not enabled. Set track_detector_performance=True"}
 
     def scan(self, text: str) -> Dict[str, object]:
         """Scan text for PII/PHI without redacting. Returns detection report."""
