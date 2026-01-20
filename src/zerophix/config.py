@@ -39,6 +39,13 @@ class RedactionConfig(BaseModel):
         description="Weights for ensemble voting"
     )
     
+    # Adaptive Ensemble Features (NEW)
+    enable_adaptive_weights: bool = Field(default=False, description="Use performance-based adaptive detector weights")
+    adaptive_weight_method: str = Field(default="f1_squared", description="Method for calculating adaptive weights: f1_squared, precision, f1_linear, harmonic")
+    enable_label_normalization: bool = Field(default=True, description="Normalize labels before ensemble voting for cross-detector consensus")
+    track_detector_performance: bool = Field(default=False, description="Track detector performance metrics during operation")
+    calibration_file: Optional[str] = Field(default=None, description="Path to pre-calibrated weights file")
+    
     enable_context_propagation: bool = Field(default=True, description="Propagate high-confidence entities across document")
     context_propagation_threshold: float = Field(default=0.90, description="Confidence threshold to trigger propagation")
     
