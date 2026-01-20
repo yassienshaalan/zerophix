@@ -473,24 +473,102 @@ class RedactionPipeline:
             ...     [(5, 13, "PHONE_NUMBER")]
             ... ]
             >>> results = pipeline.calibrate(texts, ground_truth, "calibration.json")
-            >>> print(f"Optimized weights: {results['detector_weights']}")
+            >>> print(f"Optimized weights: {results['weights']}")
         """
         optimizer = ConfigurationOptimizer(self)
-        results = optimizer.calibrate(validation_texts, validation_ground_truth)
+        raw_results = optimizer.calibrate(validation_texts, validation_ground_truth)
         
         if save_path and self.performance_tracker:
             self.performance_tracker.save_metrics(save_path)
         
         # Update pipeline with optimized configuration
         if self.performance_tracker:
-            self.cfg.detector_weights = results["detector_weights"]
-            self.cfg.label_thresholds.update(results["label_thresholds"])
+            self.cfg.detector_weights = raw_results["detector_weights"]
+            self.cfg.label_thresholds.update(raw_results["label_thresholds"])
             
             # Update consensus model with new weights
             if isinstance(self.consensus, AdaptiveConsensusModel):
                 self.consensus.update_weights_from_tracker()
         
-        return results
+        # Calculate overall metrics from detector performance
+        perf_summary = raw_results.get("performance_summary", {})
+        total_tp = sum(m.get("true_positives", 0) for m in perf_summary.values())
+        total_fp = sum(m.get("false_positives", 0) for m in perf_summary.values())
+        total_fn = sum(m.get("false_negatives", 0) for m in perf_summary.values())
+        
+        overall_precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
+        overall_recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
+        overall_f1 = 2 * overall_precision * overall_recall / (overall_precision + overall_recall) if (overall_precision + overall_recall) > 0 else 0
+        
+        # Return in expected format
+        return {
+            "weights": raw_results["detector_weights"],
+            "detector_weights": raw_results["detector_weights"],  # Alias
+            "label_thresholds": raw_results["label_thresholds"],
+            "detector_metrics": perf_summary,
+            "performance_summary": perf_summary,  # Alias
+            "metrics": {
+                "precision": overall_precision,
+                "recall": overall_recall,
+                "f1": overall_f1,
+                "true_positives": total_tp,
+                "false_positives": total_fp,
+                "false_negatives": total_fn,
+            }
+        }
+    
+    def save_calibration(self, filepath: str):
+        """
+        Save current calibration (detector weights and thresholds) to file
+        
+        Args:
+            filepath: Path to save calibration JSON
+        """
+        if not self.performance_tracker:
+            print("Warning: Performance tracking not enabled. Saving current config only.")
+        
+        calibration_data = {
+            "detector_weights": self.cfg.detector_weights,
+            "label_thresholds": self.cfg.label_thresholds,
+            "adaptive_weight_method": self.cfg.adaptive_weight_method,
+        }
+        
+        if self.performance_tracker:
+            calibration_data["performance_summary"] = self.performance_tracker.get_summary()
+            calibration_data["recommended_weights"] = self.performance_tracker.get_all_weights()
+        
+        import json
+        with open(filepath, 'w') as f:
+            json.dump(calibration_data, f, indent=2)
+        
+        print(f"✓ Calibration saved to: {filepath}")
+    
+    def load_calibration(self, filepath: str):
+        """
+        Load calibration from file and update pipeline configuration
+        
+        Args:
+            filepath: Path to calibration JSON file
+        """
+        import json
+        with open(filepath, 'r') as f:
+            calibration_data = json.load(f)
+        
+        # Update configuration
+        if "detector_weights" in calibration_data:
+            self.cfg.detector_weights = calibration_data["detector_weights"]
+        
+        if "label_thresholds" in calibration_data:
+            self.cfg.label_thresholds.update(calibration_data["label_thresholds"])
+        
+        # Update consensus model if using adaptive
+        if isinstance(self.consensus, AdaptiveConsensusModel):
+            self.consensus.weights = self.cfg.detector_weights.copy()
+        
+        print(f"✓ Calibration loaded from: {filepath}")
+        print(f"  Detector weights: {self.cfg.detector_weights}")
+        
+        return calibration_data
     
     def get_performance_summary(self) -> Dict:
         """
