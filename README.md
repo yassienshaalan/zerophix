@@ -28,7 +28,7 @@
 |---------|---------|
 | **High Accuracy** | ML models + regex patterns = 98%+ precision |
 | **Fast Processing** | Smart caching + async = 1000s docs/sec |
-| **Zero Cost** | No API fees, unlimited processing |
+| **Self-Hosted** | No per-document API fees, requires infrastructure and maintenance |
 | **Fully Offline** | 100% air-gapped after one-time model setup |
 | **Multi-Country** | Australia, US, EU, UK, Canada + extensible |
 | **100+ Entity Types** | SSN, credit cards, medical IDs, passports, etc. |
@@ -213,7 +213,7 @@ config = RedactionConfig(use_bert=True, bert_model="bert-base-cased")
 config = RedactionConfig(use_openmed=True, openmed_model="openmed-base")
 ```
 
-**GLiNER** - Zero-shot detection (NEW!)
+**GLiNER** - Zero-shot detection
 ```python
 from zerophix.detectors.gliner_detector import GLiNERDetector
 
@@ -245,47 +245,47 @@ START HERE
 │
 ├─ Need MAXIMUM SPEED (real-time, high-volume)?
 │  └─ Use: mode='fast' (regex only)
-│     ✓ 1000+ docs/sec
-│     ✓ 99.9% precision on structured IDs
-│     ✓ Best for: emails, phones, SSN, TFN, ABN, credit cards
-│     ⚠ May miss: names in unstructured text, context-dependent entities
+│     - 1000+ docs/sec
+│     - 99.9% precision on structured IDs
+│     - Best for: emails, phones, SSN, TFN, ABN, credit cards
+│     - May miss: names in unstructured text, context-dependent entities
 │
 ├─ Need MAXIMUM ACCURACY (compliance-critical)?
 │  └─ Use: mode='accurate' (regex + all ML models)
-│     ✓ 87-92% recall (catches more PII)
-│     ✓ Best for: healthcare PHI, legal discovery, GDPR compliance
-│     ⚠ Slower: 100-500 docs/sec
-│     ⚠ Higher memory: 500MB-2GB
+│     - 87-92% recall (catches more PII)
+│     - Best for: healthcare PHI, legal discovery, GDPR compliance
+│     - Slower: 100-500 docs/sec
+│     - Higher memory: 500MB-2GB
 │
 ├─ Structured data ONLY (CSV, forms, databases)?
 │  └─ Use: mode='fast' with validation
-│     ✓ Checksum validation for TFN/ABN/Medicare
-│     ✓ Format-specific patterns
-│     ✓ Near-perfect precision
+│     - Checksum validation for TFN/ABN/Medicare
+│     - Format-specific patterns
+│     - Near-perfect precision
 │
 ├─ Unstructured text (emails, documents, notes)?
 │  └─ Use: mode='accurate' OR custom ensemble
-│     ✓ Combines regex + spaCy + BERT/GLiNER
-│     ✓ Catches names, context-dependent entities
-│     ✓ Better recall on varied text
+│     - Combines regex + spaCy + BERT/GLiNER
+│     - Catches names, context-dependent entities
+│     - Better recall on varied text
 │
 ├─ Healthcare/Medical data?
 │  └─ Use: mode='accurate' + use_openmed=True
-│     ✓ PHI-optimized models
-│     ✓ Medical terminology awareness
-│     ✓ HIPAA compliance focus (87.5% recall benchmark)
+│     - PHI-optimized models
+│     - Medical terminology awareness
+│     - HIPAA compliance focus (87.5% recall benchmark)
 │
 ├─ Custom entity types (not standard PII)?
 │  └─ Use: GLiNER with custom labels
-│     ✓ Zero-shot detection - no training needed
-│     ✓ Just name what you want: "employee ID", "project code"
-│     ✓ Works on domain-specific identifiers
+│     - Zero-shot detection - no training needed
+│     - Just name what you want: "employee ID", "project code"
+│     - Works on domain-specific identifiers
 │
 └─ Not sure? Testing multiple datasets?
    └─ Use: mode='auto'
-      ✓ Intelligently selects detectors per document
-      ✓ Good starting point
-      ⚠ Then benchmark and tune based on your results
+      - Intelligently selects detectors per document
+      - Good starting point
+      - Then benchmark and tune based on your results
 ```
 
 ### Configuration Examples by Use Case
@@ -369,7 +369,7 @@ for cfg in configs:
 
 **Key Takeaway:** There is no one-size-fits-all configuration. The "best" setup depends on your data type, accuracy requirements, speed constraints, and compliance needs. Empirical testing is essential.
 
-## 🎯 Adaptive Ensemble - Auto-Configuration (NEW)
+## Adaptive Ensemble - Auto-Configuration
 
 **Problem:** Manual trial-and-error configuration with unpredictable accuracy  
 **Solution:** Automatic calibration learns optimal detector weights from your data
@@ -385,8 +385,8 @@ config = RedactionConfig(
     country="AU",
     use_gliner=True,
     use_openmed=True,
-    enable_adaptive_weights=True,       # 🎯 Auto-learns optimal weights
-    enable_label_normalization=True,    # 🎯 Fixes cross-detector consensus
+    enable_adaptive_weights=True,       # Auto-learns optimal weights
+    enable_label_normalization=True,    # Fixes cross-detector consensus
 )
 
 pipeline = RedactionPipeline(config)
@@ -436,9 +436,9 @@ result = pipeline.redact("Jane Doe, Medicare 2234 56781 2")
 weight = max(0.1, detector_f1 ** 2)
 
 # Example:
-# GLiNER: F1=0.60 → weight=0.36 ✅ High performer
-# Regex:  F1=0.30 → weight=0.09 ⚠️ Noisy
-# OpenMed: F1=0.10 → weight=0.10 ❌ Poor (floor)
+# GLiNER: F1=0.60 → weight=0.36 (High performer)
+# Regex:  F1=0.30 → weight=0.09 (Noisy)
+# OpenMed: F1=0.10 → weight=0.10 (Poor, floor applied)
 ```
 
 ### Production Usage
@@ -468,11 +468,11 @@ pipeline, results = quick_calibrate_zerophix(test_samples, num_calibration_sampl
 
 ### Benefits
 
-✅ **No more trial-and-error** - Configure once, use everywhere  
-✅ **2-5x better precision** - Fewer false positives  
-✅ **10-20% higher F1** - Better overall accuracy  
-✅ **Fast calibration** - 2-5 seconds for 20 samples  
-✅ **100% backward compatible** - Opt-in via config flag
+- **No more trial-and-error** - Configure once, use everywhere  
+- **2-5x better precision** - Fewer false positives  
+- **10-20% higher F1** - Better overall accuracy  
+- **Fast calibration** - 2-5 seconds for 20 samples  
+- **100% backward compatible** - Opt-in via config flag
 
 See [examples/adaptive_ensemble_examples.py](examples/adaptive_ensemble_examples.py) for complete examples.
 
@@ -771,7 +771,7 @@ cp -r ./zerophix-offline/cache/huggingface ~/.cache/
 |---------|-------------------|------------------------|
 | **Internet Required** | No (after setup) | Yes (always) |
 | **Data Leaves Premises** | Never | Yes |
-| **Cost per Document** | $0 | $0.001 - $0.05 |
+| **Costs** | Infrastructure and maintenance | Per-document API fees |
 | **Processing Speed** | 1000s docs/sec | Rate limited |
 | **Data Sovereignty** | Complete | Cloud provider |
 | **Compliance Audit** | Simple | Complex |
@@ -1131,13 +1131,13 @@ spec:
 ```
 
 ### Production Checklist
-- [ ] Enable TLS/SSL
-- [ ] Configure authentication
-- [ ] Set up audit logging
-- [ ] Implement rate limiting
-- [ ] Configure auto-scaling
-- [ ] Set up monitoring
-- [ ] Configure compliance standards
+- Enable TLS/SSL
+- Configure authentication
+- Set up audit logging
+- Implement rate limiting
+- Configure auto-scaling
+- Set up monitoring
+- Configure compliance standards
 
 ## Testing
 
