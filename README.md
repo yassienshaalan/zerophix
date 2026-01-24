@@ -26,10 +26,10 @@
 
 | Feature | Benefit |
 |---------|---------|
-| **High Accuracy** | ML models + regex patterns = 98%+ precision |
-| **Fast Processing** | Smart caching + async = 1000s docs/sec |
+| **High Accuracy** | ML models + regex patterns = high Precision/Recall |
+| **Fast Processing** | Smart caching + async = infra dependent |
 | **Self-Hosted** | No per-document API fees, requires infrastructure and maintenance |
-| **Fully Offline** | 100% air-gapped after one-time model setup |
+| **Fully Offline** | Air-gapped after one-time model setup |
 | **Multi-Country** | Australia, US, EU, UK, Canada + extensible |
 | **100+ Entity Types** | SSN, credit cards, medical IDs, passports, etc. |
 | **Zero-Shot Detection** | Detect ANY entity type without training (GLiNER) |
@@ -191,7 +191,7 @@ config = RedactionConfig(
 
 ### 1. Detection Methods
 
-#### Regex Patterns (Ultra-fast, 100% precision)
+#### Regex Patterns (Ultra-fast, highest precision)
 - Country-specific patterns for each jurisdiction
 - Format validation with checksum verification
 - Covers SSN, credit cards, IDs, medical numbers
@@ -245,16 +245,16 @@ START HERE
 │
 ├─ Need MAXIMUM SPEED (real-time, high-volume)?
 │  └─ Use: mode='fast' (regex only)
-│     - 1000+ docs/sec
-│     - 99.9% precision on structured IDs
+│     - High Speed
+│     - High precision on structured IDs
 │     - Best for: emails, phones, SSN, TFN, ABN, credit cards
 │     - May miss: names in unstructured text, context-dependent entities
 │
 ├─ Need MAXIMUM ACCURACY (compliance-critical)?
 │  └─ Use: mode='accurate' (regex + all ML models)
-│     - 87-92% recall (catches more PII)
+│     - High recall (catches more PII)
 │     - Best for: healthcare PHI, legal discovery, GDPR compliance
-│     - Slower: 100-500 docs/sec
+│     - Slower
 │     - Higher memory: 500MB-2GB
 │
 ├─ Structured data ONLY (CSV, forms, databases)?
@@ -420,14 +420,7 @@ result = pipeline.redact("Jane Doe, Medicare 2234 56781 2")
 - **Performance Tracking**: Track detector metrics during operation
 - **Save/Load**: Save calibration to JSON, load in production
 
-### Expected Improvements
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Precision | 8-17% | 25-40% | **2-5x better** |
-| F1 Score | 12-25% | 30-45% | **2-3x better** |
-| USERNAME FPs | 500+ | <50 | **10x reduction** |
-| Ensemble | Worse | Better | **Actually helps** |
 
 ### How It Works
 
@@ -468,9 +461,9 @@ pipeline, results = quick_calibrate_zerophix(test_samples, num_calibration_sampl
 
 ### Benefits
 
-- **No more trial-and-error** - Configure once, use everywhere  
-- **2-5x better precision** - Fewer false positives  
-- **10-20% higher F1** - Better overall accuracy  
+- **Less trial-and-error** - Configure once, use everywhere  
+- **Expected better precision** - Fewer false positives  
+- **Higher F1** - Better overall accuracy  
 - **Fast calibration** - 2-5 seconds for 20 samples  
 - **100% backward compatible** - Opt-in via config flag
 
@@ -548,19 +541,6 @@ ZeroPhix has been rigorously evaluated on standard public benchmarks for PII/PHI
 | **GLiNER** | Moderate | 85% | 88% | Zero-shot custom entities |
 | **Ensemble (All)** | Moderate | 87% | 92% | Best overall balance |
 
-### Real-World Application Performance
-
-**Australian Government ID Validation:**
-- TFN (with mod 11 checksum): 99.9% precision, 98% recall
-- ABN (with mod 89 checksum): 99.8% precision, 97% recall
-- Medicare (with mod 10 checksum): 99.7% precision, 96% recall
-- Overall AU precision improvement: 60% → 92%+ with validation
-
-**Healthcare PHI Detection (US HIPAA):**
-- Medical record numbers: 95% F1
-- Patient names: 91% F1
-- Dates of service: 97% F1
-- Overall HIPAA Safe Harbor compliance: 87.6% recall
 
 ### Reproducibility
 
@@ -579,11 +559,6 @@ python -m zerophix.eval.run_all_evaluations
 Evaluation configuration and results available in `src/zerophix/eval/`.
 src/eval/results/evaluation_2026-01-12T06-25-39Z.json](src/eval/results/evaluation_2026-01-12T06-25-39Z.json)
 
-**Key Improvements (v0.2.0):**
-- PDF Deid F1: 75.2% → 76.5% (+1.3 points)
-- Added automatic text chunking for GLiNER (prevents truncation)
-- Enhanced false positive filtering (reduced noise by 40%)
-- Medical recall maintained at 87.5% (high sensitivity for PHI
 **Latest benchmark results:** [eval/results/evaluation_2026-01-02T02-04-28Z.json](src/eval/results/evaluation_2026-01-02T02-04-28Z.json)
 
 ### Australian Entity Detection (Detailed)
@@ -609,12 +584,6 @@ from zerophix.detectors.regex_detector import RegexDetector
 detector = RegexDetector(country='AU', company=None)
 # Automatic checksum validation for AU entities
 ```
-
-**Precision Improvements:**
-- TFN: 40% → 99.9% (with checksum)
-- ABN: 35% → 99.8% (with checksum)
-- Medicare: 45% → 99.7% (with checksum)
-- Overall: 60% → 92%+ for Australian government IDs
 
 ### 2. Ensemble & Context
 
