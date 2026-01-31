@@ -144,22 +144,84 @@ def example_4_encrypt_strategy():
     
     try:
         from cryptography.fernet import Fernet
+        from zerophix.redaction.strategies import EncryptionStrategy
         
-        text = "Account: 9876543210, SSN: 123-45-6789, Email: john@company.com"
+        # Sample sensitive data
+        sensitive_data = {
+            "SSN": "123-45-6789",
+            "Account": "9876543210",
+            "Email": "john@company.com"
+        }
         
-        config = RedactionConfig(
-            country="US",
-            masking_style="encrypt",
-            detectors=["regex"]
-        )
+        print("=" * 70)
+        print("ENCRYPTION & DECRYPTION DEMO")
+        print("=" * 70)
         
-        pipeline = RedactionPipeline(config)
-        result = pipeline.redact(text)
+        # Create encryption strategy with a dummy key
+        encryption_key = Fernet.generate_key()
+        encryption_strategy = EncryptionStrategy(encryption_key=encryption_key)
         
-        print(f"Original:  {text}")
-        print(f"Encrypted: {result['text']}")
-        print("\nNote: Encrypted data can be decrypted with proper encryption key")
-        print("Note: Requires secure key management infrastructure")
+        print(f"\nGenerated encryption key: {encryption_key.decode()[:50]}...")
+        print("\nEncrypting sensitive data:")
+        print("-" * 70)
+        
+        # Encrypt each piece of data
+        encrypted_data = {}
+        for label, value in sensitive_data.items():
+            result = encryption_strategy.redact(value, label)
+            encrypted_data[label] = result.redacted_text
+            print(f"{label:10} | Original: {value:20} | Encrypted: {result.redacted_text}")
+        
+        print("\n" + "=" * 70)
+        print("DECRYPTION DEMO")
+        print("=" * 70)
+        
+        # Create Fernet cipher for decryption
+        cipher = Fernet(encryption_key)
+        
+        print("\nDecrypting data back to original:")
+        print("-" * 70)
+        
+        for label, encrypted_value in encrypted_data.items():
+            # Extract hex portion from "ENC_xxxxx" format
+            if encrypted_value.startswith("ENC_"):
+                # Note: The current implementation truncates encrypted data
+                # For full decryption, we need the complete encrypted bytes
+                print(f"{label:10} | Encrypted: {encrypted_value}")
+                print(f"           | Note: Full decryption requires storing complete encrypted data")
+        
+        print("\n" + "=" * 70)
+        print("FULL ENCRYPTION/DECRYPTION EXAMPLE")
+        print("=" * 70)
+        
+        # Complete example with full encryption/decryption
+        original_ssn = "123-45-6789"
+        
+        # Encrypt
+        encrypted_bytes = cipher.encrypt(original_ssn.encode('utf-8'))
+        encrypted_string = encrypted_bytes.decode('utf-8')
+        
+        print(f"\nOriginal:  {original_ssn}")
+        print(f"Encrypted: {encrypted_string[:60]}...")
+        
+        # Decrypt
+        decrypted_bytes = cipher.decrypt(encrypted_bytes)
+        decrypted_string = decrypted_bytes.decode('utf-8')
+        
+        print(f"Decrypted: {decrypted_string}")
+        print(f"Match:     {original_ssn == decrypted_string}")
+        
+        print("\n" + "=" * 70)
+        print("KEY TAKEAWAYS")
+        print("=" * 70)
+        print("""
+        1. Encryption is reversible with the correct key
+        2. Same key must be used for both encryption and decryption
+        3. Store encryption keys securely (HSM, key vault, KMS)
+        4. Rotate keys regularly (90-day cycle recommended)
+        5. Never store keys with encrypted data
+        6. Use key versioning for key rotation
+        """)
         
     except ImportError:
         print("ERROR: Encryption requires cryptography library:")
