@@ -66,13 +66,13 @@ Most PII/PHI redaction solutions are US-centric and cloud-dependent. ZeroPhix wa
 │                  DETECTION LAYER (Ensemble)                      │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
 │  │  Regex   │  │  spaCy   │  │   BERT   │  │  GLiNER  │          │
-│  │ 99.9%    │  │  Names   │  │  Context │  │Zero-shot │          │
+│  │   High   │  │  Names   │  │  Context │  │Zero-shot │          │
 │  │precision │  │Locations │  │ Aware    │  │ Custom   │          │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘          │
-│  ┌──────────┐  ┌──────────┐                                      │
-│  │Statistical│ │ OpenMed  │  (Australian checksum validation)    │
-│  │ Entropy  │  │Healthcare│                                      │
-│  └──────────┘  └──────────┘                                      │
+│  ┌───────────┐  ┌──────────┐                                     │
+│  │Statistical│  │ OpenMed  │  (Australian checksum validation)   │
+│  │ Entropy   │  │Healthcare│                                     │
+│  └───────────┘  └──────────┘                                     │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
                              ▼
