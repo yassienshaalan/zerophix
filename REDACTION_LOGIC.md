@@ -14,7 +14,13 @@ Most PII/PHI redaction solutions are US-centric and cloud-dependent. ZeroPhix wa
   - Dramatically improves Australian ID precision through checksum validation
   - State-specific patterns (driver licenses for all 8 states/territories)
   - Australian healthcare (IHI, HPI-I/O, DVA, PBS), financial (BSB, Centrelink CRN), and geographic entities
-  - Compliant with Australian Privacy Act and health sector regulations
+- **Compliance & Regulatory Framework**:
+  - **Privacy Act 1988**: Covers Australian Privacy Principles (APPs) for handling personal information including TFNs, Medicare numbers, and other government identifiers
+  - **My Health Records Act 2012**: Governs healthcare identifiers (IHI, HPI-I/O) and electronic health records requiring strict de-identification controls
+  - **Healthcare Identifiers Act 2010**: Regulates collection, use, and disclosure of healthcare identifiers ensuring secure handling of Medicare and IHI data
+  - **Taxation Administration Act 1953**: Protects TFN confidentiality with severe penalties for unauthorized disclosure or misuse
+  - **Corporations Act 2001**: Governs ABN/ACN usage and confidentiality requirements for business identifiers
+  - **Notifiable Data Breaches (NDB) Scheme**: Mandatory breach notification for serious data breaches involving personal information under the Privacy Act
 
 #### 2. **100% Offline Operation (Air-Gapped Capability)**
 - **Problem**: Cloud APIs require internet, creating data sovereignty and security risks
