@@ -58,22 +58,22 @@ Most PII/PHI redaction solutions are US-centric and cloud-dependent. ZeroPhix wa
                              ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                  DETECTION LAYER (Ensemble)                      │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │
-│  │  Regex   │  │  spaCy   │  │   BERT   │  │  GLiNER  │        │
-│  │ 99.9%    │  │  Names   │  │  Context │  │Zero-shot │        │
-│  │precision │  │Locations │  │ Aware    │  │ Custom   │        │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘        │
-│  ┌──────────┐  ┌──────────┐                                     │
-│  │Statistical│ │ OpenMed  │  (Australian checksum validation)   │
-│  │ Entropy  │  │Healthcare│                                     │
-│  └──────────┘  └──────────┘                                     │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐          │
+│  │  Regex   │  │  spaCy   │  │   BERT   │  │  GLiNER  │          │
+│  │ 99.9%    │  │  Names   │  │  Context │  │Zero-shot │          │
+│  │precision │  │Locations │  │ Aware    │  │ Custom   │          │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘          │
+│  ┌──────────┐  ┌──────────┐                                      │
+│  │Statistical│ │ OpenMed  │  (Australian checksum validation)    │
+│  │ Entropy  │  │Healthcare│                                      │
+│  └──────────┘  └──────────┘                                      │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
                              ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │              ENSEMBLE VOTING & CALIBRATION                       │
 │  • Adaptive weight learning (F1² method)                         │
-│  • Label normalization (PERSON ↔ USERNAME consensus)            │
+│  • Label normalization (PERSON ↔ USERNAME consensus)             │
 │  • Conflict resolution (overlap handling)                        │
 │  • Confidence scoring aggregation                                │
 └────────────────────────────┬─────────────────────────────────────┘
@@ -81,30 +81,30 @@ Most PII/PHI redaction solutions are US-centric and cloud-dependent. ZeroPhix wa
                              ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                   PROCESSING LAYER                               │
-│  ┌────────────────┐  ┌──────────────────┐  ┌────────────────┐  │
-│  │   Consensus    │  │Context Propagation│  │  Allow-List    │  │
-│  │   Resolution   │  │  (Session Memory) │  │   Filtering    │  │
-│  └────────────────┘  └──────────────────┘  └────────────────┘  │
-│  ┌────────────────┐                                             │
-│  │    Garbage     │  (False positive reduction)                 │
-│  │    Filtering   │                                             │
-│  └────────────────┘                                             │
+│  ┌────────────────┐  ┌───────────────────┐  ┌────────────────┐   │
+│  │   Consensus    │  │Context Propagation│  │  Allow-List    │   │
+│  │   Resolution   │  │  (Session Memory) │  │   Filtering    │   │
+│  └────────────────┘  └───────────────────┘  └────────────────┘   │
+│  ┌────────────────┐                                              │
+│  │    Garbage     │  (False positive reduction)                  │
+│  │    Filtering   │                                              │
+│  └────────────────┘                                              │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
                              ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                 REDACTION STRATEGY LAYER                         │
-│  • Replace (entity labels)   • Mask (partial visibility)        │
-│  • Hash (deterministic)       • Encrypt (reversible)            │
-│  • Synthetic (realistic fake) • Brackets ([REDACTED])           │
-│  • Preserve format            • Differential privacy            │
-│  • K-anonymity                • AU phone (area code preserved)  │
+│  • Replace (entity labels)   • Mask (partial visibility)         │
+│  • Hash (deterministic)       • Encrypt (reversible)             │
+│  • Synthetic (realistic fake) • Brackets ([REDACTED])            │
+│  • Preserve format            • Differential privacy             │
+│  • K-anonymity                • AU phone (area code preserved)   │
 └────────────────────────────┬─────────────────────────────────────┘
                              │
                              ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                      REDACTED OUTPUT                             │
-│  • Redacted text   • Entity metadata   • Audit logs             │
+│  • Redacted text   • Entity metadata   • Audit logs              │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
