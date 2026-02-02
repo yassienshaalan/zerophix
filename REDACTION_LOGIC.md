@@ -1300,8 +1300,8 @@ actions:
   AU_TFN: 'replace'              # Complete removal
   AU_MEDICARE: 'replace'         # Complete removal
   AU_IHI: 'replace'              # Complete removal
-  DATE_AU: 'synthetic'           # Random realistic date
-  DATE_ISO: 'synthetic'          # Random realistic date
+  DATE_AU: 'replace'             # Show label
+  DATE_ISO: 'replace'            # Show label
   AU_ADDRESS: 'replace'          # Show label
   PHONE_AU_MOBILE: 'mask'        # Partial masking
   PHONE_AU: 'mask'               # Partial masking
@@ -1317,7 +1317,7 @@ actions:
 PATIENT RECORD - CONFIDENTIAL
 
 Patient: <PERSON_NAME>
-DOB: 22/07/1988 (Age: 41)
+DOB: <DATE_AU> (Age: 41)
 Medicare: <AU_MEDICARE>
 IHI: <AU_IHI>
 TFN: <AU_TFN>
@@ -1335,8 +1335,8 @@ Current Medications:
   - HASH_3a2b1c0d9e8f 500mg BD
   - HASH_7e6f5d4c3b2a 5mg OD
 
-Last HbA1c: 7.2% (2024-11-28)
-Next appointment: 2025-03-05
+Last HbA1c: 7.2% (<DATE_ISO>)
+Next appointment: <DATE_ISO>
 ```
 
 **Protected**: 14 sensitive entities
