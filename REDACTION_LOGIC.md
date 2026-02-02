@@ -1339,7 +1339,7 @@ Next appointment: 2025-03-05
 
 **Protected**: 14 sensitive entities
 **Maintained**: Document structure, readability, realistic appearance
-**Compliant**: HIPAA Safe Harbor (87.5% recall benchmark)
+**Compliant**: HIPAA Safe Harbor 
 
 ---
 
@@ -1864,7 +1864,7 @@ Where:
 | **Context Propagation** | Session memory | None | None |
 | **Garbage Filtering** | Advanced heuristics | Basic | N/A |
 | **Batch Processing** | Parallel vectorized | Sequential | Cloud batching |
-| **Offline Capable** | ✅ Yes | ✅ Yes | ❌ No (cloud only) |
+| **Offline Capable** |  Yes |  Yes |  No (cloud only) |
 | **Cost** | Free | Free | Pay-per-call |
 
 ---
