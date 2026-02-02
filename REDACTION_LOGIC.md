@@ -1867,7 +1867,7 @@ Where:
 | **Context Propagation** | Session memory | None | None |
 | **Garbage Filtering** | Advanced heuristics | Basic | N/A |
 | **Batch Processing** | Parallel vectorized | Sequential | Cloud batching |
-| **Offline Capable** | ✅ Yes | ✅ Yes | ❌ No (cloud only) |
+| **Offline Capable** |  Yes |  Yes |  No (cloud only) |
 | **Cost** | Free | Free | Pay-per-call |
 
 ---
