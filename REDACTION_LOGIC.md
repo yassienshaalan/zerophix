@@ -1296,19 +1296,19 @@ Removed:
 **Policy** (configs/company/health_au.yml):
 ```yaml
 actions:
-  PERSON_NAME: 'mask'
-  AU_TFN: 'mask'
-  AU_MEDICARE: 'mask'
-  AU_IHI: 'mask'
-  DATE_AU: 'mask'
-  DATE_ISO: 'mask'
-  AU_ADDRESS: 'mask'
-  PHONE_AU_MOBILE: 'mask'
-  PHONE_AU: 'mask'
-  EMAIL: 'mask'
-  ORGANIZATION: 'mask'
-  MEDICAL_CONDITION: 'mask'
-  MEDICATION: 'mask'
+  PERSON_NAME: 'replace'         # Show label
+  AU_TFN: 'replace'              # Complete removal
+  AU_MEDICARE: 'replace'         # Complete removal
+  AU_IHI: 'replace'              # Complete removal
+  DATE_AU: 'synthetic'           # Random realistic date
+  DATE_ISO: 'synthetic'          # Random realistic date
+  AU_ADDRESS: 'replace'          # Show label
+  PHONE_AU_MOBILE: 'mask'        # Partial masking
+  PHONE_AU: 'mask'               # Partial masking
+  EMAIL: 'preserve_format'       # Keep structure
+  ORGANIZATION: 'synthetic'      # Fake but realistic name
+  MEDICAL_CONDITION: 'hash'      # Deterministic for research
+  MEDICATION: 'hash'             # Deterministic for research
 ```
 
 ### Output (Redacted)
@@ -1316,32 +1316,32 @@ actions:
 ```
 PATIENT RECORD - CONFIDENTIAL
 
-Patient: **** **** ***
-DOB: **/**/****  (Age: 41)
-Medicare: **** ***** *
-IHI: **** **** **** ****
-TFN: *** *** ***
+Patient: <PERSON_NAME>
+DOB: 22/07/1988 (Age: 41)
+Medicare: <AU_MEDICARE>
+IHI: <AU_IHI>
+TFN: <AU_TFN>
 
-Address: *** ****** ******, ****** *** ****
+Address: <AU_ADDRESS>
 Phone: **** *** ***
-Email: ****.***@*****.com.au
+Email: j.d@xxxxx.com.au
 
-GP: Dr. **** ***** (Provider: 1234567890)
-Clinic: ***** ********* ********
+GP: <PERSON_NAME> (Provider: 1234567890)
+Clinic: Sydney General Medical Centre
 Phone: (**) **** ****
 
-Diagnosis: **** * ******** ********
+Diagnosis: HASH_9f8e7d6c5b4a
 Current Medications:
-  - ********* 500mg BD
-  - ******** 5mg OD
+  - HASH_3a2b1c0d9e8f 500mg BD
+  - HASH_7e6f5d4c3b2a 5mg OD
 
-Last HbA1c: 7.2% (**********)
-Next appointment: **********
+Last HbA1c: 7.2% (2024-11-28)
+Next appointment: 2025-03-05
 ```
 
 **Protected**: 14 sensitive entities
-**Strategy**: Masking (partial visibility for verification)
-**Maintained**: Document structure, field positions, character counts
+**Strategies**: Multiple (replace, synthetic, mask, hash, preserve_format)
+**Maintained**: Document readability with varied privacy levels per entity type
 **Compliant**: HIPAA Safe Harbor de-identification requirements
 
 ---
