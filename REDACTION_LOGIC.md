@@ -1196,9 +1196,9 @@ Next appointment: 2025-02-20
 ```
 - Span(27, 40, "PERSON_NAME", 1.00) → "Jane Mary Doe"
 - Span(46, 56, "DATE_AU", 1.00) → "15/03/1985"
-- Span(75, 88, "AU_MEDICARE", 1.00) → "2234 56781 2"  ✓ Valid checksum
+- Span(75, 88, "AU_MEDICARE", 1.00) → "2234 56781 2"  (Valid checksum)
 - Span(95, 114, "AU_IHI", 1.00) → "8003 6012 3456 7890"
-- Span(120, 131, "AU_TFN", 1.00) → "123 456 782"  ✓ Valid checksum
+- Span(120, 131, "AU_TFN", 1.00) → "123 456 782"  (Valid checksum)
 - Span(142, 172, "AU_ADDRESS", 0.95) → "123 George Street, Sydney NSW 2000"
 - Span(180, 192, "PHONE_AU_MOBILE", 1.00) → "0412 345 678"
 - Span(200, 220, "EMAIL", 1.00) → "jane.doe@email.com.au"
@@ -1238,13 +1238,15 @@ Next appointment: 2025-02-20
 
 #### 2. Ensemble Voting (With Calibration)
 
+**Configuration**: High accuracy mode (all detectors enabled)
+
 **Calibration weights** (from 50 Australian medical samples):
 ```
-Regex:   0.35  (excellent for AU IDs)
-spaCy:   0.25  (good for names)
-OpenMed: 0.20  (best for medical terms)
+OpenMed: 0.30  (best for medical terms)
+Regex:   0.25  (excellent for AU IDs)
+spaCy:   0.20  (good for names)
 GLiNER:  0.15  (moderate for general)
-BERT:    0.05  (poor on this data, floor applied)
+BERT:    0.10  (floor applied)
 ```
 
 **Label normalization**:
@@ -1294,19 +1296,19 @@ Removed:
 **Policy** (configs/company/health_au.yml):
 ```yaml
 actions:
-  PERSON_NAME: 'synthetic'
-  AU_TFN: 'replace'
-  AU_MEDICARE: 'replace'
-  AU_IHI: 'replace'
-  DATE_AU: 'synthetic'
-  DATE_ISO: 'synthetic'
-  AU_ADDRESS: 'synthetic'
-  PHONE_AU_MOBILE: 'au_phone'  # Preserve 04XX
+  PERSON_NAME: 'mask'
+  AU_TFN: 'mask'
+  AU_MEDICARE: 'mask'
+  AU_IHI: 'mask'
+  DATE_AU: 'mask'
+  DATE_ISO: 'mask'
+  AU_ADDRESS: 'mask'
+  PHONE_AU_MOBILE: 'mask'
   PHONE_AU: 'mask'
-  EMAIL: 'preserve_format'
-  ORGANIZATION: 'synthetic'
-  MEDICAL_CONDITION: 'hash'  # For research
-  MEDICATION: 'hash'
+  EMAIL: 'mask'
+  ORGANIZATION: 'mask'
+  MEDICAL_CONDITION: 'mask'
+  MEDICATION: 'mask'
 ```
 
 ### Output (Redacted)
@@ -1314,32 +1316,33 @@ actions:
 ```
 PATIENT RECORD - CONFIDENTIAL
 
-Patient: Alice Johnson
-DOB: 22/07/1988 (Age: 41)
-Medicare: <AU_MEDICARE>
-IHI: <AU_IHI>
-TFN: <AU_TFN>
+Patient: **** **** ***
+DOB: **/**/****  (Age: 41)
+Medicare: **** ***** *
+IHI: **** **** **** ****
+TFN: *** *** ***
 
-Address: 456 Collins Avenue, Brisbane QLD 4000
-Phone: 04XX-XXX-XXX
-Email: a.j@provider.com.au
+Address: *** ****** ******, ****** *** ****
+Phone: **** *** ***
+Email: ****.***@*****.com.au
 
-GP: Dr. Michael Brown (Provider: 1234567890)
-Clinic: Sydney General Medical Centre
-Phone: (0X) XXXX-XXXX
+GP: Dr. **** ***** (Provider: 1234567890)
+Clinic: ***** ********* ********
+Phone: (**) **** ****
 
-Diagnosis: HASH_9f8e7d6c5b4a
+Diagnosis: **** * ******** ********
 Current Medications:
-  - HASH_3a2b1c0d9e8f 500mg BD
-  - HASH_7e6f5d4c3b2a 5mg OD
+  - ********* 500mg BD
+  - ******** 5mg OD
 
-Last HbA1c: 7.2% (2024-11-28)
-Next appointment: 2025-03-05
+Last HbA1c: 7.2% (**********)
+Next appointment: **********
 ```
 
 **Protected**: 14 sensitive entities
-**Maintained**: Document structure, readability, realistic appearance
-**Compliant**: HIPAA Safe Harbor (87.5% recall benchmark)
+**Strategy**: Masking (partial visibility for verification)
+**Maintained**: Document structure, field positions, character counts
+**Compliant**: HIPAA Safe Harbor de-identification requirements
 
 ---
 
@@ -1347,17 +1350,17 @@ Next appointment: 2025-03-05
 
 | Feature | ZeroPhix | Presidio (MS) | Azure AI | AWS Comprehend |
 |---------|----------|---------------|----------|----------------|
-| **Australian Focus** | ✓ 40+ entities | ✗ Limited | ✗ US-centric | ✗ US-centric |
-| **Checksum Validation** | ✓ TFN/ABN/ACN/Medicare | ✗ No | ✗ No | ✗ No |
-| **Offline Capable** | ✓ 100% | ✓ Yes | ✗ Cloud only | ✗ Cloud only |
-| **Adaptive Calibration** | ✓ F1² learning | ✗ No | ✗ No | ✗ No |
-| **Ensemble Voting** | ✓ 6 detectors | ✓ 2-3 detectors | ✗ Single model | ✗ Single model |
-| **Per-Entity Strategies** | ✓ 10+ strategies | ✓ Limited | ✗ Fixed | ✗ Fixed |
-| **Zero-Shot Detection** | ✓ GLiNER | ✗ No | ✗ No | ✗ No |
+| **Australian Focus** | Yes (40+ entities) | Limited | US-centric | US-centric |
+| **Checksum Validation** | Yes (TFN/ABN/ACN/Medicare) | No | No | No |
+| **Offline Capable** | Yes (100%) | Yes | No (Cloud only) | No (Cloud only) |
+| **Adaptive Calibration** | Yes (F1² learning) | No | No | No |
+| **Ensemble Voting** | Yes (6 detectors) | Yes (2-3 detectors) | No (Single model) | No (Single model) |
+| **Per-Entity Strategies** | Yes (10+ strategies) | Limited | Fixed | Fixed |
+| **Zero-Shot Detection** | Yes (GLiNER) | No | No | No |
 | **Cost** | Free (infra only) | Free | $2-5/1K docs | $1-3/1K docs |
-| **Data Sovereignty** | ✓ Complete | ✓ On-prem | ✗ Cloud | ✗ Cloud |
-| **Key Management** | ✓ Built-in | ✗ Manual | ✓ Azure KMS | ✓ AWS KMS |
-| **Precision (AU data)** | 92%+ | 60-70% | Unknown | Unknown |
+| **Data Sovereignty** | Complete | On-prem | Cloud | Cloud |
+| **Key Management** | Built-in | Manual | Azure KMS | AWS KMS |
+| **Precision (AU data)** | High | Moderate | Unknown | Unknown |
 
 ---
 
