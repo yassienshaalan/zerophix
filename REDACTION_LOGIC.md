@@ -122,69 +122,16 @@ Most PII/PHI redaction solutions are US-centric and cloud-dependent. ZeroPhix wa
 
 **Purpose**: Ultra-fast, high precision for structured government IDs
 
-**Australian-Specific Patterns**:
+**How It Works**: Uses pattern matching combined with mathematical checksum validation to detect and verify Australian government identifiers. Each ID type has a specific validation algorithm:
 
-```python
-# TFN - Tax File Number (9 digits, Modulus 11 validation)
-TFN_PATTERN = r'\b\d{3}[\s-]?\d{3}[\s-]?\d{3}\b'
+- **TFN (Tax File Number)**: 9 digits validated using Modulus 11 algorithm with weighted digit positions [1,4,3,7,5,8,6,9,10]
+- **ABN (Australian Business Number)**: 11 digits validated using Modulus 89 after subtracting 1 from the first digit
+- **ACN (Australian Company Number)**: 9 digits validated using Modulus 10 with descending weights [8,7,6,5,4,3,2,1]
+- **Medicare Number**: 10 digits validated using Modulus 10 Luhn-like algorithm with repeating weights [1,3,7,9]
 
-def validate_tfn(tfn: str) -> bool:
-    """
-    Modulus 11 algorithm with weights [1,4,3,7,5,8,6,9,10]
-    Example: 123 456 782
-    Calculation: (1×1 + 2×4 + 3×3 + 4×7 + 5×5 + 6×8 + 7×6 + 8×9 + 2×10) % 11 == 0
-    """
-    digits = [int(d) for d in tfn if d.isdigit()]
-    weights = [1, 4, 3, 7, 5, 8, 6, 9, 10]
-    checksum = sum(d * w for d, w in zip(digits, weights))
-    return checksum % 11 == 0
+The detector first matches the digit pattern with flexible spacing/hyphens, then applies the mathematical checksum to verify authenticity.
 
-# ABN - Australian Business Number (11 digits, Modulus 89 validation)
-ABN_PATTERN = r'\b\d{2}[\s-]?\d{3}[\s-]?\d{3}[\s-]?\d{3}\b'
-
-def validate_abn(abn: str) -> bool:
-    """
-    Modulus 89 algorithm (subtract 1 from first digit, apply weights)
-    Example: 53 004 085 616
-    """
-    digits = [int(d) for d in abn if d.isdigit()]
-    digits[0] -= 1  # Subtract 1 from first digit
-    weights = [10, 1, 3, 5, 7, 9, 11, 13, 15, 17, 19]
-    checksum = sum(d * w for d, w in zip(digits, weights))
-    return checksum % 89 == 0
-
-# ACN - Australian Company Number (9 digits, Modulus 10 validation)
-ACN_PATTERN = r'\b\d{3}[\s-]?\d{3}[\s-]?\d{3}\b'
-
-def validate_acn(acn: str) -> bool:
-    """
-    Modulus 10 algorithm with weights [8,7,6,5,4,3,2,1]
-    Example: 123 456 789
-    """
-    digits = [int(d) for d in acn if d.isdigit()]
-    weights = [8, 7, 6, 5, 4, 3, 2, 1]
-    checksum = sum(d * w for d, w in zip(digits[:8], weights))
-    check_digit = (10 - (checksum % 10)) % 10
-    return check_digit == digits[8]
-
-# Medicare - 10 digits with Modulus 10 Luhn-like validation
-MEDICARE_PATTERN = r'\b\d{4}[\s-]?\d{5}[\s-]?\d\b'
-
-def validate_medicare(medicare: str) -> bool:
-    """
-    Modulus 10 Luhn-like with weights [1,3,7,9,1,3,7,9]
-    Example: 2234 56781 2
-    """
-    digits = [int(d) for d in medicare if d.isdigit()]
-    weights = [1, 3, 7, 9, 1, 3, 7, 9]
-    checksum = sum(d * w for d, w in zip(digits[:8], weights))
-    check_digit = checksum % 10
-    return check_digit == digits[9]
-```
-
-**Precision Impact**:
-- Without validation: many false positives
-- With checksum validation: dramatically reduced false positives (mathematically verified)
+**Precision Impact**: Checksum validation dramatically reduces false positives by mathematically verifying that random digit sequences are NOT valid government IDs
 
 **Coverage**: 40+ Australian entity types including:
 - Government: TFN, ABN, ACN
@@ -199,36 +146,9 @@ def validate_medicare(medicare: str) -> bool:
 
 **Model**: en_core_web_lg (transformer-based, 560MB)
 
-**Detection Process**:
-```python
-def detect(self, text: str) -> List[Span]:
-    doc = self.nlp(text)
-    spans = []
-    
-    for ent in doc.ents:
-        # Map spaCy labels to ZeroPhix labels
-        label_map = {
-            "PERSON": "PERSON_NAME",
-            "ORG": "ORGANIZATION",
-            "GPE": "LOCATION",  # Geopolitical entity
-            "LOC": "LOCATION",
-            "DATE": "DATE",
-            "MONEY": "CURRENCY"
-        }
-        
-        if ent.label_ in label_map:
-            spans.append(Span(
-                start=ent.start_char,
-                end=ent.end_char,
-                label=label_map[ent.label_],
-                score=0.90,  # spaCy doesn't provide confidence
-                source="spacy"
-            ))
-    
-    return spans
-```
+**How It Works**: Uses a pre-trained transformer model to identify named entities in natural language text. The model analyzes linguistic context to recognize person names, organizations, locations, dates, and monetary values. Detected entities are mapped from spaCy's label system (PERSON, ORG, GPE, LOC) to ZeroPhix's standardized labels (PERSON_NAME, ORGANIZATION, LOCATION). Since spaCy doesn't provide confidence scores, a fixed score of 0.90 is assigned to all detections.
 
-**Strengths**: Names in natural text, context-aware
+**Strengths**: Excellent for names in natural text, context-aware
 **Weaknesses**: No confidence scores, struggles with uncommon names
 
 ### 3. BERT Detector (Transformer Context-Aware)
@@ -237,59 +157,16 @@ def detect(self, text: str) -> List[Span]:
 
 **Model**: bert-base-cased (110M parameters)
 
-**How it works**:
-```python
-def detect(self, text: str) -> List[Span]:
-    # Tokenize input
-    inputs = self.tokenizer(text, return_tensors="pt", 
-                           return_offsets_mapping=True)
-    
-    # Run inference
-    outputs = self.model(**inputs)
-    predictions = torch.argmax(outputs.logits, dim=2)
-    
-    # Extract entities with confidence scores
-    spans = []
-    for idx, (token_id, label_id) in enumerate(zip(inputs['input_ids'][0], predictions[0])):
-        if label_id > 0:  # Not 'O' (outside entity)
-            label = self.id2label[label_id.item()]
-            score = torch.softmax(outputs.logits[0][idx], dim=0)[label_id].item()
-            
-            # Map token position to character position
-            start, end = inputs['offset_mapping'][0][idx]
-            spans.append(Span(start, end, label, score, "bert"))
-    
-    return self._merge_token_spans(spans)  # Merge BIO tags
-```
+**How It Works**: Uses a fine-tuned BERT transformer model for token-level classification. The text is first tokenized into subword units, then each token is classified using deep contextual understanding from the 110M parameter model. The model outputs probability distributions over entity labels for each token, which are converted to confidence scores via softmax. Token-level predictions using BIO tagging (Begin, Inside, Outside) are merged into complete entity spans by combining consecutive tokens with the same label. Character positions are mapped back from tokenized positions using offset mapping.
 
-**Strengths**: Context understanding, confidence scores, handles ambiguity
-**Weaknesses**: Slower (100-300ms per doc), higher memory (500MB+)
+**Strengths**: Deep context understanding, provides confidence scores, handles ambiguous cases
+**Weaknesses**: Slower inference (100-300ms per doc), higher memory usage (500MB+)
 
 ### 4. GLiNER (Zero-Shot Custom Entities)
 
 **Purpose**: Detect ANY entity type without training
 
-**Revolutionary Approach**:
-```python
-def detect(self, text: str, entity_types: List[str]) -> List[Span]:
-    """
-    entity_types: ["employee id", "project code", "api key", ...]
-    No training needed - just name what you want to find!
-    """
-    entities = self.model.predict_entities(text, entity_types)
-    
-    spans = []
-    for ent in entities:
-        spans.append(Span(
-            start=ent["start"],
-            end=ent["end"],
-            label=ent["label"].upper().replace(" ", "_"),
-            score=ent["score"],
-            source="gliner"
-        ))
-    
-    return spans
-```
+**How It Works**: Uses a generalized named entity recognition model that accepts natural language descriptions of entity types to find. Instead of being limited to pre-trained categories, you simply specify what you're looking for in plain English (e.g., "employee id", "project code", "api key") and the model identifies matching patterns in the text. The model learns entity boundaries and types simultaneously by understanding the semantic relationship between your query and the text content. Entity labels are normalized to uppercase with underscores for consistency.
 
 **Use Cases**:
 - Custom organization IDs: "EMP-123456", "PROJ-ABC-001"
@@ -304,41 +181,13 @@ def detect(self, text: str, entity_types: List[str]) -> List[Span]:
 
 **Purpose**: Catch patterns ML models miss
 
-**Algorithms**:
-```python
-def detect(self, text: str) -> List[Span]:
-    spans = []
-    
-    # 1. Shannon Entropy (randomness detection)
-    def entropy(s: str) -> float:
-        """High entropy = random-looking (keys, hashes, encrypted data)"""
-        from collections import Counter
-        import math
-        counts = Counter(s)
-        probs = [c / len(s) for c in counts.values()]
-        return -sum(p * math.log2(p) for p in probs)
-    
-    # Scan for high-entropy tokens
-    for token in text.split():
-        if len(token) > 8 and entropy(token) > 4.0:
-            # Likely API key, hash, or encrypted data
-            spans.append(Span(..., "HIGH_ENTROPY_TOKEN", 0.75, "statistical"))
-    
-    # 2. Frequency Analysis (repeated sensitive patterns)
-    token_freq = Counter(text.split())
-    for token, count in token_freq.items():
-        if count >= 3 and self._looks_sensitive(token):
-            # Repeated ID or code
-            for match in re.finditer(re.escape(token), text):
-                spans.append(Span(..., "REPEATED_ID", 0.70, "statistical"))
-    
-    # 3. Format Anomalies (unexpected patterns)
-    # Detect: "XXX-XX-1234" (partial redaction attempt)
-    #         "***-***-6789" (masked but detectable)
-    #         Base64-encoded strings
-    
-    return spans
-```
+**How It Works**: Uses three statistical techniques to identify sensitive patterns:
+
+1. **Shannon Entropy Analysis**: Calculates character randomness for each token. High entropy (>4.0 bits) indicates random-looking strings like API keys, cryptographic hashes, or encrypted data. The entropy formula measures the unpredictability of character distribution.
+
+2. **Frequency Analysis**: Tracks token occurrences across the document. When the same suspicious-looking token appears multiple times (≥3), it's likely an internal ID or code that should be redacted.
+
+3. **Format Anomaly Detection**: Identifies unusual patterns like partial redactions ("XXX-XX-1234"), asterisk masking ("***-***-6789"), and Base64-encoded strings that other detectors might miss.
 
 **Strengths**: Catches what others miss (API keys, hashes, partial redactions)
 **Weaknesses**: Higher false positive rate, needs tuning per domain
@@ -351,24 +200,7 @@ def detect(self, text: str) -> List[Span]:
 - OpenMed-NER-DiseaseDetect (335M parameters)
 - OpenMed-NER-ChemicalDetect (33M parameters)
 
-**Detection**:
-```python
-def detect(self, text: str) -> List[Span]:
-    spans = []
-    
-    # Disease detection
-    disease_entities = self.disease_model.predict(text)
-    for ent in disease_entities:
-        spans.append(Span(..., "MEDICAL_CONDITION", ent.score, "openmed"))
-    
-    # Chemical/drug detection
-    chem_entities = self.chem_model.predict(text)
-    for ent in chem_entities:
-        spans.append(Span(..., "MEDICATION", ent.score, "openmed"))
-    
-    # Medical procedures, anatomy, tests, etc.
-    return spans
-```
+**How It Works**: Uses specialized medical NER models trained on clinical text to identify healthcare-specific entities. The disease detection model identifies medical conditions, diagnoses, and symptoms with confidence scores. The chemical detection model recognizes medications, drugs, and chemical compounds. Both models run inference on the input text and return entity spans labeled as MEDICAL_CONDITION or MEDICATION. These models are specifically trained on medical literature and clinical records, making them significantly more accurate for healthcare text than general-purpose NER models.
 
 **HIPAA Safe Harbor Coverage**:
 - Medical record numbers
@@ -401,29 +233,13 @@ Position 0-10:
 
 ### Solution 1: Basic Consensus (Pre-Calibration)
 
-```python
-def resolve_consensus(overlapping_spans: List[Span]) -> Span:
-    """Choose best span from overlapping detections"""
-    
-    # Strategy 1: Highest confidence
-    if all(s.label == overlapping_spans[0].label for s in overlapping_spans):
-        return max(overlapping_spans, key=lambda s: s.score)
-    
-    # Strategy 2: Policy-based preference
-    policy_order = ["regex", "bert", "spacy", "gliner", "statistical"]
-    for source in policy_order:
-        matches = [s for s in overlapping_spans if s.source == source]
-        if matches:
-            return max(matches, key=lambda s: s.score)
-    
-    # Strategy 3: Majority voting
-    label_votes = Counter(s.label for s in overlapping_spans)
-    majority_label = label_votes.most_common(1)[0][0]
-    candidates = [s for s in overlapping_spans if s.label == majority_label]
-    return max(candidates, key=lambda s: s.score)
-```
+**How It Works**: When multiple detectors find overlapping entities, the system resolves conflicts using three strategies:
 
-**Problem**: Equal weights for all detectors, even if some are noisy
+1. **Highest Confidence**: If all detectors agree on the label, choose the span with the highest confidence score
+2. **Policy-Based Preference**: When labels differ, follow a priority order (regex > bert > spacy > gliner > statistical) and pick the highest-confidence span from the highest-priority detector
+3. **Majority Voting**: Count votes for each label and select the label with the most votes, then choose the highest-confidence span with that label
+
+**Problem**: All detectors have equal weight, even if some are consistently noisier than others
 
 ### Solution 2: Adaptive Weighted Ensemble (With Calibration)
 
@@ -431,129 +247,52 @@ def resolve_consensus(overlapping_spans: List[Span]) -> Span:
 
 #### Step 1: Label Normalization
 
-```python
-LABEL_NORMALIZATION_MAP = {
-    # Map similar labels to canonical form
-    "PERSON": "PERSON_NAME",
-    "USERNAME": "PERSON_NAME",  # GLiNER often uses USERNAME
-    "USER": "PERSON_NAME",
-    "PATIENT_NAME": "PERSON_NAME",
-    
-    "SSN": "US_SSN",
-    "SOCIAL_SECURITY": "US_SSN",
-    
-    "TFN": "AU_TFN",
-    "TAX_FILE_NUMBER": "AU_TFN",
-    
-    # This enables cross-detector consensus!
-}
+**Purpose**: Enable cross-detector consensus by mapping similar labels to a canonical form
 
-def normalize_label(label: str) -> str:
-    """Normalize before voting so detectors can agree"""
-    return LABEL_NORMALIZATION_MAP.get(label, label)
-```
+**How It Works**: Different detectors use different label names for the same entity type (e.g., spaCy uses "PERSON", GLiNER uses "USERNAME", medical models use "PATIENT_NAME"). The normalization map translates all these variants to a single canonical label ("PERSON_NAME"). This allows detectors to "vote together" even when using different terminology. Common mappings include: PERSON/USERNAME/USER → PERSON_NAME, SSN/SOCIAL_SECURITY → US_SSN, TFN/TAX_FILE_NUMBER → AU_TFN.
 
-**Impact**: Without normalization, "PERSON" and "USERNAME" vote separately
-With normalization, they vote together → stronger consensus
+**Impact**: Without normalization, "PERSON" and "USERNAME" vote separately. With normalization, they vote together creating stronger consensus.
 
 #### Step 2: Calibration on Validation Data
 
-```python
-def calibrate(validation_texts: List[str], 
-              ground_truth: List[List[Tuple[int, int, str]]]) -> Dict[str, float]:
-    """
-    Learn optimal detector weights from labeled examples
-    
-    Args:
-        validation_texts: ["John has diabetes", "Call 555-1234", ...]
-        ground_truth: [[(0,4,"PERSON"), (9,17,"DISEASE")], [(5,13,"PHONE")], ...]
-    
-    Returns:
-        {"gliner": 0.42, "regex": 0.09, "openmed": 0.12, "spacy": 0.25, ...}
-    """
-    
-    # 1. Measure per-detector performance
-    detector_metrics = {}
-    
-    for detector in detectors:
-        predictions = detector.detect_batch(validation_texts)
-        
-        # Calculate F1 score
-        precision, recall, f1 = evaluate(predictions, ground_truth)
-        detector_metrics[detector.name] = {
-            "precision": precision,
-            "recall": recall,
-            "f1": f1
-        }
-    
-    # 2. Calculate weights using F1-squared method
-    weights = {}
-    for name, metrics in detector_metrics.items():
-        # F1² gives more weight to high-performers
-        # Low F1 = low weight, High F1 = high weight (exponentially)
-        f1_score = metrics["f1"]
-        weights[name] = max(0.1, f1_score ** 2)  # Min 0.1 to avoid zero weight
-    
-    # 3. Normalize weights to sum to 1.0
-    total = sum(weights.values())
-    weights = {k: v / total for k, v in weights.items()}
-    
-    return weights
+**Purpose**: Learn optimal detector weights from labeled examples
 
-# Example calibration results:
-# GLiNER:  F1=0.60 → weight = 0.60² = 0.36  (High performer)
-# spaCy:   F1=0.50 → weight = 0.50² = 0.25  (Good)
-# OpenMed: F1=0.35 → weight = 0.35² = 0.12  (Moderate)
-# Regex:   F1=0.30 → weight = 0.30² = 0.09  (Noisy for names)
-# BERT:    F1=0.25 → weight = 0.10 (floor)   (Poor on this data)
-```
+**How It Works**: The calibration process takes 20-50 labeled text samples with ground truth annotations and:
+
+1. **Measures per-detector performance**: Runs each detector on the validation set and calculates precision, recall, and F1 score by comparing predictions to ground truth
+
+2. **Calculates weights using F1-squared method**: Converts F1 scores to weights using the formula `weight = max(0.1, F1²)`. Squaring the F1 score exponentially rewards high-performers and penalizes poor performers. The minimum weight of 0.1 ensures no detector is completely ignored.
+
+3. **Normalizes weights**: Ensures all weights sum to 1.0 by dividing each weight by the total
+
+**Example Results**:
+- GLiNER with F1=0.60 gets weight = 0.36 (strong performer)
+- spaCy with F1=0.50 gets weight = 0.25 (good)
+- OpenMed with F1=0.35 gets weight = 0.12 (moderate)
+- Regex with F1=0.30 gets weight = 0.09 (noisy for names)
+- BERT with F1=0.25 gets weight = 0.10 (floor applied)
 
 #### Step 3: Weighted Voting in Production
 
-```python
-def weighted_consensus(overlapping_spans: List[Span], 
-                       weights: Dict[str, float]) -> Span:
-    """
-    Vote with learned weights
-    
-    Before calibration (equal weights):
-      GLiNER (PERSON, 0.92) + spaCy (PERSON, 0.98) + GLiNER (USERNAME, 0.65)
-      → Ambiguous, pick highest score
-    
-    After calibration (weighted):
-      GLiNER (PERSON, 0.92) × 0.36 = 0.331
-      spaCy  (PERSON, 0.98) × 0.25 = 0.245
-      GLiNER (USERNAME→PERSON, 0.65) × 0.36 = 0.234
-      → PERSON_NAME wins with 0.81 combined score
-    """
-    
-    # Normalize labels first
-    for span in overlapping_spans:
-        span.label = normalize_label(span.label)
-    
-    # Calculate weighted scores per label
-    label_scores = {}
-    for span in overlapping_spans:
-        weight = weights.get(span.source, 0.1)  # Default 0.1 if not calibrated
-        weighted_score = span.score * weight
-        
-        if span.label not in label_scores:
-            label_scores[span.label] = []
-        label_scores[span.label].append((span, weighted_score))
-    
-    # Aggregate scores per label
-    label_totals = {
-        label: sum(score for _, score in spans)
-        for label, spans in label_scores.items()
-    }
-    
-    # Choose label with highest total weighted score
-    winning_label = max(label_totals, key=label_totals.get)
-    winning_spans = label_scores[winning_label]
-    
-    # Return span with highest individual score from winning label
-    best_span, _ = max(winning_spans, key=lambda x: x[1])
-    return best_span
+**How It Works**: When multiple detectors find overlapping entities, the weighted consensus algorithm:
+
+1. **Normalizes all labels** to canonical forms (PERSON/USERNAME → PERSON_NAME)
+2. **Calculates weighted scores** by multiplying each span's confidence by its detector's learned weight
+3. **Aggregates by label** to sum all weighted scores for each entity type
+4. **Chooses the winning label** with the highest total weighted score
+5. **Returns the best span** from the winning label with the highest individual confidence
+
+**Example**:
+```
+Before calibration (equal weights):
+  GLiNER (PERSON, 0.92) + spaCy (PERSON, 0.98) + GLiNER (USERNAME, 0.65)
+  → Ambiguous, pick highest score
+
+After calibration (weighted):
+  GLiNER (PERSON, 0.92) × 0.36 = 0.331
+  spaCy  (PERSON, 0.98) × 0.25 = 0.245
+  GLiNER (USERNAME→PERSON, 0.65) × 0.36 = 0.234
+  → PERSON_NAME wins with 0.81 combined score
 ```
 
 ### Calibration Results (Real Examples)
@@ -590,66 +329,36 @@ False positives significantly reduced
 
 ### One-Time Calibration Workflow
 
-```python
-from zerophix.pipelines.redaction import RedactionPipeline
-from zerophix.config import RedactionConfig
+**Process**:
 
-# 1. Enable adaptive features
+1. **Enable adaptive features** in configuration (adaptive_weights, label_normalization)
+2. **Prepare validation data**: 20-50 text samples with ground truth entity annotations
+3. **Run calibration**: Takes 2-5 seconds to analyze performance and calculate optimal weights
+4. **Save results**: Store learned weights to JSON file for reuse in production
+5. **Load in production**: Reference the calibration file when creating new pipelines
+
+**Example code snippet**:
+```python
 config = RedactionConfig(
     country="AU",
-    use_gliner=True,
-    use_openmed=True,
-    use_spacy=True,
-    enable_adaptive_weights=True,      # Enable learning
-    enable_label_normalization=True,   # Enable consensus
+    enable_adaptive_weights=True,
+    enable_label_normalization=True
 )
-
 pipeline = RedactionPipeline(config)
 
-# 2. Prepare validation data (20-50 samples)
-validation_texts = [
-    "John Smith has diabetes",
-    "Call 555-123-4567",
-    "TFN: 123 456 782",
-    # ... 17-47 more examples
-]
-
-validation_ground_truth = [
-    [(0, 10, "PERSON_NAME"), (15, 23, "MEDICAL_CONDITION")],
-    [(5, 17, "PHONE_US")],
-    [(5, 17, "AU_TFN")],
-    # ... matching annotations
-]
-
-# 3. Calibrate (takes 2-5 seconds for 20 samples)
+# Calibrate once
 results = pipeline.calibrate(
     validation_texts,
     validation_ground_truth,
-    save_path="calibration_au_medical.json"  # Save for reuse!
+    save_path="calibration_au_medical.json"
 )
 
-print(f"Learned weights: {results['detector_weights']}")
-print(f"Performance improved after calibration")
-
-# 4. Use calibrated pipeline in production
-result = pipeline.redact("Jane Doe, Medicare 2234 56781 2")
-# Now uses optimal weights learned from your data!
-```
-
-### Loading Pre-Calibrated Weights
-
-```python
-# In production, load saved calibration
+# Production: load saved weights
 config = RedactionConfig(
     country="AU",
-    use_gliner=True,
-    use_openmed=True,
     enable_adaptive_weights=True,
-    calibration_file="calibration_au_medical.json"  # Load weights
+    calibration_file="calibration_au_medical.json"
 )
-
-pipeline = RedactionPipeline(config)
-# Ready to use with optimal weights!
 ```
 
 ### When to Calibrate
@@ -670,144 +379,49 @@ pipeline = RedactionPipeline(config)
 
 ### 1. Context Propagation (Session Memory)
 
-**Problem**: Same entity appears multiple times, different confidence
+**Problem**: Same entity appears multiple times with varying confidence levels
 
-```
-Document 1: "John Smith called from New York"
-            └─ PERSON (0.98)
+**Example**:
+- Document 1: "John Smith called from New York" → PERSON (0.98 confidence)
+- Document 2: "John replied with the report" → PERSON (0.65 confidence, low due to missing surname)
 
-Document 2: "John replied with the report"
-            └─ PERSON (0.65) ← Low confidence (no surname context)
-```
+**Solution**: Session memory tracks high-confidence detections (≥0.90) across documents. When the same entity text appears again with lower confidence, the system boosts the score by up to +0.20 based on how many times it was previously detected with high confidence. The entity label is also standardized to match the previous high-confidence detection. This maintains a memory dictionary storing entity text, label, maximum score, and occurrence count.
 
-**Solution**: Session memory boosts confidence
-
-```python
-class ContextPropagator:
-    def __init__(self):
-        self.entity_memory = {}  # {entity_text: (label, max_score, count)}
-        self.threshold = 0.90    # High-confidence threshold for memory
-    
-    def propagate(self, text: str, spans: List[Span]) -> List[Span]:
-        boosted_spans = []
-        
-        for span in spans:
-            entity_text = text[span.start:span.end]
-            
-            # Check if we've seen this entity before with high confidence
-            if entity_text in self.entity_memory:
-                prev_label, prev_score, count = self.entity_memory[entity_text]
-                
-                if prev_score >= self.threshold:
-                    # Boost confidence based on previous detections
-                    boost_factor = min(0.20, 0.05 * count)  # Up to +0.20
-                    span.score = min(1.0, span.score + boost_factor)
-                    span.label = prev_label  # Use consistent label
-            
-            # Update memory
-            if span.score >= self.threshold:
-                if entity_text not in self.entity_memory:
-                    self.entity_memory[entity_text] = (span.label, span.score, 1)
-                else:
-                    _, _, count = self.entity_memory[entity_text]
-                    self.entity_memory[entity_text] = (span.label, 
-                                                       max(span.score, prev_score),
-                                                       count + 1)
-            
-            boosted_spans.append(span)
-        
-        return boosted_spans
-```
-
-**Impact**: Improved recall on multi-document sessions
+**Impact**: Improved recall on multi-document sessions with consistent entity recognition
 
 ### 2. Allow-List Filtering
 
-**Problem**: Public figures, organization names trigger false positives
+**Problem**: Public figures and well-known organization names trigger false positives
 
+**Solution**: Maintains a configurable list of non-sensitive terms that should never be redacted. The filter checks each detected entity against the allow-list using both exact matching (entire entity text) and partial matching (allow-listed term appears within entity). Matching is case-insensitive for flexibility.
+
+**Configuration Example**:
 ```python
-class AllowListFilter:
-    def __init__(self, allow_list: List[str]):
-        self.allow_list = set(s.lower() for s in allow_list)
-    
-    def filter(self, text: str, spans: List[Span]) -> List[Span]:
-        filtered = []
-        
-        for span in spans:
-            entity_text = text[span.start:span.end].lower()
-            
-            # Exact match
-            if entity_text in self.allow_list:
-                continue  # Skip (whitelisted)
-            
-            # Partial match (configurable)
-            if any(allowed in entity_text for allowed in self.allow_list):
-                continue
-            
-            filtered.append(span)
-        
-        return filtered
-
-# Usage
 config = RedactionConfig(
     allow_list=["Commonwealth Bank", "Microsoft", "GitHub", "John Howard"]
 )
 ```
 
 **Use Cases**:
-- Public figures mentioned in news
-- Organization names in templates
+- Public figures mentioned in news articles
+- Organization names in document templates
 - Product names (iPhone, Windows, etc.)
 - Non-sensitive technical terms
 
 ### 3. Garbage Filtering (ML Noise Reduction)
 
-**Problem**: ML models detect nonsense
+**Problem**: ML models sometimes detect nonsensical entities
 
-```python
-class GarbageFilter:
-    def __init__(self):
-        self.stopwords = {"the", "and", "is", "at", "of", "a", "in", "to"}
-        self.min_length = 3
-    
-    def filter(self, text: str, spans: List[Span]) -> List[Span]:
-        clean_spans = []
-        
-        for span in spans:
-            entity_text = text[span.start:span.end]
-            
-            # Rule 1: Too short
-            if len(entity_text) < self.min_length:
-                continue
-            
-            # Rule 2: Common stopword
-            if entity_text.lower() in self.stopwords:
-                continue
-            
-            # Rule 3: Starts with lowercase (not proper noun)
-            if entity_text[0].islower() and span.label in ["PERSON_NAME", "ORGANIZATION"]:
-                continue
-            
-            # Rule 4: Partial word at boundary
-            if span.start > 0 and text[span.start-1].isalnum():
-                continue  # "...John" → partial word
-            if span.end < len(text) and text[span.end].isalnum():
-                continue  # "John..." → partial word
-            
-            # Rule 5: Single letter (unless SSN/ID context)
-            if len(entity_text) == 1 and span.label not in ["US_SSN", "AU_TFN"]:
-                continue
-            
-            # Rule 6: Low confidence + common word
-            if span.score < 0.70 and self._is_common_word(entity_text):
-                continue
-            
-            clean_spans.append(span)
-        
-        return clean_spans
-```
+**Solution**: Applies multiple heuristic rules to filter out false positives:
 
-**Impact**: Significant reduction in false positives from ML models
+1. **Length check**: Removes entities shorter than 3 characters
+2. **Stopword filter**: Excludes common words ("the", "and", "is", "at", etc.)
+3. **Capitalization check**: For PERSON_NAME and ORGANIZATION, requires first letter to be uppercase (proper noun)
+4. **Boundary validation**: Ensures entity doesn't start/end mid-word by checking adjacent characters
+5. **Single letter removal**: Excludes single-character entities unless they're part of structured IDs
+6. **Low confidence + common word**: Filters detections below 0.70 confidence that match common dictionary words
+
+**Impact**: Significant reduction in false positives from ML models, improving overall precision
 
 ---
 
@@ -862,35 +476,14 @@ config = RedactionConfig(
 
 ### Encryption Strategy (Production Example)
 
-```python
-from zerophix.security.encryption import KeyManager, EncryptionManager
-from cryptography.fernet import Fernet
+**How It Works**: The encryption strategy allows reversible redaction for authorized access:
 
-# 1. Key management setup
-key_manager = KeyManager(key_store_path="./secure_keys")
-
-# 2. Generate encryption key for PII
-key_info = key_manager.generate_data_encryption_key(purpose="pii_redaction")
-print(f"Key ID: {key_info['key_id']}")
-print(f"Rotation due: {key_info['rotation_due']}")
-
-# 3. Use in redaction pipeline
-config = RedactionConfig(
-    country="AU",
-    masking_style="encrypt",
-    encryption_key_id=key_info['key_id']
-)
-
-pipeline = RedactionPipeline(config)
-result = pipeline.redact("Account: 1234567890")
-
-# 4. Decrypt (authorized personnel only)
-encryption_manager = EncryptionManager(key_id=key_info['key_id'])
-original_account = encryption_manager.decrypt_text(result['text'])
-
-# 5. Key rotation (90-day cycle)
-key_manager.rotate_key(key_info['key_id'])
-```
+1. **Key Management Setup**: Initialize KeyManager with secure storage path for encryption keys
+2. **Generate Encryption Key**: Create a data encryption key specifically for PII redaction, which includes key ID and rotation schedule
+3. **Configure Pipeline**: Set masking style to "encrypt" and reference the key ID in the redaction configuration
+4. **Redact with Encryption**: Detected entities are encrypted instead of masked/replaced
+5. **Decrypt When Authorized**: Authorized personnel can decrypt using the EncryptionManager with the same key ID
+6. **Key Rotation**: Regularly rotate keys (90-day cycle recommended) to maintain security
 
 **Security Best Practices**:
 - Store keys in HSM (Hardware Security Module) or cloud KMS (AWS KMS, Azure Key Vault)
@@ -999,162 +592,56 @@ config = RedactionConfig(
 
 #### Step 1: Model Download (Internet-Connected Machine)
 
-```bash
-# On machine with internet
-pip download zerophix[all] -d ./zerophix-offline/
-python -m spacy download en_core_web_lg --download-dir ./zerophix-offline/
+**Process**: On a machine with internet access:
 
-# Download ML models to cache
-python -c "
-from zerophix.detectors.bert_detector import BERTDetector
-from zerophix.detectors.gliner_detector import GLiNERDetector
-from zerophix.detectors.openmed_detector import OpenMedDetector
+1. Download ZeroPhix package and all dependencies using `pip download zerophix[all] -d ./zerophix-offline/`
+2. Download spaCy language model using `python -m spacy download en_core_web_lg --download-dir ./zerophix-offline/`
+3. Initialize detectors to trigger automatic model downloads to cache (BERT, GLiNER, OpenMed models)
+4. Copy model cache directories from `~/.cache/zerophix` and `~/.cache/huggingface` to the offline package folder
 
-# Models auto-download to cache
-BERTDetector()
-GLiNERDetector()
-OpenMedDetector()
-"
-
-# Copy cache directories
-cp -r ~/.cache/zerophix ./zerophix-offline/cache/
-cp -r ~/.cache/huggingface ./zerophix-offline/cache/
-```
+Total package size: ~2-5GB depending on which models are included
 
 #### Step 2: Transfer to Air-Gapped Environment
 
-```bash
-# Via USB, secure network, or physical media
-# Transfer ./zerophix-offline/ folder (size: ~2-5GB depending on models)
-```
+Transfer the `./zerophix-offline/` folder via USB drive, secure network transfer, or physical media.
 
 #### Step 3: Install Offline
 
-```bash
-# On air-gapped machine
-pip install --no-index --find-links=./zerophix-offline/ zerophix[all]
+On the air-gapped machine:
 
-# Restore model caches
-cp -r ./zerophix-offline/cache/zerophix ~/.cache/
-cp -r ./zerophix-offline/cache/huggingface ~/.cache/
-
-# Install spaCy model
-cd ./zerophix-offline/
-pip install en_core_web_lg-*.whl
-```
+1. Install packages without internet: `pip install --no-index --find-links=./zerophix-offline/ zerophix[all]`
+2. Restore model caches to user's home directory cache folders
+3. Install spaCy model from the downloaded wheel file
 
 #### Step 4: Verify Offline Operation
 
-```bash
-# Disconnect internet
-ifconfig eth0 down  # Linux
-# Or disable network adapter in Windows
-
-# Test
-python -c "
-from zerophix.pipelines.redaction import RedactionPipeline
-from zerophix.config import RedactionConfig
-
-config = RedactionConfig(country='AU', use_spacy=True, use_bert=True)
-pipeline = RedactionPipeline(config)
-result = pipeline.redact('John Smith, TFN: 123 456 782')
-print(result['text'])
-"
-
-# Should work without internet!
-```
+Disconnect network and test that the pipeline can redact text using all detectors without internet access. The system should work completely offline after the one-time setup.
 
 ### Docker Image (Offline-Ready)
 
-```dockerfile
-FROM python:3.9-slim
+**Approach**: Create a Docker image containing all dependencies and ML models:
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \\
-    build-essential \\
-    && rm -rf /var/lib/apt/lists/*
+1. Start with Python 3.9 base image
+2. Copy offline package folder into image
+3. Install ZeroPhix without internet access using local packages
+4. Copy model caches into the image's cache directories
+5. Install spaCy model from wheel file
+6. Clean up temporary files to reduce image size
 
-# Copy offline packages
-COPY ./zerophix-offline /tmp/zerophix-offline
-
-# Install offline
-RUN pip install --no-index --find-links=/tmp/zerophix-offline/ zerophix[all]
-
-# Copy model caches
-COPY ./zerophix-offline/cache/zerophix /root/.cache/zerophix
-COPY ./zerophix-offline/cache/huggingface /root/.cache/huggingface
-
-# Install spaCy model
-RUN cd /tmp/zerophix-offline && pip install en_core_web_lg-*.whl
-
-# Cleanup
-RUN rm -rf /tmp/zerophix-offline
-
-WORKDIR /app
-CMD ["python"]
-```
-
-```bash
-# Build offline-capable image
-docker build -t zerophix:offline-v1 .
-
-# Run completely offline (no network)
-docker run --network=none -v $(pwd)/data:/app/data zerophix:offline-v1 \\
-    python -c "from zerophix import RedactionPipeline; ..."
-```
+The resulting image can run completely offline using `docker run --network=none` to disable network access entirely.
 
 ### Kubernetes Deployment (Air-Gapped Cluster)
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: zerophix-api
-  namespace: pii-redaction
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: zerophix
-  template:
-    metadata:
-      labels:
-        app: zerophix
-    spec:
-      # No internet access
-      hostNetwork: false
-      
-      containers:
-      - name: zerophix
-        image: zerophix:offline-v1
-        imagePullPolicy: Never  # Use local image
-        
-        resources:
-          requests:
-            memory: "2Gi"      # ML models need RAM
-            cpu: "1000m"
-          limits:
-            memory: "4Gi"
-            cpu: "2000m"
-        
-        env:
-        - name: ZEROPHIX_OFFLINE_MODE
-          value: "true"
-        - name: ZEROPHIX_CACHE_DIR
-          value: "/cache"
-        
-        volumeMounts:
-        - name: model-cache
-          mountPath: /cache
-          readOnly: true      # Models immutable
-      
-      volumes:
-      - name: model-cache
-        persistentVolumeClaim:
-          claimName: zerophix-models-pvc
-```
+**Approach**: Deploy ZeroPhix in a Kubernetes cluster without internet access:
 
-**Result**: Complete PII redaction in air-gapped Kubernetes, no internet dependency
+- Use locally stored container images (no pulling from internet)
+- Configure resource limits (2-4GB RAM for ML models, 1-2 CPU cores)
+- Mount persistent volume for read-only model caches
+- Run 3 replicas for high availability
+- Set `hostNetwork: false` to ensure no internet access
+- Store models on persistent volume claim shared across pods
+
+**Result**: Complete PII redaction in air-gapped Kubernetes with no internet dependency
 
 ---
 
