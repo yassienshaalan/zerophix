@@ -1,0 +1,30 @@
+# PyPI Configuration Template
+# 
+# IMPORTANT: This is a TEMPLATE file. Do NOT commit actual credentials to Git!
+# 
+# Setup Instructions:
+# 1. Copy this file to your home directory: ~/.pypirc (Linux/Mac) or %USERPROFILE%\.pypirc (Windows)
+# 2. Replace the placeholder tokens with your actual PyPI API tokens
+# 3. Set file permissions to protect it: chmod 600 ~/.pypirc (Linux/Mac)
+#
+# To get API tokens:
+# - PyPI: https://pypi.org/manage/account/token/
+# - TestPyPI: https://test.pypi.org/manage/account/token/
+
+[distutils]
+index-servers =
+    pypi
+    testpypi
+
+[pypi]
+username = __token__
+password = pypi-YOUR_PYPI_API_TOKEN_HERE
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = pypi-YOUR_TESTPYPI_API_TOKEN_HERE
+
+# Usage:
+# Upload to TestPyPI: twine upload --repository testpypi dist/*
+# Upload to PyPI: twine upload dist/*
