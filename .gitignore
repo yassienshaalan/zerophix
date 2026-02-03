@@ -167,3 +167,13 @@ sample_documents/
 *.pt
 *.pth
 *.onnx
+
+# PyPI Publishing (IMPORTANT: Never commit credentials!)
+.pypirc
+.pypirc.local
+*.tar.gz.asc
+*.whl.asc
+
+# Evaluation results (can be large)
+eval/results/*.json
+eval/results/*.txt

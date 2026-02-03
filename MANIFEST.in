@@ -1,0 +1,57 @@
+# Include documentation and metadata files
+include LICENSE
+include README.md
+include CHANGELOG.md
+include REDACTION_LOGIC.md
+include pyproject.toml
+include setup.py
+include requirements.txt
+
+# Include configuration files
+recursive-include configs *.yml *.yaml *.json
+
+# Include example files
+recursive-include examples *.py *.json *.txt *.csv
+
+# Include data files (but not sensitive test data)
+recursive-include src/zerophix/data *.json *.txt *.yml
+
+# Exclude development and build artifacts
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.so
+recursive-exclude * .DS_Store
+recursive-exclude * .git*
+exclude .env
+exclude .env.*
+
+# Exclude test files
+recursive-exclude tests *
+recursive-exclude .pytest_cache *
+
+# Exclude documentation build artifacts
+recursive-exclude docs/_build *
+
+# Exclude evaluation results and benchmarks
+recursive-exclude eval/results *
+recursive-exclude audit_logs *
+recursive-exclude secure_data *
+
+# Exclude keys directory (security)
+recursive-exclude keys *
+
+# Exclude virtual environments
+recursive-exclude .venv *
+recursive-exclude venv *
+recursive-exclude env *
+
+# Exclude IDE-specific files
+recursive-exclude .vscode *
+recursive-exclude .idea *
+recursive-exclude *.egg-info *
+
+# Exclude sample documents (may contain test data)
+recursive-exclude sample_documents *
+
+# Exclude scripts (development only)
+recursive-exclude scripts *
