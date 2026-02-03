@@ -1,5 +1,20 @@
 # ZeroPhix Redaction Logic Explained
 
+## What is ZeroPhix?
+
+**ZeroPhix** is a standalone Python library for detecting and redacting personally identifiable information (PII) and protected health information (PHI) in text documents. It operates entirely offline with no cloud dependencies, making it ideal for organizations with strict data sovereignty requirements.
+
+### Key Characteristics
+
+- **Standalone Python Library**: No external APIs, cloud services, or internet required
+- **Cross-Platform**: Works on Windows, Linux, macOS
+- **Offline-First**: One-time pre-trained models download, then fully air-gapped operation
+- **Flexible Deployment**: Command-line tool, Python API, REST API, Docker containers, Kubernetes
+- **Open Source**: Apache 2.0 License
+- **Production-Ready**: Comprehensive error handling, logging, and audit trails
+
+---
+
 ## Core Principles & Design Philosophy
 
 ### Why ZeroPhix Exists
