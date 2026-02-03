@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "zerophix"
 dynamic = ["version"]
 description = "Enterprise-grade PII/PSI/PHI redaction service: multilingual, customizable, and privacy-first"
-authors = [{name = "ZeroPhix Team", email = "contact@zerophix.io"}]
+authors = [{name = "Yassien Shaalan", email = "yassien@gmail.com"}]
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.9"
@@ -25,11 +25,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourorg/zerophix"
-Documentation = "https://zerophix.readthedocs.io"
-Repository = "https://github.com/yourorg/zerophix"
-Issues = "https://github.com/yourorg/zerophix/issues"
-Changelog = "https://github.com/yourorg/zerophix/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/yassienshaalan/zerophix"
+Documentation = "https://github.com/yassienshaalan/zerophix/blob/main/REDACTION_LOGIC.md"
+Repository = "https://github.com/yassienshaalan/zerophix"
+Issues = "https://github.com/yassienshaalan/zerophix/issues"
+Changelog = "https://github.com/yassienshaalan/zerophix/blob/main/README.md"
 
 [project.scripts]
 zerophix = "zerophix.cli:app"
