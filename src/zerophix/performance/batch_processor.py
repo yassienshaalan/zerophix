@@ -319,19 +319,19 @@ class DatabricksOptimizer:
             except:
                 pass
             
-            print(f"✓ Detected Databricks cluster configuration:")
+            print(f"Detected Databricks cluster configuration:")
             print(f"  - Executors: {max(num_executors, 1)}")
             print(f"  - Cores per executor: {executor_cores}")
             print(f"  - Total cores: {total_cores}")
             print(f"  - Executor memory: {executor_memory}")
             print(f"  - GPU available: {config['use_gpu']}")
-            print(f"\n✓ Optimized settings for maximum performance:")
+            print(f"\nOptimized settings for maximum performance:")
             print(f"  - Workers: {config['n_workers']} (using ALL cores)")
             print(f"  - Batch size: {config['batch_size']}")
             print(f"  - Max concurrent: {config['max_concurrent_tasks']}")
             
         except Exception as e:
-            print(f"⚠ Could not detect Spark cluster, using local defaults: {e}")
+            print(f"Warning: Could not detect Spark cluster, using local defaults: {e}")
             print(f"  - Workers: {config['n_workers']} (local CPU count)")
             print(f"  - Batch size: {config['batch_size']}")
         
