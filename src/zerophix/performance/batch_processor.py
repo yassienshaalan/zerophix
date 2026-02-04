@@ -273,31 +273,31 @@ class DatabricksOptimizer:
         Print recommended Spark configuration for ZeroPhix on Databricks
         """
         config = """
-        # Recommended Databricks Configuration for ZeroPhix
-        
-        # Cluster Settings
-        - Runtime: ML Runtime 13.3 LTS or later (includes transformers)
-        - Instance Type: GPU instances (g5.xlarge or better) for BERT/GLiNER
-        - Workers: 2-8 depending on dataset size
-        
-        # Spark Configuration
-        spark.executor.memory: 8g
-        spark.executor.cores: 4
-        spark.task.cpus: 1
-        spark.sql.execution.arrow.enabled: true
-        spark.sql.execution.arrow.pyspark.enabled: true
-        
-        # Python Libraries
-        %pip install zerophix[all] --upgrade
-        
-        # Environment Variables
-        TRANSFORMERS_CACHE=/dbfs/models/cache
-        HF_HOME=/dbfs/models/huggingface
-        
-        # Performance Tips
-        1. Use broadcast variables for the pipeline object
-        2. Repartition data to match worker count
-        3. Cache intermediate results with df.cache()
+Recommended Databricks Configuration for ZeroPhix
+
+Cluster Settings:
+- Runtime: ML Runtime 13.3 LTS or later (includes transformers)
+- Instance Type: GPU instances (g5.xlarge or better) for BERT/GLiNER
+- Workers: 2-8 depending on dataset size
+
+Spark Configuration:
+- spark.executor.memory: 8g
+- spark.executor.cores: 4
+- spark.task.cpus: 1
+- spark.sql.execution.arrow.enabled: true
+- spark.sql.execution.arrow.pyspark.enabled: true
+
+Python Libraries:
+%pip install zerophix[all] --upgrade
+
+Environment Variables:
+- TRANSFORMERS_CACHE=/dbfs/models/cache
+- HF_HOME=/dbfs/models/huggingface
+
+Performance Tips:
+1. Use broadcast variables for the pipeline object
+2. Repartition data to match worker count
+3. Cache intermediate results with df.cache()
         4. Use mapInPandas for batch processing
         """
         print(config)
