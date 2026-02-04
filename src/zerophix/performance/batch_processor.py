@@ -268,6 +268,76 @@ class DatabricksOptimizer:
             return scan_udf
     
     @staticmethod
+    def get_optimal_config():
+        """
+        Dynamically detect cluster resources and return optimized configuration
+        
+        Returns:
+            Dict with optimal settings based on current cluster
+        """
+        config = {
+            'n_workers': mp.cpu_count(),
+            'executor_memory': '8g',
+            'executor_cores': 4,
+            'batch_size': 100,
+            'use_gpu': False,
+            'max_concurrent_tasks': mp.cpu_count() * 2
+        }
+        
+        try:
+            # Try to detect Databricks environment
+            from pyspark.sql import SparkSession
+            spark = SparkSession.builder.getOrCreate()
+            sc = spark.sparkContext
+            
+            # Get cluster configuration
+            executor_memory = sc.getConf().get('spark.executor.memory', '8g')
+            executor_cores = int(sc.getConf().get('spark.executor.cores', '4'))
+            num_executors = len(sc._jsc.sc().statusTracker().getExecutorInfos()) - 1  # Exclude driver
+            
+            # Calculate total resources
+            total_cores = executor_cores * max(num_executors, 1)
+            
+            # Aggressive optimization: use all available cores
+            config['n_workers'] = total_cores
+            config['executor_memory'] = executor_memory
+            config['executor_cores'] = executor_cores
+            config['max_concurrent_tasks'] = total_cores * 3  # Oversubscribe for I/O heavy
+            
+            # Adaptive batch size based on memory
+            memory_gb = int(executor_memory.replace('g', '').replace('G', ''))
+            config['batch_size'] = min(memory_gb * 25, 500)  # 25 docs per GB, max 500
+            
+            # Check for GPU availability
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    config['use_gpu'] = True
+                    config['gpu_memory'] = torch.cuda.get_device_properties(0).total_memory // (1024**3)
+                    # With GPU, increase batch size significantly
+                    config['batch_size'] = min(config['batch_size'] * 2, 1000)
+            except:
+                pass
+            
+            print(f"✓ Detected Databricks cluster configuration:")
+            print(f"  - Executors: {max(num_executors, 1)}")
+            print(f"  - Cores per executor: {executor_cores}")
+            print(f"  - Total cores: {total_cores}")
+            print(f"  - Executor memory: {executor_memory}")
+            print(f"  - GPU available: {config['use_gpu']}")
+            print(f"\n✓ Optimized settings for maximum performance:")
+            print(f"  - Workers: {config['n_workers']} (using ALL cores)")
+            print(f"  - Batch size: {config['batch_size']}")
+            print(f"  - Max concurrent: {config['max_concurrent_tasks']}")
+            
+        except Exception as e:
+            print(f"⚠ Could not detect Spark cluster, using local defaults: {e}")
+            print(f"  - Workers: {config['n_workers']} (local CPU count)")
+            print(f"  - Batch size: {config['batch_size']}")
+        
+        return config
+    
+    @staticmethod
     def optimize_spark_config():
         """
         Print recommended Spark configuration for ZeroPhix on Databricks
@@ -275,25 +345,37 @@ class DatabricksOptimizer:
         config = (
             "Recommended Databricks Configuration for ZeroPhix\n\n"
             "Cluster Settings:\n"
-            "- Runtime: ML Runtime 13.3 LTS or later (includes transformers)\n"
+            "- Runtime: ML Runtime 15.4 LTS (recommended for best performance)\n"
             "- Instance Type: GPU instances (g5.xlarge or better) for BERT/GLiNER\n"
-            "- Workers: 2-8 depending on dataset size\n\n"
-            "Spark Configuration:\n"
-            "- spark.executor.memory: 8g\n"
-            "- spark.executor.cores: 4\n"
+            "- Workers: 4-16 depending on dataset size (more = faster)\n"
+            "- Driver: Standard_DS5_v2 or better (16GB+ RAM)\n\n"
+            "Aggressive Spark Configuration (Maximum Performance):\n"
+            "- spark.executor.memory: 16g (or higher if available)\n"
+            "- spark.executor.cores: 8 (use all available cores)\n"
             "- spark.task.cpus: 1\n"
+            "- spark.default.parallelism: <num_cores * 3>\n"
+            "- spark.sql.shuffle.partitions: <num_cores * 2>\n"
             "- spark.sql.execution.arrow.enabled: true\n"
-            "- spark.sql.execution.arrow.pyspark.enabled: true\n\n"
+            "- spark.sql.execution.arrow.pyspark.enabled: true\n"
+            "- spark.sql.execution.arrow.maxRecordsPerBatch: 10000\n"
+            "- spark.executor.memoryOverhead: 4g\n"
+            "- spark.memory.fraction: 0.8\n"
+            "- spark.memory.storageFraction: 0.3\n\n"
             "Python Libraries:\n"
-            "%pip install zerophix[all] --upgrade\n\n"
+            "%pip install zerophix[all] --upgrade --no-cache-dir\n\n"
             "Environment Variables:\n"
-            "- TRANSFORMERS_CACHE=/dbfs/models/cache\n"
-            "- HF_HOME=/dbfs/models/huggingface\n\n"
-            "Performance Tips:\n"
+            "- TOKENIZERS_PARALLELISM: false\n"
+            "- TRANSFORMERS_CACHE: /dbfs/models/cache\n"
+            "- HF_HOME: /dbfs/models/huggingface\n"
+            "- OMP_NUM_THREADS: 1\n\n"
+            "Performance Tips (Push to Limit):\n"
             "1. Use broadcast variables for the pipeline object\n"
-            "2. Repartition data to match worker count\n"
-            "3. Cache intermediate results with df.cache()\n"
-            "4. Use mapInPandas for batch processing\n"
+            "2. Repartition to num_workers * 3 for better parallelism\n"
+            "3. Use .persist(StorageLevel.MEMORY_AND_DISK) for large datasets\n"
+            "4. Enable adaptive query execution (AQE)\n"
+            "5. Use mapInPandas with optimal batch sizes\n"
+            "6. Cache models globally with ModelCache\n"
+            "7. Process in parallel with BatchProcessor(n_workers=<total_cores>)\n"
         )
         print(config)
         return config
