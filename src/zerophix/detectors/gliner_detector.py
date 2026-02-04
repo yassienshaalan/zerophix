@@ -24,6 +24,12 @@ try:
 except ImportError:
     GLINER_AVAILABLE = False
 
+try:
+    from ..performance.model_cache import get_model_cache
+    MODEL_CACHE_AVAILABLE = True
+except ImportError:
+    MODEL_CACHE_AVAILABLE = False
+
 
 class GLiNERDetector(Detector):
     """
@@ -102,14 +108,27 @@ class GLiNERDetector(Detector):
         self.device = device
         self.label_thresholds = label_thresholds or {}
         
-        # Load model (downloads automatically on first use)
-        print(f"Loading GLiNER model: {model_name}...")
-        self.model = GLiNER.from_pretrained(model_name)
+        # Load model with caching (massive speedup for batch processing)
+        cache_key = f"gliner_{model_name}_{device or 'auto'}"
         
-        if device:
-            self.model = self.model.to(device)
-        
-        print(f"GLiNER ready! Device: {self.model.device}")
+        if MODEL_CACHE_AVAILABLE:
+            model_cache = get_model_cache()
+            if model_cache.has(cache_key):
+                self.model = model_cache.get(cache_key)
+                print(f"GLiNER model loaded from cache: {model_name}")
+            else:
+                print(f"Loading GLiNER model: {model_name}...")
+                self.model = GLiNER.from_pretrained(model_name)
+                if device:
+                    self.model = self.model.to(device)
+                model_cache.set(cache_key, self.model)
+                print(f"GLiNER ready! Device: {self.model.device}")
+        else:
+            print(f"Loading GLiNER model: {model_name}...")
+            self.model = GLiNER.from_pretrained(model_name)
+            if device:
+                self.model = self.model.to(device)
+            print(f"GLiNER ready! Device: {self.model.device}")
     
     def detect(self, 
                text: str,
