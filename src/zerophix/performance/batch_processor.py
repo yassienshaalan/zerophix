@@ -112,7 +112,7 @@ class BatchProcessor:
                 if operation == 'redact':
                     future = executor.submit(self.pipeline.redact, text, **kwargs)
                 else:
-                    future = executor.submit(self.pipeline.scan, text, self.parallel_detectors)
+                    future = executor.submit(lambda t: self.pipeline.scan(t, parallel_detectors=self.parallel_detectors), text)
                 futures[future] = idx
             
             iterator = tqdm(as_completed(futures), total=len(futures), 
