@@ -219,8 +219,6 @@ class DatabricksOptimizer:
             
         Returns:
             PySpark UDF function
-        """
-        from pyspark.sql.functions import udf
             
         Note:
             Requires PySpark to be installed. Install with: pip install pyspark
@@ -233,6 +231,8 @@ class DatabricksOptimizer:
                 "PySpark not installed. Install with: pip install pyspark\n"
                 "Or install zerophix with spark support: pip install zerophix[spark]"
             )
+        
+        if return_type == 'redacted':
             @udf(returnType=StringType())
             def redact_udf(text):
                 if text is None:
