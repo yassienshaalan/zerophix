@@ -223,10 +223,14 @@ class RedactionPipeline:
         
         return "general"
 
-    def scan(self, text: str) -> List[Span]:
+    def scan(self, text: str, parallel_detectors: bool = False) -> List[Span]:
         """
         Scan text for entities without redacting.
         Returns a list of detected Span objects.
+        
+        Args:
+            text: Text to scan
+            parallel_detectors: Run all detectors in parallel (faster on multi-core)
         """
         spans: List[Span] = []
         
@@ -270,8 +274,25 @@ class RedactionPipeline:
         # Regex: ~1ms, spaCy: ~10ms, GLiNER: ~100ms, BERT: ~200ms, OpenMed: ~300ms
         sorted_components = self._sort_detectors_by_speed(active_components)
         
-        for comp in sorted_components:
-            spans.extend(comp.detect(text))
+        if parallel_detectors and len(sorted_components) > 1:
+            # Run all detectors in parallel for maximum speed
+            from concurrent.futures import ThreadPoolExecutor
+            
+            def run_detector(comp):
+                try:
+                    return comp.detect(text)
+                except Exception as e:
+                    print(f"Detector {comp.__class__.__name__} failed: {e}")
+                    return []
+            
+            with ThreadPoolExecutor(max_workers=len(sorted_components)) as executor:
+                futures = [executor.submit(run_detector, comp) for comp in sorted_components]
+                for future in futures:
+                    spans.extend(future.result())
+        else:
+            # Sequential execution (default)
+            for comp in sorted_components:
+                spans.extend(comp.detect(text))
 
         # Apply advanced processing
         merged = self._process_spans(text, spans)
