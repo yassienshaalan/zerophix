@@ -621,8 +621,8 @@ class RedactionPipeline:
             return self.performance_tracker.get_summary()
         return {"error": "Performance tracking not enabled. Set track_detector_performance=True"}
 
-    def scan(self, text: str) -> Dict[str, object]:
-        """Scan text for PII/PHI without redacting. Returns detection report."""
+    def scan_report(self, text: str) -> Dict[str, object]:
+        """Scan text for PII/PHI without redacting. Returns detection report with statistics."""
         spans: List[Span] = []
         for comp in self.components:
             spans.extend(comp.detect(text))
