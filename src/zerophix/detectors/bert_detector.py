@@ -4,6 +4,12 @@ from typing import List, Optional, Dict, Any
 from .base import Detector, Span
 import numpy as np
 
+try:
+    from ..performance.model_cache import get_model_cache
+    MODEL_CACHE_AVAILABLE = True
+except ImportError:
+    MODEL_CACHE_AVAILABLE = False
+
 class BertDetector(Detector):
     """Advanced BERT-based NER detector with context awareness"""
     
@@ -25,16 +31,42 @@ class BertDetector(Detector):
         self.confidence_threshold = confidence_threshold
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         
+        cache_key = f"bert_{model_name}_{self.device}"
+        
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-            self.model = AutoModelForTokenClassification.from_pretrained(model_name)
-            self.nlp = pipeline(
-                "ner",
-                model=self.model,
-                tokenizer=self.tokenizer,
-                device=0 if self.device == "cuda" else -1,
-                aggregation_strategy="max"
-            )
+            if MODEL_CACHE_AVAILABLE:
+                model_cache = get_model_cache()
+                if model_cache.has(cache_key):
+                    cached = model_cache.get(cache_key)
+                    self.tokenizer = cached['tokenizer']
+                    self.model = cached['model']
+                    self.nlp = cached['pipeline']
+                    print(f"BERT model loaded from cache: {model_name}")
+                else:
+                    self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                    self.model = AutoModelForTokenClassification.from_pretrained(model_name)
+                    self.nlp = pipeline(
+                        "ner",
+                        model=self.model,
+                        tokenizer=self.tokenizer,
+                        device=0 if self.device == "cuda" else -1,
+                        aggregation_strategy="max"
+                    )
+                    model_cache.set(cache_key, {
+                        'tokenizer': self.tokenizer,
+                        'model': self.model,
+                        'pipeline': self.nlp
+                    })
+            else:
+                self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+                self.model = AutoModelForTokenClassification.from_pretrained(model_name)
+                self.nlp = pipeline(
+                    "ner",
+                    model=self.model,
+                    tokenizer=self.tokenizer,
+                    device=0 if self.device == "cuda" else -1,
+                    aggregation_strategy="max"
+                )
         except Exception as e:
             raise RuntimeError(f"Failed to load BERT model {model_name}: {e}")
     

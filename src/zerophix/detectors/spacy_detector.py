@@ -2,6 +2,12 @@ import spacy
 from typing import List, Optional, Dict, Any
 from .base import Detector, Span
 
+try:
+    from ..performance.model_cache import get_model_cache
+    MODEL_CACHE_AVAILABLE = True
+except ImportError:
+    MODEL_CACHE_AVAILABLE = False
+
 class SpacyDetector(Detector):
     """Advanced NER detector using spaCy models with custom entity recognition"""
     
@@ -15,8 +21,19 @@ class SpacyDetector(Detector):
             model_name: spaCy model to use (en_core_web_sm, en_core_web_lg, etc.)
             custom_entities: Dict mapping entity labels to lists of patterns
         """
+        cache_key = f"spacy_{model_name}"
+        
         try:
-            self.nlp = spacy.load(model_name)
+            if MODEL_CACHE_AVAILABLE:
+                model_cache = get_model_cache()
+                if model_cache.has(cache_key):
+                    self.nlp = model_cache.get(cache_key)
+                    print(f"spaCy model loaded from cache: {model_name}")
+                else:
+                    self.nlp = spacy.load(model_name)
+                    model_cache.set(cache_key, self.nlp)
+            else:
+                self.nlp = spacy.load(model_name)
         except OSError:
             # Fallback to blank model if specific model not available
             self.nlp = spacy.blank("en")

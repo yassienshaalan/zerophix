@@ -2,35 +2,72 @@ import importlib
 from .base import Detector
 from zerophix.models.manager import ensure_model
 
+try:
+    from ..performance.model_cache import get_model_cache
+    MODEL_CACHE_AVAILABLE = True
+except ImportError:
+    MODEL_CACHE_AVAILABLE = False
+
 class OpenMedDetector(Detector):
     def __init__(self, model_name="openmed-base", models_dir=None, conf=0.5,
                  max_seq_len=512, batch_size=8, device="auto", lora_adapter_id=None,
                  enable_assertion=False):
         path = ensure_model(model_name, models_dir=models_dir)
         tr = importlib.import_module("transformers")
+        
+        cache_key = f"openmed_{model_name}_{device}_{lora_adapter_id}"
 
         # device map
         kwargs = {}
         if device != "auto":
             kwargs["device_map"] = {"": 0} if device == "cuda" else "cpu"
 
-        self.tokenizer = tr.AutoTokenizer.from_pretrained(path)
-        self.model = tr.AutoModelForTokenClassification.from_pretrained(path, **kwargs)
+        if MODEL_CACHE_AVAILABLE:
+            model_cache = get_model_cache()
+            if model_cache.has(cache_key):
+                cached = model_cache.get(cache_key)
+                self.tokenizer = cached['tokenizer']
+                self.model = cached['model']
+                self.pipe = cached['pipeline']
+                print(f"OpenMed model loaded from cache: {model_name}")
+            else:
+                self.tokenizer = tr.AutoTokenizer.from_pretrained(path)
+                self.model = tr.AutoModelForTokenClassification.from_pretrained(path, **kwargs)
 
-        # Optional: load LoRA adapter
-        if lora_adapter_id:
-            peft = importlib.import_module("peft")
-            self.model = peft.PeftModel.from_pretrained(self.model, lora_adapter_id)
+                # Optional: load LoRA adapter
+                if lora_adapter_id:
+                    peft = importlib.import_module("peft")
+                    self.model = peft.PeftModel.from_pretrained(self.model, lora_adapter_id)
 
-        self.pipe = tr.pipeline(
-            "token-classification",
-            model=self.model,
-            tokenizer=self.tokenizer,
-            aggregation_strategy="simple",
-            # top_k=None,  # Removed as it causes TypeError in newer transformers
-            batch_size=batch_size,
-            # truncation=True # Removed as it causes TypeError in newer transformers
-        )
+                self.pipe = tr.pipeline(
+                    "token-classification",
+                    model=self.model,
+                    tokenizer=self.tokenizer,
+                    aggregation_strategy="simple",
+                    batch_size=batch_size,
+                )
+                model_cache.set(cache_key, {
+                    'tokenizer': self.tokenizer,
+                    'model': self.model,
+                    'pipeline': self.pipe
+                })
+        else:
+            self.tokenizer = tr.AutoTokenizer.from_pretrained(path)
+            self.model = tr.AutoModelForTokenClassification.from_pretrained(path, **kwargs)
+
+            # Optional: load LoRA adapter
+            if lora_adapter_id:
+                peft = importlib.import_module("peft")
+                self.model = peft.PeftModel.from_pretrained(self.model, lora_adapter_id)
+
+            self.pipe = tr.pipeline(
+                "token-classification",
+                model=self.model,
+                tokenizer=self.tokenizer,
+                aggregation_strategy="simple",
+                batch_size=batch_size,
+            )
+        
         self.conf = conf
         self.enable_assertion = enable_assertion
 
