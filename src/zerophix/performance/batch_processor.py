@@ -54,6 +54,10 @@ class BatchProcessor:
         self.chunk_size = chunk_size
         self.show_progress = show_progress
         self.parallel_detectors = parallel_detectors
+        
+        # Reuse executor across batches to avoid startup overhead
+        self._executor = None
+        self._executor_type = None
     
     def process_batch(self, 
                      texts: List[str],
@@ -101,29 +105,53 @@ class BatchProcessor:
         
         return results
     
+    def _get_executor(self):
+        """Get or create reusable executor"""
+        executor_type = 'process' if self.use_processes else 'thread'
+        
+        # Create new executor if type changed or doesn't exist
+        if self._executor is None or self._executor_type != executor_type:
+            # Close old executor if exists
+            if self._executor is not None:
+                self._executor.shutdown(wait=True)
+            
+            # Create new executor
+            if self.use_processes:
+                self._executor = ProcessPoolExecutor(max_workers=self.n_workers)
+            else:
+                self._executor = ThreadPoolExecutor(max_workers=self.n_workers)
+            self._executor_type = executor_type
+        
+        return self._executor
+    
+    def __del__(self):
+        """Cleanup executor on deletion"""
+        if self._executor is not None:
+            self._executor.shutdown(wait=False)
+    
     def _process_parallel_threads(self, texts: List[str], operation: str, **kwargs) -> List[Dict]:
         """Thread-based parallel processing for I/O-bound operations"""
         results = [None] * len(texts)
         
-        with ThreadPoolExecutor(max_workers=self.n_workers) as executor:
-            futures = {}
-            
-            for idx, text in enumerate(texts):
-                if operation == 'redact':
-                    future = executor.submit(self.pipeline.redact, text, **kwargs)
-                else:
-                    future = executor.submit(lambda t: self.pipeline.scan(t, parallel_detectors=self.parallel_detectors), text)
-                futures[future] = idx
-            
-            iterator = tqdm(as_completed(futures), total=len(futures), 
-                          desc=f"Processing ({operation})") if self.show_progress else as_completed(futures)
-            
-            for future in iterator:
-                idx = futures[future]
-                try:
-                    results[idx] = future.result()
-                except Exception as e:
-                    results[idx] = {'error': str(e), 'text': texts[idx]}
+        executor = self._get_executor()
+        futures = {}
+        
+        for idx, text in enumerate(texts):
+            if operation == 'redact':
+                future = executor.submit(self.pipeline.redact, text, **kwargs)
+            else:
+                future = executor.submit(lambda t: self.pipeline.scan(t, parallel_detectors=self.parallel_detectors), text)
+            futures[future] = idx
+        
+        iterator = tqdm(as_completed(futures), total=len(futures), 
+                      desc=f"Processing ({operation})") if self.show_progress else as_completed(futures)
+        
+        for future in iterator:
+            idx = futures[future]
+            try:
+                results[idx] = future.result()
+            except Exception as e:
+                results[idx] = {'error': str(e), 'text': texts[idx]}
         
         return results
     
