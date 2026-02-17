@@ -2,9 +2,6 @@ from typing import List, Dict
 import re
 from ..config import RedactionConfig
 from ..detectors.regex_detector import RegexDetector
-from ..detectors.spacy_detector import SpacyDetector
-from ..detectors.bert_detector import BertDetector
-from ..detectors.gliner_detector import GLiNERDetector
 from ..detectors.statistical_detector import StatisticalDetector
 from ..detectors.base import Span
 from .consensus import ConsensusModel
@@ -13,11 +10,31 @@ from .context import ContextPropagator
 from .allowlist import AllowListFilter
 from .post_processors import GarbageFilter
 
+# Lazy import optional detectors
+SpacyDetector = None
+BertDetector = None
+GLiNERDetector = None
+OpenMedDetector = None
+
+try:
+    from ..detectors.spacy_detector import SpacyDetector
+except ImportError:
+    pass
+
+try:
+    from ..detectors.bert_detector import BertDetector
+except ImportError:
+    pass
+
+try:
+    from ..detectors.gliner_detector import GLiNERDetector
+except ImportError:
+    pass
+
 try:
     from ..detectors.openmed_detector import OpenMedDetector
-except ImportError as e:
-    print(f"DEBUG: Failed to import OpenMedDetector (ImportError): {e}")
-    OpenMedDetector = None
+except ImportError:
+    pass
 except Exception as e:
     print(f"DEBUG: Failed to import OpenMedDetector: {e}")
     import traceback
@@ -39,21 +56,27 @@ class RedactionPipeline:
             self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
         
         # 2. Spacy Detector
-        if is_auto or cfg.use_spacy:
+        if (is_auto or cfg.use_spacy) and SpacyDetector is not None:
             self.components.append(SpacyDetector())
+        elif cfg.use_spacy and SpacyDetector is None:
+            raise RuntimeError("spaCy detector requested but not installed. Install zerophix[spacy].")
 
         # 3. BERT Detector
-        if is_auto or cfg.use_bert:
+        if (is_auto or cfg.use_bert) and BertDetector is not None:
             self.components.append(BertDetector(confidence_threshold=cfg.thresholds.get('bert_conf', 0.9)))
+        elif cfg.use_bert and BertDetector is None:
+            raise RuntimeError("BERT detector requested but not installed. Install zerophix[bert].")
 
         # 4. GLiNER Detector
-        if is_auto or cfg.use_gliner:
+        if (is_auto or cfg.use_gliner) and GLiNERDetector is not None:
             gliner_threshold = cfg.thresholds.get('gliner_conf', 0.5)
             self.components.append(GLiNERDetector(
                 labels=cfg.gliner_labels,
                 confidence_threshold=gliner_threshold,
                 label_thresholds=cfg.label_thresholds
             ))
+        elif cfg.use_gliner and GLiNERDetector is None:
+            raise RuntimeError("GLiNER detector requested but not installed. Install zerophix[gliner].")
 
         # 5. Statistical Detector (Skip in auto to reduce noise, unless explicitly enabled)
         if not is_auto and cfg.use_statistical:
