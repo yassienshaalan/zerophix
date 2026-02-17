@@ -2,7 +2,14 @@ import re
 import numpy as np
 from typing import List, Dict, Set, Optional, Tuple
 from collections import Counter
-from scipy import stats
+
+try:
+    from scipy import stats
+    scipy_available = True
+except ImportError:
+    scipy_available = False
+    stats = None
+
 from .base import Detector, Span
 
 class StatisticalDetector(Detector):
@@ -18,6 +25,11 @@ class StatisticalDetector(Detector):
             min_frequency: Minimum frequency for pattern to be considered
             confidence_threshold: Minimum confidence for detection
         """
+        if not scipy_available:
+            raise RuntimeError(
+                "Statistical detector requires scipy. Install with: pip install zerophix[statistical]"
+            )
+        
         self.min_frequency = min_frequency
         self.confidence_threshold = confidence_threshold
         
