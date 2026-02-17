@@ -1,4 +1,4 @@
-# ZeroPhix v0.1.14 - Enterprise PII/PSI/PHI Redaction
+# ZeroPhix v0.1.15 - Enterprise PII/PSI/PHI Redaction
 
 **Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
@@ -95,7 +95,7 @@ rich>=13.9.2
 nltk>=3.8.1
 cryptography>=41.0.0
 pypdf>=3.0.0
-zerophix==0.1.14
+zerophix==0.1.15
 ```
 
 In your notebook:
