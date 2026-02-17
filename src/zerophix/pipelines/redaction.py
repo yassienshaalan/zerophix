@@ -51,7 +51,7 @@ class RedactionPipeline:
         if is_auto or "regex" in cfg.detectors:
             self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
         
-        # 2. Custom Detector (pattern-based, user-defined patterns)
+        # 2. Custom Entity Detector
         if is_auto or "custom" in cfg.detectors:
             self.components.append(CustomEntityDetector(cfg.custom_patterns))
         
