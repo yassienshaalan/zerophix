@@ -1,10 +1,38 @@
 #!/usr/bin/env python3
 """
-Example script showing how to run the ZeroPhi API with custom configuration.
+ZeroPhix REST API Server
+=======================
+
+Starts a FastAPI server for ZeroPhix redaction services.
+
+INSTALLATION REQUIRED:
+  pip install "zerophix[api]"
+  # Installs: fastapi, uvicorn, python-multipart
+
+FEATURES USED:
+  ✓ REST API endpoints
+  ✓ JSON request/response
+  ✓ Batch processing via API
+  ✓ Document upload
+
+USAGE:
+  1. Start server: python examples/run_api.py
+  2. API docs:     http://localhost:8000/docs
+  3. Redact text:  POST /redact
 
 This demonstrates how to programmatically configure and run the API server
 instead of relying solely on environment variables.
 """
+
+# Check if FastAPI and uvicorn are available
+try:
+    import fastapi
+    import uvicorn
+except ImportError:
+    print("ERROR: FastAPI/Uvicorn not installed")
+    print("Please run: pip install 'zerophix[api]'")
+    print("This installs: fastapi, uvicorn, python-multipart")
+    exit(1)
 
 import logging
 from zerophix.config import APIConfig
