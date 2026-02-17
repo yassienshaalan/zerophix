@@ -193,7 +193,7 @@ def example_1_healthcare_clinical_records():
     • Physiotherapist (pelvic floor): Women's Health Physio, 0412 345 678
     
     INSURANCE & BILLING:
-    • Private Health: BUPA, Member #: 6789012345
+    • Private Health: ABC Health Insurance, Member #: 6789012345
     • Obstetric Package: $8,500 (paid in full)
     • Diabetes Management Plan (MBS Item 721): Ref DMP-2024-456
     • Insulin Pump Funding Application: NDIS Ref #NDIS-2024-789456-001
