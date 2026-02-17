@@ -6,6 +6,26 @@ ZeroPhi Ultra-Complex Real-World Examples
 These examples demonstrate advanced, production-grade scenarios with multiple
 PII/PHI types, complex document structures, and comprehensive reporting.
 
+INSTALLATION:
+  Recommended: pip install "zerophix[all]"
+  
+  Optionally install specific features:
+    - Medical PHI: pip install "zerophix[openmed]"
+    - Advanced ML: pip install "zerophix[spacy,bert]"
+    - Document processing: pip install "zerophix[documents]"
+
+FEATURES DEMONSTRATED:
+  ✓ Multi-type PII/PHI detection
+  ✓ Healthcare records processing
+  ✓ Financial document redaction
+  ✓ Audit trails and compliance
+  ✓ Multi-format reporting
+  ◇ OpenMed medical detection (optional)
+  ◇ spaCy NER enhancement (optional)
+
+NOTE: Examples work with minimal install but features skipped if unavailable.
+      Run with: python examples/ultra_complex_examples.py
+
 Example 1: Healthcare Multi-Patient Clinical Records with Audit Trail
 Example 2: Financial Services Multi-Document Compliance Processing
 """
@@ -13,10 +33,9 @@ Example 2: Financial Services Multi-Document Compliance Processing
 import json
 from pathlib import Path
 from datetime import datetime
-from zerophi.pipelines.redaction import RedactionPipeline
-from zerophi.config import RedactionConfig
-from zerophi.reporting import ReportGenerator
-
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
+from zerophix.reporting import ReportGenerator
 
 # =============================================================================
 # EXAMPLE 1: HEALTHCARE - COMPLEX CLINICAL RECORDS WITH FULL AUDIT TRAIL

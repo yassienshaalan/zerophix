@@ -8,7 +8,18 @@ This script demonstrates how to use ZeroPhix with three local files:
 - pii.xlsx
 - pii.pdf
 
-Place this script in a directory with those three files next to it.
+INSTALLATION REQUIRED:
+  pip install "zerophix[documents]"
+  # Installs pypdf, openpyxl for document processing
+
+FEATURES USED:
+  ✓ CSV processing
+  ✓ Excel/XLSX processing
+  ✓ PDF processing
+  ✓ Batch file processing
+
+NOTE: Examples work with minimal install but documents extra recommended.
+      Place this script in a directory with pii.csv, pii.xlsx, pii.pdf files.
 
 Author: ZeroPhix Team
 """
