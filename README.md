@@ -39,12 +39,19 @@
 
 ## Quick Start
 
+
 ### Installation
 
-```bash
-# Basic installation (regex only - 100% offline)
-pip install zerophix
+**Install directly from PyPI:**
 
+```bash
+pip install zerophix
+```
+
+Or use extras for full features:
+
+
+```bash
 # With all features (recommended)
 pip install "zerophix[all]"
 
