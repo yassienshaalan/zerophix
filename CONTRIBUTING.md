@@ -148,4 +148,4 @@ Code owners review all PRs. Focus on:
 
 ---
 
-**Happy contributing! 🚀**
+**Happy contributing! **
