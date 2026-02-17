@@ -1,4 +1,4 @@
-# ZeroPhix v0.1.15 - Enterprise PII/PSI/PHI Redaction
+# ZeroPhix v0.1.16 - Enterprise PII/PSI/PHI Redaction
 
 **Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
@@ -1164,18 +1164,128 @@ zerophix scan --infile document.txt --format html --output report.html
 
 ## Examples
 
+All examples handle missing optional dependencies gracefully - if a feature isn't installed, the example will skip that section and continue.
+
+### Quick Start (Minimal Install)
+Install: `pip install zerophix`
+
 | Example | Description |
 |---------|-------------|
-| [test_all_interfaces.py](examples/test_all_interfaces.py) | Quick test of all input types (string, batch, DataFrame, files) |
-| [all_interfaces_demo.py](examples/all_interfaces_demo.py) | Comprehensive demo of all interfaces with detailed examples |
-| [gliner_examples.py](examples/gliner_examples.py) | Zero-shot custom entity detection |
-| [quick_start_examples.py](examples/quick_start_examples.py) | Basic usage patterns |
-| [comprehensive_usage_examples.py](examples/comprehensive_usage_examples.py) | All features demonstrated |
-| [file_tests_pii.py](examples/file_tests_pii.py) | CSV/XLSX/PDF processing |
+| [quick_start_examples.py](examples/quick_start_examples.py) | Basic redaction, strategies, batch processing |
 | [scan_example.py](examples/scan_example.py) | Detection without redaction |
+| [australian_entities_examples.py](examples/australian_entities_examples.py) | Australian-specific PII detection |
+
+**Run:**
+```bash
+python examples/quick_start_examples.py
+python examples/scan_example.py
+python examples/australian_entities_examples.py
+```
+
+### Core Functionality (Recommended Install)
+Install: `pip install "zerophix[all]"`
+
+| Example | Description |
+|---------|-------------|
+| [test_all_interfaces.py](examples/test_all_interfaces.py) | All input types (string, batch, DataFrame) |
+| [all_interfaces_demo.py](examples/all_interfaces_demo.py) | Comprehensive interface demo |
+| [file_tests_pii.py](examples/file_tests_pii.py) | CSV/XLSX/PDF processing |
+| [redaction_strategies_examples.py](examples/redaction_strategies_examples.py) | All 9 redaction strategies |
 | [report_example.py](examples/report_example.py) | Multi-format reporting |
+
+**Run:**
+```bash
+python examples/test_all_interfaces.py
+python examples/all_interfaces_demo.py
+python examples/file_tests_pii.py
+python examples/redaction_strategies_examples.py
+python examples/report_example.py
+```
+
+### Advanced ML Features (Full Install)
+Install: `pip install "zerophix[all]"`
+
+| Example | Description |
+|---------|-------------|
+| [comprehensive_usage_examples.py](examples/comprehensive_usage_examples.py) | All detectors and features |
 | [ultra_complex_examples.py](examples/ultra_complex_examples.py) | Healthcare & financial scenarios |
-| [run_api.py](examples/run_api.py) | API server configuration |
+| [gliner_examples.py](examples/gliner_examples.py) | Zero-shot custom entity detection (requires GLiNER) |
+| [adaptive_ensemble_examples.py](examples/adaptive_ensemble_examples.py) | Smart detector selection |
+| [quick_calibrate.py](examples/quick_calibrate.py) | Model calibration |
+
+**Run:**
+```bash
+python examples/comprehensive_usage_examples.py
+python examples/ultra_complex_examples.py
+python examples/gliner_examples.py
+python examples/adaptive_ensemble_examples.py
+python examples/quick_calibrate.py
+```
+
+### Cloud Platforms
+Install: `pip install "zerophix[databricks]"` (or `pip install "zerophix[all]"`)
+
+| Example | Description |
+|---------|-------------|
+| [databricks_medical_optimized.py](examples/databricks_medical_optimized.py) | PHI detection optimized for Databricks DBR 18+ |
+| [optimized_databricks_benchmark.ipynb](examples/optimized_databricks_benchmark.ipynb) | Performance benchmarks on Databricks |
+
+**Run (Databricks):**
+```python
+%run ../examples/databricks_medical_optimized.py
+```
+
+### API & Server
+Install: `pip install "zerophix[api]"`
+
+| Example | Description |
+|---------|-------------|
+| [run_api.py](examples/run_api.py) | Start REST API server |
+| [api_usage_examples.py](examples/api_usage_examples.py) | REST API client examples |
+
+**Run:**
+```bash
+# Start server (http://localhost:8000)
+python examples/run_api.py
+
+# In another terminal
+python examples/api_usage_examples.py
+```
+
+### Installation Quick Reference
+
+```bash
+# Minimal (regex only)
+pip install zerophix
+
+# Recommended (all core features)
+pip install "zerophix[all]"
+
+# Individual features
+pip install "zerophix[spacy]"          # spaCy NER
+pip install "zerophix[bert]"           # BERT detection
+pip install "zerophix[gliner]"         # Zero-shot detection
+pip install "zerophix[openmed]"        # Medical PHI
+pip install "zerophix[statistical]"    # Entropy analysis
+pip install "zerophix[documents]"      # PDF/DOCX/Excel/CSV
+pip install "zerophix[api]"            # REST API server
+```
+
+### Feature Support by Example
+
+| Example | Regex | spaCy | BERT | GLiNER | OpenMed | Docs | API |
+|---------|:-----:|:-----:|:----:|:------:|:-------:|:----:|:---:|
+| quick_start | ✓ | | | | | | |
+| scan_example | ✓ | | | | | | |
+| test_all_interfaces | ✓ | ◇ | ◇ | | | ◇ | |
+| comprehensive | ✓ | ◇ | ◇ | | ◇ | | |
+| file_tests | ✓ | ◇ | ◇ | | | ✓ | |
+| ultra_complex | ✓ | ◇ | ◇ | | ◇ | | |
+| gliner | ✓ | | | ✓ | | | |
+| adaptive_ensemble | ✓ | ◇ | ◇ | | | | |
+| databricks_medical | ✓ | | | | ◇ | | |
+
+**Legend:** ✓ = Included | ◇ = Optional (skipped if not installed)
 
 ## Advanced Features
 
