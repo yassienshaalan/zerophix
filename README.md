@@ -108,7 +108,7 @@ pipeline = RedactionPipeline(config)
 
 text = "John Doe, SSN: 123-45-6789, Email: john@example.com"
 result = pipeline.redact(text)
-print(result['text'])  # ✅ Works!
+print(result['text']) 
 ```
 
 **Note:** Don't install scipy/numpy/pandas separately on Databricks - use cluster's pre-compiled versions.
