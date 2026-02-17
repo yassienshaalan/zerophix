@@ -1,4 +1,4 @@
-# ZeroPhix v0.1.0 - Enterprise PII/PSI/PHI Redaction
+# ZeroPhix v0.1.14 - Enterprise PII/PSI/PHI Redaction
 
 **Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
@@ -79,6 +79,39 @@ python -m spacy download en_core_web_lg
 - **Regex-only**: Works immediately, no downloads, 100% offline from install
 - **With ML models**: One-time download, then 100% offline forever
 - **Air-gapped environments**: Pre-download models, transfer via USB/network
+
+### Databricks / Cloud Platforms
+
+**For Databricks (DBR 18.0+):**
+
+Install via cluster **Libraries → Install from PyPI**:
+```
+pydantic>=2.7
+pyyaml>=6.0.1
+regex>=2024.4.16
+click>=8.1.7
+tqdm>=4.66.5
+rich>=13.9.2
+nltk>=3.8.1
+cryptography>=41.0.0
+pypdf>=3.0.0
+zerophix==0.1.14
+```
+
+In your notebook:
+```python
+from zerophix.pipelines.redaction import RedactionPipeline
+from zerophix.config import RedactionConfig
+
+config = RedactionConfig(country="US", detectors=["regex"])
+pipeline = RedactionPipeline(config)
+
+text = "John Doe, SSN: 123-45-6789, Email: john@example.com"
+result = pipeline.redact(text)
+print(result['text'])  # ✅ Works!
+```
+
+**Note:** Don't install scipy/numpy/pandas separately on Databricks - use cluster's pre-compiled versions.
 
 ### 30-Second Demo
 
