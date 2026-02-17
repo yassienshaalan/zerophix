@@ -18,11 +18,11 @@ class RedactionConfig(BaseModel):
     
     # ML Model flags
     use_openmed: bool = Field(default=False, description="Enable OpenMed model detector")
-    use_spacy: bool = Field(default=True, description="Enable spaCy NER detector")
+    use_spacy: bool = Field(default=False, description="Enable spaCy NER detector")
     use_bert: bool = Field(default=False, description="Enable BERT-based NER detector")
     use_gliner: bool = Field(default=False, description="Enable GLiNER zero-shot detector")
     use_statistical: bool = Field(default=False, description="Enable statistical pattern detector")
-    use_contextual: bool = Field(default=True, description="Use contextual enhancement for ML detectors")
+    use_contextual: bool = Field(default=False, description="Use contextual enhancement for ML detectors")
     
     # Advanced Accuracy Features
     enable_ensemble_voting: bool = Field(default=True, description="Enable weighted voting for conflict resolution")
