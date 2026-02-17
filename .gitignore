@@ -171,8 +171,12 @@ sample_documents/
 # PyPI Publishing (IMPORTANT: Never commit credentials!)
 .pypirc
 .pypirc.local
+.pypirc.template  # Template only, use locally
 *.tar.gz.asc
 *.whl.asc
+dist/
+build/
+*.egg-info/
 
 # Evaluation results (can be large)
 eval/results/*.json

@@ -1,0 +1,26 @@
+# Global code owner - all changes require review
+* @yassienshaalan
+
+# Core pipeline and detection logic
+/src/zerophix/pipelines/ @yassienshaalan
+/src/zerophix/detectors/ @yassienshaalan
+/src/zerophix/redaction/ @yassienshaalan
+
+# Security and compliance
+/src/zerophix/security/ @yassienshaalan
+/src/zerophix/policies/ @yassienshaalan
+
+# Configuration and API
+/src/zerophix/config.py @yassienshaalan
+/src/zerophix/api/ @yassienshaalan
+
+# Build and deployment
+setup.py @yassienshaalan
+pyproject.toml @yassienshaalan
+.github/ @yassienshaalan
+requirements.txt @yassienshaalan
+MANIFEST.in @yassienshaalan
+
+# Documentation
+README.md @yassienshaalan
+REDACTION_LOGIC.md @yassienshaalan
