@@ -34,7 +34,8 @@ Changelog = "https://github.com/yassienshaalan/zerophix/blob/main/README.md"
 zerophix = "zerophix.cli:app"
 
 [project.optional-dependencies]
-# Statistical analysis (optional)
+# Statistical analysis and pattern detection
+
 statistical = ["scipy>=1.10.0,<2.0"]
 
 # Core ML models
