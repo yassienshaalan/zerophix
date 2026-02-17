@@ -246,14 +246,17 @@ class RedactionPipeline:
         
         return "general"
 
-    def scan(self, text: str, parallel_detectors: bool = False) -> List[Span]:
+    def scan(self, text: str, parallel_detectors: bool = False) -> Dict[str, object]:
         """
         Scan text for entities without redacting.
-        Returns a list of detected Span objects.
+        Returns a dict with detected entities and metadata.
         
         Args:
             text: Text to scan
             parallel_detectors: Run all detectors in parallel (faster on multi-core)
+            
+        Returns:
+            Dict with keys: detections, total_detections, entity_counts, has_pii
         """
         spans: List[Span] = []
         
@@ -319,7 +322,30 @@ class RedactionPipeline:
 
         # Apply advanced processing
         merged = self._process_spans(text, spans)
-        return merged
+        
+        # Calculate statistics
+        entity_counts = {}
+        for s in merged:
+            entity_counts[s.label] = entity_counts.get(s.label, 0) + 1
+
+        # Convert spans to detection dicts
+        detections = []
+        for s in merged:
+            detections.append({
+                "start": s.start,
+                "end": s.end,
+                "label": s.label,
+                "score": s.score,
+                "source": s.source,
+                "text": text[s.start:s.end]
+            })
+
+        return {
+            "detections": detections,
+            "total_detections": len(merged),
+            "entity_counts": entity_counts,
+            "has_pii": len(merged) > 0
+        }
     
     def _sort_detectors_by_speed(self, components: List) -> List:
         """Sort detectors by execution speed (fastest first)"""
