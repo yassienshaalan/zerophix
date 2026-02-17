@@ -6,7 +6,17 @@ ZeroPhi Quick Start Examples
 Simple, practical examples showing the most common ZeroPhi use cases.
 Perfect for getting started quickly with real-world scenarios.
 
-Run this file: python examples/quick_start_examples.py
+INSTALLATION:
+  Minimal: pip install zerophix
+  Full:    pip install "zerophix[all]"
+
+FEATURES USED:
+  ✓ Regex detection (always available)
+  ✓ Custom patterns (always available)
+  ✓ Batch processing (always available)
+
+NOTE: This example works with minimal install. Run with:
+  python examples/quick_start_examples.py
 """
 
 from zerophix.pipelines.redaction import RedactionPipeline

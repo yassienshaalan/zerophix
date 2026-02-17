@@ -6,7 +6,9 @@ from collections import Counter
 try:
     from scipy import stats
     scipy_available = True
-except ImportError:
+except Exception:
+    # Catch ImportError, ModuleNotFoundError, and any other exceptions
+    # (scipy might be blocked entirely on Databricks)
     scipy_available = False
     stats = None
 
