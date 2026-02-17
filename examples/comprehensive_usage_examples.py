@@ -6,6 +6,28 @@ ZeroPhi Comprehensive Usage Examples
 This file demonstrates how to use every functionality in ZeroPhix step by step.
 Each section shows practical examples with real code that you can run.
 
+INSTALLATION REQUIREMENTS:
+  Basic (regex only):
+    pip install zerophix
+  
+  Full features:
+    pip install "zerophix[all]"
+  
+  Specific features:
+    pip install "zerophix[spacy,bert,gliner,statistical,documents,api]"
+
+FEATURES USED IN THIS FILE:
+  ✓ Regex detection (always available)
+  ✓ Custom patterns (always available)
+  ◇ spaCy NER (requires: pip install "zerophix[spacy]")
+  ◇ BERT detection (requires: pip install "zerophix[bert]")
+  ◇ OpenMed PHI detection (requires: pip install "zerophix[openmed]")
+  ◇ Statistical analysis (requires: pip install "zerophix[statistical]")
+  ◇ Document processing (requires: pip install "zerophix[documents]")
+  ◇ REST API (requires: pip install "zerophix[api]")
+
+NOTE: Examples will automatically skip unavailable features and continue running.
+
 Author: ZeroPhix Team
 Date: October 2025
 """
@@ -25,28 +47,70 @@ from zerophix.pipelines.redaction import RedactionPipeline
 from zerophix.config import RedactionConfig
 from zerophix.policies.loader import load_policy
 
-# Detection engines
+# Detection engines - with graceful fallbacks for optional dependencies
 from zerophix.detectors.regex_detector import RegexDetector
-from zerophix.detectors.spacy_detector import SpacyDetector
-from zerophix.detectors.bert_detector import BertDetector
-from zerophix.detectors.openmed_detector import OpenMedDetector
-from zerophix.detectors.statistical_detector import StatisticalDetector
 from zerophix.detectors.custom_detector import CustomEntityDetector
 
-# Security and compliance
-from zerophix.security.compliance import SecureAuditLogger, ComplianceValidator, ZeroTrustValidator, ComplianceStandard
-from zerophix.security.encryption import EncryptionManager
+# Optional detection engines
+try:
+    from zerophix.detectors.spacy_detector import SpacyDetector
+    SPACY_AVAILABLE = True
+except ImportError:
+    SPACY_AVAILABLE = False
+    SpacyDetector = None
+
+try:
+    from zerophix.detectors.bert_detector import BertDetector
+    BERT_AVAILABLE = True
+except ImportError:
+    BERT_AVAILABLE = False
+    BertDetector = None
+
+try:
+    from zerophix.detectors.openmed_detector import OpenMedDetector
+    OPENMED_AVAILABLE = True
+except ImportError:
+    OPENMED_AVAILABLE = False
+    OpenMedDetector = None
+
+try:
+    from zerophix.detectors.statistical_detector import StatisticalDetector
+    STATISTICAL_AVAILABLE = True
+except ImportError:
+    STATISTICAL_AVAILABLE = False
+    StatisticalDetector = None
+
+# Security and compliance - with optional features
+try:
+    from zerophix.security.compliance import SecureAuditLogger, ComplianceValidator, ZeroTrustValidator, ComplianceStandard
+    COMPLIANCE_AVAILABLE = True
+except ImportError:
+    COMPLIANCE_AVAILABLE = False
+
+try:
+    from zerophix.security.encryption import EncryptionManager
+    ENCRYPTION_AVAILABLE = True
+except ImportError:
+    ENCRYPTION_AVAILABLE = False
 
 # Performance features
-from zerophix.performance.optimization import PerformanceCache, BatchProcessor, StreamProcessor
+try:
+    from zerophix.performance.optimization import PerformanceCache, BatchProcessor, StreamProcessor
+    PERFORMANCE_AVAILABLE = True
+except ImportError:
+    PERFORMANCE_AVAILABLE = False
 
-# Document processing
-from zerophix.processors.documents import (
-    PDFProcessor,
-    DOCXProcessor,
-    ExcelProcessor,
-    CSVProcessor,
-)
+# Document processing - with optional formats
+try:
+    from zerophix.processors.documents import (
+        PDFProcessor,
+        DOCXProcessor,
+        ExcelProcessor,
+        CSVProcessor,
+    )
+    DOCUMENT_PROCESSORS_AVAILABLE = True
+except ImportError:
+    DOCUMENT_PROCESSORS_AVAILABLE = False
 
 # API components
 from zerophix.api.rest import app

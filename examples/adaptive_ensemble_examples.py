@@ -1,6 +1,28 @@
 """
-Adaptive Ensemble Usage Examples
-Demonstrates how to use the new adaptive calibration system to optimize ZeroPhix
+Adaptive Ensemble & Calibration Examples
+=========================================
+
+Demonstrates how to use the adaptive calibration system to optimize ZeroPhix
+detection accuracy for your specific use cases.
+
+INSTALLATION:
+  Recommended: pip install "zerophix[all]"
+  
+  Minimum: pip install zerophix
+  
+  For best accuracy: pip install "zerophix[spacy,bert]"
+
+FEATURES USED:
+  ✓ Adaptive ensemble detection
+  ✓ Configuration optimization
+  ✓ Label normalization
+  ✓ Consensus models
+  ◇ spaCy NER (optional, improves names/locations)
+  ◇ BERT detection (optional, improves contextual entities)
+
+NOTE: Examples work with minimal install but skips ML features if unavailable.
+      Run with: python examples/adaptive_ensemble_examples.py
+
 """
 
 from zerophix.config import RedactionConfig
