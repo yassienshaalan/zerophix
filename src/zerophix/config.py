@@ -12,7 +12,7 @@ class RedactionConfig(BaseModel):
     
     # Detector configuration
     detectors: List[str] = Field(
-        default_factory=lambda: ["regex", "custom", "spacy"],
+        default_factory=lambda: ["regex", "custom"],
         description="Order of detectors to apply: regex, custom, spacy, bert, openmed, statistical"
     )
     

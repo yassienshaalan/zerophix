@@ -18,28 +18,23 @@ OpenMedDetector = None
 
 try:
     from ..detectors.spacy_detector import SpacyDetector
-except ImportError:
+except Exception:
     pass
 
 try:
     from ..detectors.bert_detector import BertDetector
-except ImportError:
+except Exception:
     pass
 
 try:
     from ..detectors.gliner_detector import GLiNERDetector
-except ImportError:
+except Exception:
     pass
 
 try:
     from ..detectors.openmed_detector import OpenMedDetector
-except ImportError:
+except Exception:
     pass
-except Exception as e:
-    print(f"DEBUG: Failed to import OpenMedDetector: {e}")
-    import traceback
-    traceback.print_exc()
-    OpenMedDetector = None
 
 import hashlib
 
