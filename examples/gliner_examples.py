@@ -7,12 +7,32 @@ GLiNER (Generalist Named Entity Recognition) enables zero-shot entity
 detection without any fine-tuning. Just name the entities you want to 
 find - no training data required!
 
+INSTALLATION REQUIRED:
+  pip install "zerophix[gliner]"
+  # This also installs torch, transformers, and gliner
+
+FEATURES USED:
+  ✓ GLiNER zero-shot detection
+  ✓ Custom entity type detection
+  ✓ Multi-label entity detection
+
 Features:
 - Zero-shot: No training data needed
 - Flexible: Detect any entity type by naming it
 - Accurate: 90%+ F1 score on standard benchmarks
 - Fast: ~100ms per document
 
+"""
+
+# Check if GLiNER is available
+try:
+    from zerophix.detectors.gliner_detector import GLiNERDetector
+except ImportError:
+    print("ERROR: GLiNER not installed")
+    print("Please run: pip install 'zerophix[gliner]'")
+    print("This example requires transformers, torch, and gliner>=0.1.0")
+    exit(1)
+"""
 Installation:
     pip install gliner
 
