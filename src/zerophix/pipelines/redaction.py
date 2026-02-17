@@ -2,6 +2,7 @@ from typing import List, Dict
 import re
 from ..config import RedactionConfig
 from ..detectors.regex_detector import RegexDetector
+from ..detectors.custom_detector import CustomEntityDetector
 from ..detectors.statistical_detector import StatisticalDetector
 from ..detectors.base import Span
 from .consensus import ConsensusModel
@@ -50,7 +51,11 @@ class RedactionPipeline:
         if is_auto or "regex" in cfg.detectors:
             self.components.append(RegexDetector(cfg.country, cfg.company, cfg.custom_patterns))
         
-        # 2. Spacy Detector
+        # 2. Custom Detector (pattern-based, user-defined patterns)
+        if is_auto or "custom" in cfg.detectors:
+            self.components.append(CustomEntityDetector(cfg.custom_patterns))
+        
+        # 3. Spacy Detector
         if (is_auto or cfg.use_spacy) and SpacyDetector is not None:
             self.components.append(SpacyDetector())
         elif cfg.use_spacy and SpacyDetector is None:
