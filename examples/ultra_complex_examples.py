@@ -400,7 +400,6 @@ def example_1_healthcare_clinical_records():
         print(f"    Text: '{det['text']}'")
         print(f"    Confidence: {det['score']:.2%}")
         print(f"    Position: {det['start']}-{det['end']}")
-        print(f"    Context: ...{det['context'][:60]}...")
     
     # Step 4: Generate comprehensive reports
     print("\n STEP 4: Generating Compliance Reports")
