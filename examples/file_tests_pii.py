@@ -28,12 +28,32 @@ import argparse
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
-import pandas as pd
+# Try to import pandas for CSV processing
+try:
+    import pandas as pd
+    PANDAS_AVAILABLE = True
+except ImportError:
+    PANDAS_AVAILABLE = False
+    pd = None
 
 from zerophix.pipelines.redaction import RedactionPipeline
 from zerophix.config import RedactionConfig
-from zerophix.processors.documents import PDFProcessor
-from zerophix.security.encryption import EncryptionManager
+
+# Try to import document processors
+try:
+    from zerophix.processors.documents import PDFProcessor
+    DOCUMENT_PROCESSORS_AVAILABLE = True
+except ImportError:
+    DOCUMENT_PROCESSORS_AVAILABLE = False
+    PDFProcessor = None
+
+# Try to import encryption
+try:
+    from zerophix.security.encryption import EncryptionManager
+    ENCRYPTION_AVAILABLE = True
+except ImportError:
+    ENCRYPTION_AVAILABLE = False
+    EncryptionManager = None
 
 
 def print_section(title: str) -> None:
@@ -293,6 +313,13 @@ def test_pdf_redaction_and_encryption() -> None:
 
 def main() -> None:
     global CSV_PATH, XLSX_PATH, PDF_PATH
+
+    # Check if required dependencies are installed
+    if not PANDAS_AVAILABLE:
+        print("ERROR: pandas is not installed!")
+        print("Please install it with: pip install pandas")
+        print("Or install zerophix with documents support: pip install 'zerophix[documents]'")
+        return
 
     args = parse_args()
     CSV_PATH, XLSX_PATH, PDF_PATH = resolve_paths(args)
