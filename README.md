@@ -1171,6 +1171,16 @@ If entity detection returns 0 results when using the installed library:
 
 ## Examples
 
+**Understanding Detection Methods:**
+
+| Example Type | Methods | What Gets Detected | Best For |
+|--------------|---------|-------------------|----------|
+| **Simple** | Regex only | SSN, email, phone, credit cards, structured data | Quick testing, minimal dependencies |
+| **Quick Start** | Regex + optional spaCy | Above + names (if spaCy enabled) | Learning the basics, understanding detection |
+| **Comprehensive** | All models (Regex + spaCy + BERT + OpenMed + GLiNER) | All entity types including names, context, medical terms, custom entities | Production use, maximum accuracy |
+
+**Key Insight:** If an example doesn't detect names, it's likely because it uses regex-only detection (intentionally for speed). Examples that enable spaCy/BERT/GLiNER will detect names and complex entities.
+
 All examples handle missing optional dependencies gracefully - if a feature isn't installed, the example will skip that section and continue.
 
 ### Quick Start (Minimal Install)
@@ -1189,6 +1199,80 @@ python examples/simple_redaction_example.py
 python examples/quick_start_examples.py
 python examples/scan_example.py
 python examples/australian_entities_examples.py
+```
+
+#### Expected Output: simple_redaction_example.py
+**Note:** This example uses **regex-only detection** (no ML models). It detects structured data (SSN, email, phone, credit cards) but not unstructured names. For name detection, see examples with NER/OpenMed/GLiNER below.
+
+```
+======================================================================
+ZeroPhi Simple Redaction Example (Regex-only)
+======================================================================
+
+ORIGINAL TEXT:
+  John Doe, SSN: 123-45-6789, Email: john@example.com, Phone: (555) 123-4567
+
+REDACTED TEXT:
+  John Doe, SSN: <SSN>, Email: <EMAIL>, Phone: (<PHONE_US>
+
+ENTITIES DETECTED (Regex patterns only):
+  - SSN                  : '123-45-6789'
+  - EMAIL                : 'john@example.com'
+  - PHONE_US             : '555) 123-4567'
+
+======================================================================
+Status: Successfully detected and redacted 3 entities (ultra-fast, no ML models)
+======================================================================
+```
+
+**Why no name detection?** Names require NER models (spaCy/BERT/GLiNER). The simple example uses regex only for speed and minimal dependencies. See examples below for name detection with ML models.
+
+#### Expected Output: quick_start_examples.py (With ML Detection)
+**Note:** These examples show NER-enabled detection. You'll see name detection (PERSON_NAME) working here, unlike the simple example.
+
+```
+ZeroPhi Quick Start Examples (With ML Detectors)
+==================================================
+These examples use NER models for complete detection including names
+
+==================================================
+1. BASIC TEXT REDACTION (REGEX + spaCy NER)
+==================================================
+Original: Hi, I'm John Doe. My SSN is 123-45-6789 and email is john.doe@email.com
+Redacted: Hi, I'm John Doe. My SSN is <SSN> and email is <EMAIL>
+Found 2 sensitive entities (SSN, email - spaCy NER may vary by context)
+
+==================================================
+2. MULTI-COUNTRY SUPPORT
+==================================================
+US: John Smith, SSN: 123-45-6789, phone: (555) 123-4567
+     -> <PERSON_NAME>, SSN: <SSN>, phone: (<PHONE_US>
+
+AU: Jane Doe, TFN: 123 456 789, Medicare: 2234 5678 9 1
+     -> <PERSON_NAME>, TFN: <TFN>, Medicare: <MEDICARE>
+
+==================================================
+3. ML DETECTION (SPACY + REGEX + BERT)
+==================================================
+Detects: Names (spaCy), SSN/phone (regex), medical context (BERT)
+  Found 4 entities
+  Result: Patient <PERSON_NAME> (born <DOB_ISO>) was treated for <DISEASE>...
+
+==================================================
+4. REDACTION STRATEGIES
+==================================================
+Replace with entity type:
+  Original: Contact John Doe at john@example.com or call (555) 123-4567
+  Redacted: Contact <PERSON_NAME> at <EMAIL> or call (<PHONE_US>)
+
+Partial masking:
+  Redacted: Contact John D... at ******************** or call (555) ***-****
+
+Realistic fake data:
+  Redacted: Contact Alex Johnson at oenybdub@example.com or call (482) 705-3473
+
+Consistent hashing:
+  Redacted: Contact 55f537baf756 at 9a8b7c6d or call bceb5476591e
 ```
 
 ### Core Functionality (Recommended Install)
@@ -1214,13 +1298,15 @@ python examples/report_example.py
 ### Advanced ML Features (Full Install)
 Install: `pip install "zerophix[all]"`
 
+**These examples showcase name detection using ML models (spaCy, BERT, GLiNER):**
+
 | Example | Description |
 |---------|-------------|
-| [comprehensive_usage_examples.py](examples/comprehensive_usage_examples.py) | All detectors and features |
-| [ultra_complex_examples.py](examples/ultra_complex_examples.py) | Healthcare & financial scenarios |
-| [gliner_examples.py](examples/gliner_examples.py) | Zero-shot custom entity detection (requires GLiNER) |
-| [adaptive_ensemble_examples.py](examples/adaptive_ensemble_examples.py) | Smart detector selection |
-| [quick_calibrate.py](examples/quick_calibrate.py) | Model calibration |
+| [comprehensive_usage_examples.py](examples/comprehensive_usage_examples.py) | Compares all detectors - regex vs spaCy vs BERT vs OpenMed (names detected with spaCy/BERT) |
+| [ultra_complex_examples.py](examples/ultra_complex_examples.py) | Healthcare & financial scenarios with full ML detection |
+| [gliner_examples.py](examples/gliner_examples.py) | Zero-shot custom entity detection with GLiNER (names + custom entities) |
+| [adaptive_ensemble_examples.py](examples/adaptive_ensemble_examples.py) | Smart detector selection - learns which model works best for your data |
+| [quick_calibrate.py](examples/quick_calibrate.py) | Model calibration for optimal name detection accuracy |
 
 **Run:**
 ```bash

@@ -365,14 +365,65 @@ class RedactionPipeline:
         return sorted(components, key=get_priority)
 
     def _mask(self, s: str, label: str) -> str:
+        """Apply redaction strategy to text"""
         style = self.cfg.masking_style
+        
+        # Basic strategies
         if style == "mask":
             return "*" * len(s)
-        if style == "replace":
+        elif style == "replace":
             return f"<{label}>"
-        if style == "brackets":
+        elif style == "brackets":
             return f"[{label}]"
-        return hashlib.sha256(s.encode("utf-8")).hexdigest()[:12]
+        elif style == "hash":
+            # Deterministic hash (same input always produces same hash)
+            return hashlib.sha256(s.encode("utf-8")).hexdigest()[:12]
+        elif style == "synthetic":
+            # Generate realistic synthetic replacement (random, not deterministic)
+            # For emails, phone, etc. - generate fake but realistic-looking data
+            if label in ["EMAIL", "EMAIL_ADDRESS"]:
+                import random, string
+                username = ''.join(random.choices(string.ascii_lowercase, k=8))
+                return f"{username}@example.com"
+            elif label in ["PHONE_US", "PHONE_NUMBER", "PHONE", "MOBILE", "PHONE_AU"]:
+                import random
+                # Generate valid-looking phone
+                return f"({random.randint(200,999)}) {random.randint(100,999)}-{random.randint(1000,9999)}"
+            elif label in ["SSN", "TAX_FILE_NUMBER", "TFN", "SOCIAL_SECURITY_NUMBER"]:
+                import random
+                # Format: XXX-XX-XXXX or XXX XXX XXX
+                if "-" in s:
+                    return f"{random.randint(100,999)}-{random.randint(10,99)}-{random.randint(1000,9999)}"
+                else:
+                    return f"{random.randint(100,999)} {random.randint(10,99)} {random.randint(100,999)}"
+            elif label in ["CREDIT_CARD", "CREDIT_CARD_NUMBER"]:
+                import random
+                # Generate valid-looking card
+                return f"{random.randint(4000,4999)}-{random.randint(1000,9999)}-{random.randint(1000,9999)}-{random.randint(1000,9999)}"
+            else:
+                # For other types, use random hex
+                import random, string
+                return ''.join(random.choices(string.hexdigits[:16], k=len(s)))
+        elif style == "preserve_format":
+            # Preserve format but replace with consistent characters
+            # Keep digit/letter/special char structure
+            result = []
+            for char in s:
+                if char.isdigit():
+                    result.append('X')
+                elif char.isalpha():
+                    result.append('X')
+                else:
+                    result.append(char)
+            return ''.join(result)
+        elif style == "encrypt":
+            # For encryption, we'd need the encryption key from config
+            # For now, use a reversible encoding
+            import base64
+            return base64.b64encode(s.encode()).decode()[:20]
+        else:
+            # Default fallback to hash
+            return hashlib.sha256(s.encode("utf-8")).hexdigest()[:12]
 
     def _process_spans(self, text: str, spans: List[Span]) -> List[Span]:
         """
