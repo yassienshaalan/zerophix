@@ -1171,12 +1171,14 @@ Install: `pip install zerophix`
 
 | Example | Description |
 |---------|-------------|
+| [simple_redaction_example.py](examples/simple_redaction_example.py) | **START HERE** - Simplest possible example (5 lines) |
 | [quick_start_examples.py](examples/quick_start_examples.py) | Basic redaction, strategies, batch processing |
 | [scan_example.py](examples/scan_example.py) | Detection without redaction |
 | [australian_entities_examples.py](examples/australian_entities_examples.py) | Australian-specific PII detection |
 
 **Run:**
 ```bash
+python examples/simple_redaction_example.py
 python examples/quick_start_examples.py
 python examples/scan_example.py
 python examples/australian_entities_examples.py
