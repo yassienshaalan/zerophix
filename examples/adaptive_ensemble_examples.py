@@ -37,11 +37,16 @@ def example_adaptive_ensemble():
     Enable adaptive ensemble with label normalization
     This helps cross-detector consensus work properly
     """
+    print("\n" + "="*80)
+    print("Example 1: Basic Adaptive Ensemble with Label Normalization")
+    print("="*80)
+    
+    # Start with minimal config (regex only, no optional deps needed)
     config = RedactionConfig(
         country="AU",
-        use_gliner=True,
-        use_openmed=True,
-        use_spacy=True,
+        use_gliner=False,
+        use_openmed=False,
+        use_spacy=False,
         
         # NEW: Enable adaptive features
         enable_adaptive_weights=True,  # Use performance-based weights
@@ -49,11 +54,17 @@ def example_adaptive_ensemble():
         adaptive_weight_method="f1_squared",  # Emphasize high performers
     )
     
-    pipeline = RedactionPipeline(config)
-    
-    # Use normally - no changes to API
-    result = pipeline.redact("John Smith has diabetes. Call 555-1234.")
-    print(result['text'])
+    try:
+        pipeline = RedactionPipeline(config)
+        
+        # Use normally - no changes to API
+        result = pipeline.redact("John Smith has diabetes. Call 555-1234.")
+        print(f"Original: John Smith has diabetes. Call 555-1234.")
+        print(f"Redacted: {result['text']}")
+        print(f"Entities found: {len(result.get('spans', []))}")
+    except Exception as e:
+        print(f"Error: {e}")
+        print("Try installing optional dependencies: pip install 'zerophix[all]'")
 
 
 # =============================================================================
