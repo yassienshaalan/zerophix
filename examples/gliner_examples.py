@@ -46,7 +46,7 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from zerophi.detectors.gliner_detector import GLiNERDetector
+from zerophix.detectors.gliner_detector import GLiNERDetector
 
 
 def example_basic_usage():
