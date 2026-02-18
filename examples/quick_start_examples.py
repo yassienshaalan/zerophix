@@ -24,7 +24,7 @@ from zerophix.config import RedactionConfig
 
 
 def example_1_basic_text_redaction():
-    """Most basic example - redact text with default settings"""
+    """Most basic example - redact text with default settings - includes NER for name detection"""
     print("=" * 50)
     print("1. BASIC TEXT REDACTION")
     print("=" * 50)
@@ -32,8 +32,12 @@ def example_1_basic_text_redaction():
     # Simple text with PII
     text = "Hi, I'm John Doe. My SSN is 123-45-6789 and email is john.doe@email.com"
     
-    # Create basic US configuration
-    config = RedactionConfig(country="US", masking_style="replace")
+    # Create basic US configuration with spaCy for name detection
+    config = RedactionConfig(
+        country="US",
+        detectors=["regex", "spacy"],  # Enable spaCy NER for names
+        masking_style="replace"
+    )
     pipeline = RedactionPipeline(config)
     
     # Redact the text
