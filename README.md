@@ -1162,6 +1162,13 @@ html_report = ReportGenerator.generate(result, format="html")
 zerophix scan --infile document.txt --format html --output report.html
 ```
 
+## Troubleshooting
+
+If entity detection returns 0 results when using the installed library:
+- **Solution**: Ensure policy YAML files are included in your installation
+- **Details**: See [DEBUGGING_ENTITY_DETECTION.md](DEBUGGING_ENTITY_DETECTION.md) for comprehensive troubleshooting
+- **Quick test**: `python test_installed_library.py`
+
 ## Examples
 
 All examples handle missing optional dependencies gracefully - if a feature isn't installed, the example will skip that section and continue.
