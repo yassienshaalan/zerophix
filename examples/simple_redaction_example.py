@@ -32,9 +32,12 @@ def main():
     print()
     
     # Create configuration for US country
+    # Note: Using regex-only detectors for speed and minimal dependencies.
+    # Names (John Doe) require NER models - see quick_start_examples.py for that.
     config = RedactionConfig(
         country="US",
-        masking_style="replace"  # Shows clear [ENTITY] labels
+        detectors=["regex"],      # Regex-only: ultra-fast, structured data only
+        masking_style="replace"   # Shows clear [ENTITY] labels
     )
     
     # Create pipeline
