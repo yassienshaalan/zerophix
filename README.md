@@ -1191,6 +1191,74 @@ python examples/scan_example.py
 python examples/australian_entities_examples.py
 ```
 
+#### Expected Output: simple_redaction_example.py
+```
+======================================================================
+ZeroPhi Simple Redaction Example
+======================================================================
+
+ORIGINAL TEXT:
+  John Doe, SSN: 123-45-6789, Email: john@example.com, Phone: (555) 123-4567
+
+REDACTED TEXT:
+  John Doe, SSN: <SSN>, Email: <EMAIL>, Phone: (<PHONE_US>
+
+ENTITIES DETECTED:
+  - SSN                  : '123-45-6789'
+  - EMAIL                : 'john@example.com'
+  - PHONE_US             : '555) 123-4567'
+
+======================================================================
+Status: Successfully detected and redacted 3 entities
+======================================================================
+```
+
+#### Expected Output: quick_start_examples.py (First Examples)
+```
+ZeroPhi Quick Start Examples
+============================
+These examples show common ZeroPhi usage patterns
+Start here to learn the basics!
+
+==================================================
+1. BASIC TEXT REDACTION
+==================================================
+Original: Hi, I'm John Doe. My SSN is 123-45-6789 and email is john.doe@email.com
+Redacted: Hi, I'm John Doe. My SSN is <SSN> and email is <EMAIL>
+Found 2 sensitive entities
+
+==================================================
+2. MULTI-COUNTRY SUPPORT
+==================================================
+US: John Smith, SSN: 123-45-6789, phone: (555) 123-4567
+     -> John Smith, SSN: <SSN>, phone: (<PHONE_US>
+
+AU: Jane Doe, TFN: 123 456 789, Medicare: 2234 5678 9 1
+     -> <PERSON_NAME>, TFN: <BSB> 789, Medicare: <POSTCODE_AU> <POSTCODE_AU> 9 1
+
+==================================================
+3. ADVANCED ML DETECTION
+==================================================
+Fast (Regex only):
+  Found 4 entities
+  Result: Patient John Doe (born <DOB_ISO>) was treated for diabetes...
+
+==================================================
+4. REDACTION STRATEGIES
+==================================================
+Replace with asterisks:
+  Redacted: Contact John Doe at <EMAIL> or call (<PHONE_US>
+
+Partial masking:
+  Redacted: Contact John Doe at ******************** or call (*************
+
+Realistic fake data:
+  Redacted: Contact John Doe at oenybdub@example.com or call ((482) 705-3473
+
+Consistent hashing:
+  Redacted: Contact John Doe at 55f537baf756 or call (bceb5476591e
+```
+
 ### Core Functionality (Recommended Install)
 Install: `pip install "zerophix[all]"`
 
