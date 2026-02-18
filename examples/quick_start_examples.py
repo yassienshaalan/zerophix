@@ -33,7 +33,7 @@ def example_1_basic_text_redaction():
     text = "Hi, I'm John Doe. My SSN is 123-45-6789 and email is john.doe@email.com"
     
     # Create basic US configuration
-    config = RedactionConfig(country="US")
+    config = RedactionConfig(country="US", masking_style="replace")
     pipeline = RedactionPipeline(config)
     
     # Redact the text
@@ -61,12 +61,12 @@ def example_2_multiple_countries():
     }
     
     for country, text in examples.items():
-        config = RedactionConfig(country=country)
+        config = RedactionConfig(country=country, masking_style="replace")
         pipeline = RedactionPipeline(config)
         result = pipeline.redact(text)
         
         print(f"{country}: {text}")
-        print(f"     → {result['text']}")
+        print(f"     -> {result['text']}")
         print()
 
 
@@ -96,6 +96,7 @@ def example_3_advanced_detection():
             config = RedactionConfig(
                 country="US",
                 detectors=detectors,
+                masking_style="replace",
                 confidence_threshold=0.8
             )
             pipeline = RedactionPipeline(config)
@@ -179,7 +180,7 @@ def example_5_file_processing():
             content = f.read()
         
         # Redact content
-        config = RedactionConfig(country="US")
+        config = RedactionConfig(country="US", masking_style="replace")
         pipeline = RedactionPipeline(config)
         result = pipeline.redact(content)
         
@@ -220,6 +221,7 @@ def example_6_custom_patterns():
     from zerophix.detectors.custom_detector import CustomEntityDetector
     
     custom_detector = CustomEntityDetector()
+    # Note: Custom detector should be initialized with config, not directly instantiated
     
     # Add custom patterns
     custom_detector.add_pattern("EMPLOYEE_ID", r"EMP-\d{6}")
@@ -231,7 +233,7 @@ def example_6_custom_patterns():
     config = RedactionConfig(
         country="US",
         detectors=["regex", "custom"],
-        custom_detector=custom_detector
+        masking_style="replace"
     )
     
     pipeline = RedactionPipeline(config)
@@ -263,7 +265,7 @@ def example_7_batch_processing():
     print(f"Processing {len(texts)} texts in batch...")
     
     # Process all texts
-    config = RedactionConfig(country="US")
+    config = RedactionConfig(country="US", masking_style="replace")
     pipeline = RedactionPipeline(config)
     
     results = []

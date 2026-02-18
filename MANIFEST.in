@@ -13,7 +13,8 @@ recursive-include configs *.yml *.yaml *.json
 # Include example files
 recursive-include examples *.py *.json *.txt *.csv
 
-# Include data files (but not sensitive test data)
+# Include policy and data files
+recursive-include src/zerophix/policies *.yml *.yaml
 recursive-include src/zerophix/data *.json *.txt *.yml
 
 # Exclude development and build artifacts

@@ -83,7 +83,6 @@ def example_detailed_scan():
         print(f"  Text: '{detection['text']}'")
         print(f"  Confidence: {detection['score']:.2f}")
         print(f"  Position: {detection['start']}-{detection['end']}")
-        print(f"  Context: ...{detection['context']}...")
         print()
 
 

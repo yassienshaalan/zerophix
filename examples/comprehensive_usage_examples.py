@@ -113,7 +113,12 @@ except ImportError:
     DOCUMENT_PROCESSORS_AVAILABLE = False
 
 # API components
-from zerophix.api.rest import app
+try:
+    from zerophix.api.rest import app
+    API_AVAILABLE = True
+except (ModuleNotFoundError, ImportError):
+    API_AVAILABLE = False
+    app = None
 # from zerophix.api.webhooks import WebhookManager
 
 
@@ -1010,7 +1015,12 @@ async def main():
         example_10_comprehensive_config()
         
         # Run asynchronous examples
-        await example_8_api_integration()
+        if API_AVAILABLE:
+            await example_8_api_integration()
+        else:
+            print("\nSkipping example_8_api_integration - fastapi not installed")
+            print("Install with: pip install zerophix[api]")
+        
         await example_9_async_processing()
         
         print_section("EXAMPLES COMPLETED SUCCESSFULLY")

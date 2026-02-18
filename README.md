@@ -1,4 +1,4 @@
-# ZeroPhix v0.1.16 - Enterprise PII/PSI/PHI Redaction
+# ZeroPhix v0.1.17 - Enterprise PII/PSI/PHI Redaction
 
 **Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
@@ -1162,6 +1162,13 @@ html_report = ReportGenerator.generate(result, format="html")
 zerophix scan --infile document.txt --format html --output report.html
 ```
 
+## Troubleshooting
+
+If entity detection returns 0 results when using the installed library:
+- **Solution**: Ensure policy YAML files are included in your installation
+- **Details**: See [DEBUGGING_ENTITY_DETECTION.md](DEBUGGING_ENTITY_DETECTION.md) for comprehensive troubleshooting
+- **Quick test**: `python test_installed_library.py`
+
 ## Examples
 
 All examples handle missing optional dependencies gracefully - if a feature isn't installed, the example will skip that section and continue.
@@ -1171,12 +1178,14 @@ Install: `pip install zerophix`
 
 | Example | Description |
 |---------|-------------|
+| [simple_redaction_example.py](examples/simple_redaction_example.py) | **START HERE** - Simplest possible example (5 lines) |
 | [quick_start_examples.py](examples/quick_start_examples.py) | Basic redaction, strategies, batch processing |
 | [scan_example.py](examples/scan_example.py) | Detection without redaction |
 | [australian_entities_examples.py](examples/australian_entities_examples.py) | Australian-specific PII detection |
 
 **Run:**
 ```bash
+python examples/simple_redaction_example.py
 python examples/quick_start_examples.py
 python examples/scan_example.py
 python examples/australian_entities_examples.py

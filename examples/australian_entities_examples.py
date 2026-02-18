@@ -413,14 +413,14 @@ def example_10_precision_comparison():
 def main():
     """Run all Australian examples"""
     print("""
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║          ZeroPhix Australian Entities - Complete Coverage           ║
-║                                                                      ║
-║  40+ Australian entity types with mathematical checksum validation  ║
-║  92%+ precision for Australian government identifiers               ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
+======================================================================
+                                                                      
+          ZeroPhix Australian Entities - Complete Coverage           
+                                                                      
+  40+ Australian entity types with mathematical checksum validation  
+  92%+ precision for Australian government identifiers               
+                                                                      
+======================================================================
     """)
     
     try:

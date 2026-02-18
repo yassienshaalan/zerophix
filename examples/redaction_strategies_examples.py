@@ -503,14 +503,14 @@ decrypted = enc_mgr.decrypt_text(encrypted)
 def main():
     """Run all examples"""
     print("""
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║          ZeroPhix Redaction Strategies - Complete Guide              ║
-║                                                                      ║
-║  This example demonstrates all 10+ redaction strategies and when    ║
-║  to use each one. Choose the right strategy for your use case!      ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
+======================================================================
+
+          ZeroPhix Redaction Strategies - Complete Guide
+
+  This example demonstrates all 10+ redaction strategies and when
+  to use each one. Choose the right strategy for your use case!
+
+======================================================================
     """)
     
     try:

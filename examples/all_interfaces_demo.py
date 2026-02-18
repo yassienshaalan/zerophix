@@ -20,7 +20,7 @@ print("=" * 80)
 
 config = RedactionConfig(
     country='US',
-    use_spacy=True,
+    use_spacy=False,
     use_gliner=False,  # Fast mode
     use_bert=False
 )

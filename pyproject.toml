@@ -85,5 +85,8 @@ all = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+zerophix = ["policies/*.yml", "data/*.json", "data/*.txt"]
+
 [tool.setuptools.dynamic]
 version = {attr = "zerophix.__version__.__version__"}

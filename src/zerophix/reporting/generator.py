@@ -73,7 +73,8 @@ class ReportGenerator:
                 lines.append(f"- **Text:** `{det['text']}`")
                 lines.append(f"- **Confidence:** {det['score']:.2f}")
                 lines.append(f"- **Position:** {det['start']}-{det['end']}")
-                lines.append(f"- **Context:** ...{det['context']}...")
+                if 'context' in det:
+                    lines.append(f"- **Context:** ...{det['context']}...")
                 lines.append("")
         else:
             lines.append("*No PII/PHI detected in the text.*")
@@ -134,7 +135,8 @@ class ReportGenerator:
                 html.append(f'<div class="detection-item"><strong>Text:</strong> <span class="text-highlight">{det["text"]}</span></div>')
                 html.append(f'<div class="detection-item"><strong>Confidence:</strong> {det["score"]:.2f}</div>')
                 html.append(f'<div class="detection-item"><strong>Position:</strong> {det["start"]}-{det["end"]}</div>')
-                html.append(f'<div class="detection-item"><strong>Context:</strong> <span class="context">...{det["context"]}...</span></div>')
+                if 'context' in det:
+                    html.append(f'<div class="detection-item"><strong>Context:</strong> <span class="context">...{det["context"]}...</span></div>')
                 html.append('</div>')
         else:
             html.append('<div class="no-pii">No PII/PHI detected in the text.</div>')
@@ -160,7 +162,7 @@ class ReportGenerator:
                 f"{det['score']:.2f}",
                 det['start'],
                 det['end'],
-                det['context']
+                det.get('context', '')
             ])
         
         return output.getvalue()
@@ -191,7 +193,8 @@ class ReportGenerator:
                 lines.append(f"  Text: {det['text']}")
                 lines.append(f"  Confidence: {det['score']:.2f}")
                 lines.append(f"  Position: {det['start']}-{det['end']}")
-                lines.append(f"  Context: ...{det['context']}...")
+                if 'context' in det:
+                    lines.append(f"  Context: ...{det['context']}...")
         else:
             lines.append("No PII/PHI detected in the text.")
         
