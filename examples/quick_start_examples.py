@@ -217,22 +217,20 @@ def example_6_custom_patterns():
     Salary information: $75,000 annually.
     """
     
-    # Create custom detector
-    from zerophix.detectors.custom_detector import CustomEntityDetector
+    # Define custom patterns as dictionary
+    # This is passed to the CustomEntityDetector via config
+    custom_patterns = {
+        "EMPLOYEE_ID": [r"EMP-\d{6}"],
+        "PROJECT_CODE": [r"PROJ-[A-Z]{3}-\d{4}"],
+        "INTERNAL_IP": [r"192\.168\.\d{1,3}\.\d{1,3}"],
+        "ACCESS_CODE": [r"AC-\d{6}"]
+    }
     
-    custom_detector = CustomEntityDetector()
-    # Note: Custom detector should be initialized with config, not directly instantiated
-    
-    # Add custom patterns
-    custom_detector.add_pattern("EMPLOYEE_ID", r"EMP-\d{6}")
-    custom_detector.add_pattern("PROJECT_CODE", r"PROJ-[A-Z]{3}-\d{4}")
-    custom_detector.add_pattern("INTERNAL_IP", r"192\.168\.\d{1,3}\.\d{1,3}")
-    custom_detector.add_pattern("ACCESS_CODE", r"AC-\d{6}")
-    
-    # Use custom detector
+    # Pass custom patterns to config
     config = RedactionConfig(
         country="US",
         detectors=["regex", "custom"],
+        custom_patterns=custom_patterns,
         masking_style="replace"
     )
     
