@@ -113,9 +113,6 @@ Insurance: INS-123456, SSN: 123-45-6789."""
 print(f"\n ORIGINAL TEXT:")
 print(f"   {text}\n")
 
-from zerophix.pipelines.redaction import RedactionPipeline
-from zerophix.config import RedactionConfig
-
 configs = [
     ("Regex Only", {"country": "US", "use_bert": False, "use_gliner": False}),
     ("Regex + BERT", {"country": "US", "use_bert": True, "use_gliner": False}),
@@ -158,10 +155,8 @@ for name, flags in configs:
         results_summary.append((name, len(spans)))
         print()
         
-    except (RuntimeError, ImportError) as e:
-        print(f"     {str(e)} (skipped)\n")
-        results_summary.append((name, 0))
-
+    except RuntimeError as e:
+        print(f"     {str(e)}\n")
 
 print(" SUMMARY")
 print("=" * 70)
@@ -204,18 +199,75 @@ Insurance: INS-123456, SSN: 01a54629efb9.
        PHONE_US                  → 555) 123-4567
        SSN                       → 123-45-6789
 
-     BERT detector requested but not installed. Install zerophix[bert]. (skipped)
-     GLiNER not installed. Install with: pip install gliner (skipped)
-     BERT detector requested but not installed. Install zerophix[bert]. (skipped)
+BERT model loaded from cache: dslim/bert-base-NER
+──────────────────────────────────────────────────────────────────────
+ Regex + BERT
+──────────────────────────────────────────────────────────────────────
+   Entities Found: 5
+
+    REDACTED TEXT:
+   Patient 6cea57c2fb6c (born 68b5b32e5ebc) was treated for diabetes.
+Contact: 6b0b4806b1e5, emergency: (bceb5476591e.
+Insurance: INS-123456, SSN: 01a54629efb9.
+
+    DETECTED ENTITIES:
+       PERSON_NAME               → John Doe
+       DOB_ISO                   → 1985-03-15
+       EMAIL                     → john.doe@hospital.com
+       PHONE_US                  → 555) 123-4567
+       SSN                       → 123-45-6789
+
+GLiNER model loaded from cache: urchade/gliner_large-v2.1
+──────────────────────────────────────────────────────────────────────
+ Regex + GLiNER
+──────────────────────────────────────────────────────────────────────
+   Entities Found: 8
+
+    REDACTED TEXT:
+   Patient 6cea57c2fb6c (born 68b5b32e5ebc) was 6389dc45d052 for 6a5d28d69b8b.
+Contact: 6b0b4806b1e5, emergency: (bceb5476591e.
+Insurance: INS-123456, f96e4bd5abd0: 01a54629efb9.
+
+    DETECTED ENTITIES:
+       PATIENT_NAME              → John Doe
+       DOB_ISO                   → 1985-03-15
+       TREATMENT                 → treated
+       MEDICAL_CONDITION         → diabetes
+       EMAIL                     → john.doe@hospital.com
+       PHONE_US                  → 555) 123-4567
+       SOCIAL_SECURITY_NUMBER    → SSN
+       SSN                       → 123-45-6789
+
+BERT model loaded from cache: dslim/bert-base-NER
+GLiNER model loaded from cache: urchade/gliner_large-v2.1
+──────────────────────────────────────────────────────────────────────
+ Ensemble (BERT+GLiNER)
+──────────────────────────────────────────────────────────────────────
+   Entities Found: 8
+
+    REDACTED TEXT:
+   Patient 6cea57c2fb6c (born 68b5b32e5ebc) was 6389dc45d052 for 6a5d28d69b8b.
+Contact: 6b0b4806b1e5, emergency: (bceb5476591e.
+Insurance: INS-123456, f96e4bd5abd0: 01a54629efb9.
+
+    DETECTED ENTITIES:
+       PERSON_NAME               → John Doe
+       DOB_ISO                   → 1985-03-15
+       TREATMENT                 → treated
+       MEDICAL_CONDITION         → diabetes
+       EMAIL                     → john.doe@hospital.com
+       PHONE_US                  → 555) 123-4567
+       SOCIAL_SECURITY_NUMBER    → SSN
+       SSN                       → 123-45-6789
 
  SUMMARY
 ======================================================================
 Method                    PII Found    Advantage
 ----------------------------------------------------------------------
 Regex Only                4            Fast baseline, catches structured patterns
-Regex + BERT              0            Best coverage via ensemble voting
-Regex + GLiNER            0            Best coverage via ensemble voting
-Ensemble (BERT+GLiNER)    0            Best coverage via ensemble voting
+Regex + BERT              5            Best coverage via ensemble voting
+Regex + GLiNER            8            Best coverage via ensemble voting
+Ensemble (BERT+GLiNER)    8            Best coverage via ensemble voting
 ```
 
 ### Advanced PII Scanning with Reporting
@@ -247,7 +299,7 @@ for entity in spans:
     print(f"{label:<20} {value:<25} {pos:<15}")
 
 # Example 2: Risk Assessment Report
-print("\n\nRISK ASSESSMENT REPORT")
+print("RISK ASSESSMENT REPORT")
 
 texts = {
     "low_risk": "Product ABC costs $49.99",
@@ -279,7 +331,8 @@ for risk, text in texts.items():
     print(f"  Redacted: {result['text']}")
 
 # Example 3: Statistical Report
-print("\n\nSTATISTICAL REPORT")
+
+print("STATISTICAL REPORT")
 
 texts = [
     "John Doe, SSN: 123-45-6789",
@@ -289,7 +342,7 @@ texts = [
     "Card: 4532-1234-5678-9999"
 ]
 
-config = RedactionConfig(country="US", use_bert=False, use_gliner=False)
+config = RedactionConfig(country="US", use_bert=True, use_gliner=True)
 pipeline = RedactionPipeline(config)
 
 stats = {"total_texts": len(texts), "total_entities": 0, "by_type": {}}
@@ -305,14 +358,14 @@ print(f"\nDocuments Scanned: {stats['total_texts']}")
 print(f"Total PII Found: {stats['total_entities']}")
 print(f"\nBreakdown by Type:")
 for entity_type, count in sorted(stats['by_type'].items()):
-    pct = (count / stats['total_entities']) * 100 if stats['total_entities'] > 0 else 0
+    pct = (count / stats['total_entities']) * 100
     print(f"  {entity_type:<20} {count:>3} ({pct:>5.1f}%)")
 
 # Example 4: JSON Export
-print("\n\nJSON EXPORT")
+print("JSON EXPORT")
 
 text = "Dr. Jane Smith: jane@clinic.com, (555) 987-6543, SSN: 456-78-9012"
-config = RedactionConfig(country="US", use_bert=False)
+config = RedactionConfig(country="US", use_bert=True)
 pipeline = RedactionPipeline(config)
 
 result = pipeline.redact(text)
@@ -339,12 +392,10 @@ DETAILED DETECTION REPORT
 
 Text: SSN: 123-45-6789, Email: john@example.com, Phone: (555) 123-4567
 
-Entity Type          Value                     Position
-SSN                  123-45-6789               [5:16]
-EMAIL                john@example.com          [25:41]
-PHONE_US             555) 123-4567             [51:64]
-
-
+Entity Type          Value                     Position       
+SSN                  123-45-6789               [5:16]         
+EMAIL                john@example.com          [25:41]        
+PHONE_US             555) 123-4567             [51:64]        
 RISK ASSESSMENT REPORT
 
 [LOW] 0 entities found
@@ -358,26 +409,36 @@ RISK ASSESSMENT REPORT
 [HIGH] 3 entities found
   Original: SSN: 123-45-6789, Card: 4532-1234-5678-9999, (555) 123-4567
   Redacted: SSN: 01a54629efb9, Card: 77b9ec3e5b03, (bceb5476591e
-
-
 STATISTICAL REPORT
+BERT model loaded from cache: dslim/bert-base-NER
+GLiNER model loaded from cache: urchade/gliner_large-v2.1
 
 Documents Scanned: 5
-Total PII Found: 4
+Total PII Found: 9
 
 Breakdown by Type:
-  CREDIT_CARD            1 ( 25.0%)
-  EMAIL                  1 ( 25.0%)
-  PHONE_US               1 ( 25.0%)
-  SSN                    1 ( 25.0%)
-
-
+  CREDIT_CARD            1 ( 11.1%)
+  EMAIL                  2 ( 22.2%)
+  ORGANIZATION           1 ( 11.1%)
+  PERSON_NAME            1 ( 11.1%)
+  PHONE_US               1 ( 11.1%)
+  SSN                    1 ( 11.1%)
+  TRANSACTION_AMOUNT     2 ( 22.2%)
 JSON EXPORT
+BERT model loaded from cache: dslim/bert-base-NER
 {
   "original_text": "Dr. Jane Smith: jane@clinic.com, (555) 987-6543, SSN: 456-78-9012",
-  "redacted_text": "Dr. Jane Smith: d87eba4c9a30, (d8f6c45fb5e3, SSN: 34450d3629c8",
-  "entities_found": 3,
+  "redacted_text": "Dr. a2dd3acadb1c: d87eba4c9a30, (d8f6c45fb5e3, SSN: 34450d3629c8",
+  "entities_found": 4,
   "entities": [
+    {
+      "type": "PERSON_NAME",
+      "value": "Jane Smith",
+      "position": [
+        4,
+        14
+      ]
+    },
     {
       "type": "EMAIL",
       "value": "jane@clinic.com",
