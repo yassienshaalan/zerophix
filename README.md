@@ -1,4 +1,4 @@
-# ZeroPhix v0.1.17 - Enterprise PII/PSI/PHI Redaction
+# ZeroPhix v0.1.19 - Enterprise PII/PSI/PHI Redaction
 
 **Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
@@ -98,36 +98,312 @@ pypdf>=3.0.0
 zerophix==0.1.15
 ```
 
-In your notebook:
-```python
-from zerophix.pipelines.redaction import RedactionPipeline
-from zerophix.config import RedactionConfig
-
-config = RedactionConfig(country="US", detectors=["regex"])
-pipeline = RedactionPipeline(config)
-
-text = "John Doe, SSN: 123-45-6789, Email: john@example.com"
-result = pipeline.redact(text)
-print(result['text']) 
-```
-
 **Note:** Don't install scipy/numpy/pandas separately on Databricks - use cluster's pre-compiled versions.
 
-### 30-Second Demo
+### Detection Methods Comparison
 
 ```python
+"""Detection Methods Comparison - With Per-Method Redacted Text"""
+print("ZEROPHIX: DETECTION METHODS COMPARISON")
+
+text = """Patient John Doe (born 1985-03-15) was treated for diabetes.
+Contact: john.doe@hospital.com, emergency: (555) 123-4567.
+Insurance: INS-123456, SSN: 123-45-6789."""
+
+print(f"\n ORIGINAL TEXT:")
+print(f"   {text}\n")
+
 from zerophix.pipelines.redaction import RedactionPipeline
 from zerophix.config import RedactionConfig
 
-# Configure and redact
+configs = [
+    ("Regex Only", {"country": "US", "use_bert": False, "use_gliner": False}),
+    ("Regex + BERT", {"country": "US", "use_bert": True, "use_gliner": False}),
+    ("Regex + GLiNER", {"country": "US", "use_bert": False, "use_gliner": True}),
+    ("Ensemble (BERT+GLiNER)", {"country": "US", "use_bert": True, "use_gliner": True, "enable_ensemble_voting": True}),
+]
+
+results_summary = []
+
+for name, flags in configs:
+    try:
+        config = RedactionConfig(**flags)
+        pipeline = RedactionPipeline(config)
+        result = pipeline.redact(text)
+        
+        spans = result.get('spans', [])
+        redacted_text = result.get('text', text)
+        
+        print("─" * 70)
+        print(f" {name}")
+        print("─" * 70)
+        print(f"   Entities Found: {len(spans)}")
+        print(f"\n    REDACTED TEXT:")
+        print(f"   {redacted_text}")
+        
+        if spans:
+            print(f"\n    DETECTED ENTITIES:")
+            for span in spans:
+                label = span.get('label', 'UNKNOWN')
+                start = span.get('start')
+                end = span.get('end')
+                if start is not None and end is not None:
+                    value = text[start:end]
+                else:
+                    value = span.get('value', '???')
+                print(f"       {label:<25} → {value}")
+        else:
+            print(f"\n     No entities detected")
+        
+        results_summary.append((name, len(spans)))
+        print()
+        
+    except (RuntimeError, ImportError) as e:
+        print(f"     {str(e)} (skipped)\n")
+        results_summary.append((name, 0))
+
+
+print(" SUMMARY")
+print("=" * 70)
+print(f"{'Method':<25} {'PII Found':<12} {'Advantage'}")
+print("-" * 70)
+for name, count in results_summary:
+    if "Regex Only" in name:
+        advantage = "Fast baseline, catches structured patterns"
+    elif "BERT" in name and "+" not in name:
+        advantage = "Adds PERSON_NAME detection (context-aware)"
+    elif "GLiNER" in name and "+" not in name:
+        advantage = "Detects medical/contextual entities"
+    else:
+        advantage = "Best coverage via ensemble voting"
+    print(f"{name:<25} {count:<12} {advantage}")
+```
+
+**Output:**
+```
+ZEROPHIX: DETECTION METHODS COMPARISON
+
+ ORIGINAL TEXT:
+   Patient John Doe (born 1985-03-15) was treated for diabetes.
+Contact: john.doe@hospital.com, emergency: (555) 123-4567.
+Insurance: INS-123456, SSN: 123-45-6789.
+
+──────────────────────────────────────────────────────────────────────
+ Regex Only
+──────────────────────────────────────────────────────────────────────
+   Entities Found: 4
+
+    REDACTED TEXT:
+   Patient John Doe (born 68b5b32e5ebc) was treated for diabetes.
+Contact: 6b0b4806b1e5, emergency: (bceb5476591e.
+Insurance: INS-123456, SSN: 01a54629efb9.
+
+    DETECTED ENTITIES:
+       DOB_ISO                   → 1985-03-15
+       EMAIL                     → john.doe@hospital.com
+       PHONE_US                  → 555) 123-4567
+       SSN                       → 123-45-6789
+
+     BERT detector requested but not installed. Install zerophix[bert]. (skipped)
+     GLiNER not installed. Install with: pip install gliner (skipped)
+     BERT detector requested but not installed. Install zerophix[bert]. (skipped)
+
+ SUMMARY
+======================================================================
+Method                    PII Found    Advantage
+----------------------------------------------------------------------
+Regex Only                4            Fast baseline, catches structured patterns
+Regex + BERT              0            Best coverage via ensemble voting
+Regex + GLiNER            0            Best coverage via ensemble voting
+Ensemble (BERT+GLiNER)    0            Best coverage via ensemble voting
+```
+
+### Advanced PII Scanning with Reporting
+
+```python
+"""Advanced PII Scanning with Reporting"""
+from zerophix.config import RedactionConfig
+from zerophix.pipelines.redaction import RedactionPipeline
+import json
+
+# Example 1: Detailed Report
+print("DETAILED DETECTION REPORT")
+
+text = "SSN: 123-45-6789, Email: john@example.com, Phone: (555) 123-4567"
+config = RedactionConfig(country="US", include_confidence=True)
+pipeline = RedactionPipeline(config)
+
+result = pipeline.redact(text)
+spans = result.get('spans', [])
+
+print(f"\nText: {text}\n")
+print(f"{'Entity Type':<20} {'Value':<25} {'Position':<15}")
+
+for entity in spans:
+    label = entity['label']
+    start, end = entity['start'], entity['end']
+    value = text[start:end]
+    pos = f"[{start}:{end}]"
+    print(f"{label:<20} {value:<25} {pos:<15}")
+
+# Example 2: Risk Assessment Report
+print("\n\nRISK ASSESSMENT REPORT")
+
+texts = {
+    "low_risk": "Product ABC costs $49.99",
+    "medium_risk": "Contact: john@example.com",
+    "high_risk": "SSN: 123-45-6789, Card: 4532-1234-5678-9999, (555) 123-4567"
+}
+
 config = RedactionConfig(country="US")
 pipeline = RedactionPipeline(config)
 
-text = "John Doe, SSN: 123-45-6789, Email: john@example.com"
-result = pipeline.redact(text)
+risk_levels = {"low_risk": 0, "medium_risk": 0, "high_risk": 0}
 
-print(result['text'])
-# Output: [PERSON], SSN: XXX-XX-6789, Email: [EMAIL]
+for risk, text in texts.items():
+    result = pipeline.redact(text)
+    count = len(result.get('spans', []))
+    
+    if count == 0:
+        level = "LOW"
+        risk_levels["low_risk"] += 1
+    elif count <= 2:
+        level = "MEDIUM"
+        risk_levels["medium_risk"] += 1
+    else:
+        level = "HIGH"
+        risk_levels["high_risk"] += 1
+    
+    print(f"\n[{level}] {count} entities found")
+    print(f"  Original: {text}")
+    print(f"  Redacted: {result['text']}")
+
+# Example 3: Statistical Report
+print("\n\nSTATISTICAL REPORT")
+
+texts = [
+    "John Doe, SSN: 123-45-6789",
+    "Email: jane@example.com",
+    "Phone: (555) 123-4567",
+    "Product: XYZ, Price: $99",
+    "Card: 4532-1234-5678-9999"
+]
+
+config = RedactionConfig(country="US", use_bert=False, use_gliner=False)
+pipeline = RedactionPipeline(config)
+
+stats = {"total_texts": len(texts), "total_entities": 0, "by_type": {}}
+
+for text in texts:
+    result = pipeline.redact(text)
+    for entity in result.get('spans', []):
+        label = entity['label']
+        stats["total_entities"] += 1
+        stats["by_type"][label] = stats["by_type"].get(label, 0) + 1
+
+print(f"\nDocuments Scanned: {stats['total_texts']}")
+print(f"Total PII Found: {stats['total_entities']}")
+print(f"\nBreakdown by Type:")
+for entity_type, count in sorted(stats['by_type'].items()):
+    pct = (count / stats['total_entities']) * 100 if stats['total_entities'] > 0 else 0
+    print(f"  {entity_type:<20} {count:>3} ({pct:>5.1f}%)")
+
+# Example 4: JSON Export
+print("\n\nJSON EXPORT")
+
+text = "Dr. Jane Smith: jane@clinic.com, (555) 987-6543, SSN: 456-78-9012"
+config = RedactionConfig(country="US", use_bert=False)
+pipeline = RedactionPipeline(config)
+
+result = pipeline.redact(text)
+report = {
+    "original_text": text,
+    "redacted_text": result['text'],
+    "entities_found": len(result.get('spans', [])),
+    "entities": [
+        {
+            "type": e['label'],
+            "value": text[e['start']:e['end']],
+            "position": (e['start'], e['end'])
+        }
+        for e in result.get('spans', [])
+    ]
+}
+
+print(json.dumps(report, indent=2))
+```
+
+**Output:**
+```
+DETAILED DETECTION REPORT
+
+Text: SSN: 123-45-6789, Email: john@example.com, Phone: (555) 123-4567
+
+Entity Type          Value                     Position
+SSN                  123-45-6789               [5:16]
+EMAIL                john@example.com          [25:41]
+PHONE_US             555) 123-4567             [51:64]
+
+
+RISK ASSESSMENT REPORT
+
+[LOW] 0 entities found
+  Original: Product ABC costs $49.99
+  Redacted: Product ABC costs $49.99
+
+[MEDIUM] 1 entities found
+  Original: Contact: john@example.com
+  Redacted: Contact: 855f96e983f1
+
+[HIGH] 3 entities found
+  Original: SSN: 123-45-6789, Card: 4532-1234-5678-9999, (555) 123-4567
+  Redacted: SSN: 01a54629efb9, Card: 77b9ec3e5b03, (bceb5476591e
+
+
+STATISTICAL REPORT
+
+Documents Scanned: 5
+Total PII Found: 4
+
+Breakdown by Type:
+  CREDIT_CARD            1 ( 25.0%)
+  EMAIL                  1 ( 25.0%)
+  PHONE_US               1 ( 25.0%)
+  SSN                    1 ( 25.0%)
+
+
+JSON EXPORT
+{
+  "original_text": "Dr. Jane Smith: jane@clinic.com, (555) 987-6543, SSN: 456-78-9012",
+  "redacted_text": "Dr. Jane Smith: d87eba4c9a30, (d8f6c45fb5e3, SSN: 34450d3629c8",
+  "entities_found": 3,
+  "entities": [
+    {
+      "type": "EMAIL",
+      "value": "jane@clinic.com",
+      "position": [
+        16,
+        31
+      ]
+    },
+    {
+      "type": "PHONE_US",
+      "value": "555) 987-6543",
+      "position": [
+        34,
+        47
+      ]
+    },
+    {
+      "type": "SSN",
+      "value": "456-78-9012",
+      "position": [
+        54,
+        65
+      ]
+    }
+  ]
+}
 ```
 
 ### Supported Input Types
