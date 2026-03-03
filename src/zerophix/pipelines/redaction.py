@@ -16,6 +16,7 @@ SpacyDetector = None
 BertDetector = None
 GLiNERDetector = None
 OpenMedDetector = None
+DeBERTaDetector = None
 
 try:
     from ..detectors.spacy_detector import SpacyDetector
@@ -34,6 +35,11 @@ except Exception:
 
 try:
     from ..detectors.openmed_detector import OpenMedDetector
+except Exception:
+    pass
+
+try:
+    from ..detectors.deberta_detector import DeBERTaDetector
 except Exception:
     pass
 
@@ -66,6 +72,14 @@ class RedactionPipeline:
             self.components.append(BertDetector(confidence_threshold=cfg.thresholds.get('bert_conf', 0.9)))
         elif cfg.use_bert and BertDetector is None:
             raise RuntimeError("BERT detector requested but not installed. Install zerophix[bert].")
+
+        # 3b. DeBERTa-v3 Detector (higher accuracy alternative to BERT)
+        if cfg.use_deberta and DeBERTaDetector is not None:
+            self.components.append(DeBERTaDetector(
+                confidence_threshold=cfg.thresholds.get('deberta_conf', 0.85)
+            ))
+        elif cfg.use_deberta and DeBERTaDetector is None:
+            raise RuntimeError("DeBERTa detector requested but not installed. Install zerophix[bert] (same deps).")
 
         # 4. GLiNER Detector
         if (is_auto or cfg.use_gliner) and GLiNERDetector is not None:
@@ -355,6 +369,7 @@ class RedactionPipeline:
             'StatisticalDetector': 2,
             'GLiNERDetector': 3,
             'BertDetector': 4,
+            'DeBERTaDetector': 4,
             'OpenMedDetector': 5,
         }
         
