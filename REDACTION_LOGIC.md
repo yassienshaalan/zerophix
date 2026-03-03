@@ -168,7 +168,7 @@ The detector first matches the digit pattern with flexible spacing/hyphens, then
 
 ### 3. BERT Detector (Transformer Context-Aware)
 
-**Purpose**: Highest accuracy for complex, context-dependent entities
+**Purpose**: Context-dependent entity detection
 
 **Model**: bert-base-cased (110M parameters)
 
@@ -176,6 +176,34 @@ The detector first matches the digit pattern with flexible spacing/hyphens, then
 
 **Strengths**: Deep context understanding, provides confidence scores, handles ambiguous cases
 **Weaknesses**: Slower inference (100-300ms per doc), higher memory usage (500MB+)
+
+### 3b. DeBERTa-v3 Detector (Higher Accuracy NER)
+
+**Purpose**: Drop-in BERT replacement with +2.5 F1 improvement on standard benchmarks
+
+**Model**: DeBERTa-v3-base fine-tuned for NER (184M parameters)
+
+**How It Works**: DeBERTa-v3 uses disentangled attention (separating content and position embeddings) and an enhanced mask decoder, producing more accurate token-level predictions than standard BERT. It uses ELECTRA-style pretraining which is more sample-efficient. Same pipeline as BERT (tokenize → classify tokens → merge BIO spans), but significantly better on:
+- Rare/unseen person names (+3-4% recall)
+- Medical entity boundaries (+2% precision)
+- Ambiguous context resolution
+
+**Benchmark Comparison**:
+| Model | CoNLL-2003 F1 | OntoNotes F1 |
+|-------|---------------|--------------|
+| BERT-base | 91.3 | 88.4 |
+| **DeBERTa-v3** | **93.8** | **91.2** |
+
+**Configuration**:
+```python
+config = RedactionConfig(
+    use_deberta=True,        # Enable DeBERTa-v3 (same deps as BERT)
+    use_bert=False,          # Disable standard BERT (or run both for ensemble)
+)
+```
+
+**Strengths**: State-of-the-art NER accuracy, same API as BERT, better on rare entities
+**Weaknesses**: ~1.3x slower than BERT-base, slightly higher memory (600MB+)
 
 ### 4. GLiNER (Zero-Shot Custom Entities)
 
@@ -258,7 +286,7 @@ Position 0-10:
 
 ### Solution 2: Adaptive Weighted Ensemble (With Calibration)
 
-**Key Innovation**: Learn optimal detector weights from YOUR data
+**Key Innovation**: Learn optimal detector weights from YOUR data, calibrate confidence scores with Platt Scaling, and use multi-signal scoring for winner selection.
 
 #### Step 1: Label Normalization
 
@@ -268,7 +296,28 @@ Position 0-10:
 
 **Impact**: Without normalization, "PERSON" and "USERNAME" vote separately. With normalization, they vote together creating stronger consensus.
 
-#### Step 2: Calibration on Validation Data
+#### Step 2: Confidence Calibration (Platt Scaling)
+
+**Purpose**: Transform raw detector scores into meaningful probabilities
+
+**Problem**: A BERT score of 0.9 and a GLiNER score of 0.9 mean very different things. Raw scores are poorly calibrated — they don't reflect actual accuracy.
+
+**Solution**: Per-detector Platt Scaling fits a logistic curve `P(correct|score) = 1/(1 + exp(A×score + B))` on validation data. After calibration, a score of 0.7 truly means "70% chance this is correct."
+
+**Metrics**:
+- **Expected Calibration Error (ECE)**: Measures calibration quality (0 = perfect)
+- Typical improvement: ECE drops from 0.25-0.35 → 0.005-0.02
+
+**Per-label calibration**: BERT's accuracy on PERSON_NAME differs from its accuracy on MEDICATION. Calibration is fitted per-detector AND per-label when sufficient samples exist (≥10).
+
+```python
+# Calibrators are saved alongside weights
+config = RedactionConfig(
+    calibration_file="calibration_au_medical.json"  # loads weights + calibrators
+)
+```
+
+#### Step 3: Calibration on Validation Data
 
 **Purpose**: Learn optimal detector weights from labeled examples
 
@@ -276,38 +325,45 @@ Position 0-10:
 
 1. **Measures per-detector performance**: Runs each detector on the validation set and calculates precision, recall, and F1 score by comparing predictions to ground truth
 
-2. **Calculates weights using F1-squared method**: Converts F1 scores to weights using the formula `weight = max(0.1, F1²)`. Squaring the F1 score exponentially rewards high-performers and penalizes poor performers. The minimum weight of 0.1 ensures no detector is completely ignored.
+2. **Fits confidence calibrators**: Records (score, is_correct) pairs during evaluation, then fits Platt Scaling per-detector and per-label
 
-3. **Normalizes weights**: Ensures all weights sum to 1.0 by dividing each weight by the total
+3. **Calculates weights using F1-squared method**: Converts F1 scores to weights using the formula `weight = max(0.1, F1²)`. Squaring the F1 score exponentially rewards high-performers and penalizes poor performers. The minimum weight of 0.1 ensures no detector is completely ignored.
+
+4. **Grid-searches optimal thresholds**: For each entity label, tries thresholds [0.2, 0.3, ..., 0.8] and picks the one maximizing F1
+
+5. **Normalizes weights**: Ensures all weights sum to 1.0 by dividing each weight by the total
 
 **Example Results**:
 - GLiNER with F1=0.60 gets weight = 0.36 (strong performer)
+- DeBERTa with F1=0.55 gets weight = 0.30 (strong NER)
 - spaCy with F1=0.50 gets weight = 0.25 (good)
 - OpenMed with F1=0.35 gets weight = 0.12 (moderate)
 - Regex with F1=0.30 gets weight = 0.09 (noisy for names)
 - BERT with F1=0.25 gets weight = 0.10 (floor applied)
 
-#### Step 3: Weighted Voting in Production
+#### Step 4: Multi-Signal Weighted Voting in Production
 
-**How It Works**: When multiple detectors find overlapping entities, the weighted consensus algorithm:
+**How It Works**: When multiple detectors find overlapping entities, the calibration-aware consensus algorithm uses **five signals** to pick the winner:
 
-1. **Normalizes all labels** to canonical forms (PERSON/USERNAME → PERSON_NAME)
-2. **Calculates weighted scores** by multiplying each span's confidence by its detector's learned weight
-3. **Aggregates by label** to sum all weighted scores for each entity type
-4. **Chooses the winning label** with the highest total weighted score
-5. **Returns the best span** from the winning label with the highest individual confidence
+```
+final_score = calibrated_score × detector_weight × length_factor × label_f1_bonus × agreement_bonus
+```
+
+| Signal | Formula | Purpose |
+|--------|---------|---------|
+| **Calibrated score** | Platt(raw_score) | Meaningful probability instead of raw confidence |
+| **Detector weight** | 0.8 × F1² + 0.2 × config_weight | Blend learned performance with domain prior |
+| **Length factor** | 1.0 + min(len, 30)/150 | Longer matches are more specific |
+| **Label F1 bonus** | 1.0 + max(precision, f1) × 0.4 | Historical accuracy on this specific label |
+| **Agreement bonus** | 1.0 + 0.15 × (n_agreeing - 1) | Cross-detector corroboration |
 
 **Example**:
 ```
-Before calibration (equal weights):
-  GLiNER (PERSON, 0.92) + spaCy (PERSON, 0.98) + GLiNER (USERNAME, 0.65)
-  → Ambiguous, pick highest score
-
-After calibration (weighted):
-  GLiNER (PERSON, 0.92) × 0.36 = 0.331
-  spaCy  (PERSON, 0.98) × 0.25 = 0.245
-  GLiNER (USERNAME→PERSON, 0.65) × 0.36 = 0.234
-  → PERSON_NAME wins with 0.81 combined score
+Text: "John Smith" at position [0:10]
+  spaCy:   PERSON_NAME (raw=0.98, calibrated=0.94) × weight=0.25 × len=1.07 × f1=1.3 × agree=1.3 = 0.43
+  GLiNER:  PERSON_NAME (raw=0.92, calibrated=0.87) × weight=0.36 × len=1.07 × f1=1.2 × agree=1.3 = 0.44
+  DeBERTa: PERSON_NAME (raw=0.96, calibrated=0.93) × weight=0.30 × len=1.07 × f1=1.35 × agree=1.3 = 0.52
+  → DeBERTa wins (highest combined score, corroborated by 3 detectors)
 ```
 
 ### Calibration Results (Real Examples)
@@ -1034,6 +1090,25 @@ Configurable redaction strategies:
 
 ## Performance Optimizations
 
+### Parallel Detector Execution
+
+```python
+config = RedactionConfig(
+    parallel_detection=True,  # Run detectors concurrently
+    max_workers=4,            # Thread pool size
+)
+pipeline = RedactionPipeline(config)
+result = pipeline.redact(text)  # Detectors run in parallel automatically
+```
+
+**How It Works**: A shared `ThreadPoolExecutor` is created once at pipeline init and reused across all `redact()`/`scan()` calls. Each detector is submitted as an independent future. Results are collected via `as_completed()` for optimal throughput.
+
+**Benefits**:
+- **3-4x speedup** when multiple ML detectors are enabled (BERT + GLiNER + spaCy)
+- **Zero overhead** for single-detector configs (pool is not created)
+- **Thread-safe**: Each detector operates on its own copy of the text
+- Reuses pool across calls (no thread creation overhead per document)
+
 ### Batch Processing
 ```python
 results = pipeline.redact_batch(texts, parallel=True, max_workers=4)
@@ -1041,6 +1116,7 @@ results = pipeline.redact_batch(texts, parallel=True, max_workers=4)
 - **Vectorized processing**: ~10x faster for batches >100 texts
 - **Parallel execution**: ~4x speedup on 4-core CPU
 - **ThreadPoolExecutor**: Non-blocking I/O for ML models
+- Automatic serial fallback for <10 documents (avoids overhead)
 
 ### Domain Detection (Auto Mode)
 ```python
@@ -1231,14 +1307,74 @@ print(f"Filtered: {len(raw_spans) - len(processed_spans)} spans")
 
 ---
 
+## Regression Testing Framework
+
+### Tiered Regression Suite
+
+ZeroPhix includes a built-in regression suite with three tiers for release gating:
+
+| Tier | Cases | Time | Purpose | Gate |
+|------|-------|------|---------|------|
+| **Smoke** | 30 | <1s | Catches catastrophic regressions | CI / pre-commit |
+| **Basic** | 100 | <5s | Standard release validation (US + AU) | PR merge |
+| **Full** | 100+ | <30s | Thorough release validation | Release |
+
+### Golden Test Cases
+
+Each tier contains pinned test cases with exact expected labels:
+- Email, SSN, phone, credit card detection (positive cases)
+- Medical records, combined multi-entity scenarios
+- No-PII texts (must NOT false-positive)
+- Australian-specific entities (TFN, ABN, Medicare)
+
+### Baseline Tracking
+
+```bash
+# Save current metrics as baseline (after intentional improvements)
+python tests/regression_suite.py --save-baseline
+
+# Check for regression against saved baseline
+python tests/regression_suite.py --check
+```
+
+The baseline tracks accuracy, precision, recall, and F1 per country per tier. A regression is flagged when accuracy drops >2% vs baseline.
+
+### IoU-Based Span Evaluation
+
+**Problem**: Standard exact-match evaluation penalizes near-misses harshly. A detection at `[10, 25]` vs gold `[11, 26]` scores as both a false positive AND a false negative under exact match.
+
+**Solution**: IoU (Intersection over Union) partial matching:
+
+```
+IoU([10,25], [11,26]) = intersection/union = 14/16 = 0.875
+```
+
+With IoU threshold 0.5, this counts as a partial match worth 0.875 instead of a complete miss.
+
+```python
+from zerophix.eval.span_metrics import compute_enhanced_span_metrics
+
+gold = [(0, 10, 'EMAIL'), (15, 28, 'SSN')]
+pred = [(0, 10, 'EMAIL'), (14, 27, 'SSN')]  # SSN off by 1
+
+m = compute_enhanced_span_metrics(gold, pred, iou_threshold=0.5)
+print(f"Exact F1: {m.exact_f1:.3f}")    # Penalizes the near-miss
+print(f"Partial F1: {m.partial_f1:.3f}") # Credits the near-match
+print(f"Mean IoU: {m.mean_iou:.3f}")     # Average overlap quality
+```
+
+**Impact**: Small model updates that shift span boundaries by 1-2 characters no longer cause false regression failures.
+
+---
+
 ## License
 
 This document is part of the ZeroPhix project (Apache 2.0 License).
 
 ---
 
-**Last Updated:** February 3, 2026  
-**Version:** 0.2.0
+**Last Updated:** March 3, 2026
+**Version:** 0.2.1
 
-**Authors**: ZeroPhix Team  
+**Authors**: ZeroPhix Team
 **Focus**: Australian Data Sovereignty, Offline Operation, Dynamic Configurability

@@ -22,6 +22,7 @@ class RedactionConfig(BaseModel):
     use_bert: bool = Field(default=False, description="Enable BERT-based NER detector")
     use_gliner: bool = Field(default=False, description="Enable GLiNER zero-shot detector")
     use_statistical: bool = Field(default=False, description="Enable statistical pattern detector")
+    use_deberta: bool = Field(default=False, description="Enable DeBERTa-v3 NER detector (higher accuracy than BERT)")
     use_contextual: bool = Field(default=False, description="Use contextual enhancement for ML detectors")
     
     # Advanced Accuracy Features
@@ -31,6 +32,7 @@ class RedactionConfig(BaseModel):
             "regex": 2.0,      # High precision
             "custom": 2.0,     # User defined
             "gliner": 1.8,     # High accuracy zero-shot
+            "deberta": 1.6,    # DeBERTa-v3 (better than BERT)
             "openmed": 1.5,    # Specialized
             "bert": 1.2,       # General DL
             "spacy": 1.0,      # General ML
@@ -52,6 +54,10 @@ class RedactionConfig(BaseModel):
     allow_list: List[str] = Field(default_factory=list, description="List of terms to never redact")
     allow_list_file: Optional[str] = Field(default=None, description="Path to file containing allow-list terms")
 
+    # Parallel processing
+    parallel_detection: bool = Field(default=False, description="Run detectors in parallel via shared thread pool")
+    max_workers: int = Field(default=4, description="Max threads for parallel detector execution")
+
     # Model specifications
     spacy_model: str = Field(default="en_core_web_sm", description="spaCy model name")
     bert_model: str = Field(default="dslim/bert-base-NER", description="BERT model for NER")
@@ -66,7 +72,8 @@ class RedactionConfig(BaseModel):
             "spacy_conf": 0.80,
             "statistical_conf": 0.70,
             "custom_conf": 0.85,
-            "gliner_conf": 0.50
+            "gliner_conf": 0.50,
+            "deberta_conf": 0.85
         },
         description="Confidence thresholds for different detectors"
     )

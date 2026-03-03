@@ -1,7 +1,12 @@
 """
 Adaptive Ensemble System for ZeroPhix
-Learns optimal detector weights and thresholds from validation data
-Reduces manual trial-and-error configuration
+======================================
+
+Multi-model merge with calibration-aware scoring:
+  1. Label normalization (cross-detector agreement)
+  2. Confidence calibration (Platt scaling per detector)
+  3. Multi-signal winner selection (F1 history + calibrated score + agreement count)
+  4. Detector correlation tracking (avoid double-counting correlated detectors)
 """
 
 from typing import List, Dict, Tuple, Optional
@@ -23,49 +28,61 @@ class DetectorMetrics:
     false_positives: int = 0
     false_negatives: int = 0
     total_predictions: int = 0
-    
+
     # Label-specific metrics
     label_metrics: Dict[str, Dict[str, int]] = field(default_factory=lambda: defaultdict(lambda: {"tp": 0, "fp": 0, "fn": 0}))
-    
+
+    # Per-label confidence score history (for calibration)
+    score_history: Dict[str, List[Tuple[float, bool]]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+
     @property
     def precision(self) -> float:
         if self.true_positives + self.false_positives == 0:
             return 0.0
         return self.true_positives / (self.true_positives + self.false_positives)
-    
+
     @property
     def recall(self) -> float:
         if self.true_positives + self.false_negatives == 0:
             return 0.0
         return self.true_positives / (self.true_positives + self.false_negatives)
-    
+
     @property
     def f1(self) -> float:
         p, r = self.precision, self.recall
         if p + r == 0:
             return 0.0
         return 2 * p * r / (p + r)
-    
+
     def get_label_f1(self, label: str) -> float:
         """Get F1 score for a specific label"""
         m = self.label_metrics.get(label, {})
         tp = m.get("tp", 0)
         fp = m.get("fp", 0)
         fn = m.get("fn", 0)
-        
+
         if tp + fp == 0:
             p = 0.0
         else:
             p = tp / (tp + fp)
-        
+
         if tp + fn == 0:
             r = 0.0
         else:
             r = tp / (tp + fn)
-        
+
         if p + r == 0:
             return 0.0
         return 2 * p * r / (p + r)
+
+    def get_label_precision(self, label: str) -> float:
+        """Get precision for a specific label"""
+        m = self.label_metrics.get(label, {})
+        tp = m.get("tp", 0)
+        fp = m.get("fp", 0)
+        return tp / (tp + fp) if (tp + fp) > 0 else 0.0
 
 
 class PerformanceTracker:
@@ -118,14 +135,21 @@ class PerformanceTracker:
         for tp in true_positives:
             label = tp[2]
             metrics.label_metrics[label]["tp"] += 1
-        
+
         for fp in false_positives:
             label = fp[2]
             metrics.label_metrics[label]["fp"] += 1
-        
+
         for fn in false_negatives:
             label = fn[2]
             metrics.label_metrics[label]["fn"] += 1
+
+        # Record score history for calibration fitting
+        matched_positions = {(s.start, s.end, s.label) for s in predictions} & gt_set
+        for span in predictions:
+            key = (span.start, span.end, span.label)
+            is_correct = key in matched_positions
+            metrics.score_history[span.label].append((span.score, is_correct))
     
     def get_detector_weight(self, detector_name: str, method: str = "f1_squared") -> float:
         """
@@ -313,60 +337,73 @@ class LabelNormalizer:
 
 class AdaptiveConsensusModel:
     """
-    Enhanced consensus model with:
-    - Adaptive detector weights based on performance
-    - Label normalization before voting
-    - Performance-aware conflict resolution
+    Advanced multi-model merge with calibration-aware scoring.
+
+    Scoring formula per span in an overlap group:
+        final = calibrated_score * detector_weight * length_factor * label_f1_bonus * agreement_bonus
+
+    Where:
+      - calibrated_score: Platt-calibrated confidence (or raw if no calibrator)
+      - detector_weight: Blended (80% adaptive F1-squared, 20% config prior)
+      - length_factor: 1.0 + min(length, 30) / 150  (longer = more specific)
+      - label_f1_bonus: 1.0 + label_precision * 0.4  (historical accuracy on this label)
+      - agreement_bonus: 1.0 + 0.15 * (n_agreeing_detectors - 1)  (cross-detector corroboration)
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  config: RedactionConfig,
                  tracker: Optional[PerformanceTracker] = None,
-                 normalizer: Optional[LabelNormalizer] = None):
+                 normalizer: Optional[LabelNormalizer] = None,
+                 calibrator=None):
         self.config = config
         self.tracker = tracker
         self.normalizer = normalizer or LabelNormalizer()
-        
+        self.calibrator = calibrator  # PerDetectorCalibrator instance (optional)
+
         # Start with config weights, update with tracker if available
         self.weights = config.detector_weights.copy()
         if tracker:
             self.update_weights_from_tracker()
-    
+
+    def set_calibrator(self, calibrator):
+        """Attach a PerDetectorCalibrator for score calibration during voting."""
+        self.calibrator = calibrator
+
     def update_weights_from_tracker(self):
         """Update detector weights based on tracked performance"""
         if not self.tracker:
             return
-        
+
         adaptive_weights = self.tracker.get_all_weights(method="f1_squared")
-        
+
         # Blend config weights with adaptive weights (80% adaptive, 20% config)
         for detector, adaptive_weight in adaptive_weights.items():
             config_weight = self.weights.get(detector, 1.0)
             self.weights[detector] = 0.8 * adaptive_weight + 0.2 * config_weight
-    
+
     def resolve(self, spans: List[Span], text: str = None) -> List[Span]:
         """
-        Resolve conflicts with adaptive weights and label normalization
+        Resolve conflicts with calibration-aware multi-signal scoring.
         """
         if not spans:
             return []
-        
+
         # CRITICAL: Normalize labels BEFORE voting
         normalized_spans = self.normalizer.normalize_spans(spans)
-        
+
         # Sort by start position
         normalized_spans.sort(key=lambda x: x.start)
-        
+
         resolved = []
         current_group = []
         group_end = -1
-        
+
         for span in normalized_spans:
             if not current_group:
                 current_group.append(span)
                 group_end = span.end
                 continue
-            
+
             # Check overlap
             if span.start < group_end:
                 current_group.append(span)
@@ -375,46 +412,73 @@ class AdaptiveConsensusModel:
                 # Resolve current group
                 winner = self._pick_winner(current_group)
                 resolved.append(winner)
-                
+
                 # Start new group
                 current_group = [span]
                 group_end = span.end
-        
+
         if current_group:
             winner = self._pick_winner(current_group)
             resolved.append(winner)
-        
+
         return resolved
-    
+
     def _pick_winner(self, group: List[Span]) -> Span:
-        """Pick best span from overlapping group using adaptive weights"""
+        """
+        Pick best span from overlapping group using multi-signal scoring:
+          1. Calibrated confidence score
+          2. Detector weight (adaptive or config)
+          3. Length bonus (specificity)
+          4. Label-specific F1/precision history
+          5. Agreement bonus (how many detectors agree on this label)
+        """
         if len(group) == 1:
             return group[0]
-        
+
+        # Pre-compute agreement counts: how many detectors produce each label
+        label_sources: Dict[str, int] = defaultdict(int)
+        for span in group:
+            label_sources[span.label] += 1
+
         best_span = None
         best_score = -1.0
-        
+
         for span in group:
-            # Get adaptive weight for this detector
+            # 1. Calibrated confidence
+            cal_score = span.score
+            if self.calibrator:
+                try:
+                    cal_score = self.calibrator.calibrate(
+                        span.source, span.score, span.label
+                    )
+                except Exception:
+                    pass  # fall back to raw score
+
+            # 2. Detector weight
             weight = self.weights.get(span.source, 1.0)
-            
-            # Length bonus: prefer longer matches (more specific)
+
+            # 3. Length bonus: prefer longer matches (more specific)
             length = span.end - span.start
-            length_factor = 1.0 + (min(length, 20) / 100.0)
-            
-            # If we have performance data, use label-specific F1 as additional signal
+            length_factor = 1.0 + (min(length, 30) / 150.0)
+
+            # 4. Label-specific historical performance bonus
             label_bonus = 1.0
             if self.tracker and span.source in self.tracker.metrics:
+                label_prec = self.tracker.metrics[span.source].get_label_precision(span.label)
                 label_f1 = self.tracker.metrics[span.source].get_label_f1(span.label)
-                # Boost entities where this detector historically performs well
-                label_bonus = 1.0 + (label_f1 * 0.5)
-            
-            final_score = span.score * weight * length_factor * label_bonus
-            
+                # Use precision for winner selection (penalize noisy labels)
+                label_bonus = 1.0 + max(label_prec, label_f1) * 0.4
+
+            # 5. Agreement bonus: reward labels corroborated by multiple detectors
+            n_agreeing = label_sources.get(span.label, 1)
+            agreement_bonus = 1.0 + 0.15 * (n_agreeing - 1)
+
+            final_score = cal_score * weight * length_factor * label_bonus * agreement_bonus
+
             if final_score > best_score:
                 best_score = final_score
                 best_span = span
-        
+
         return best_span
 
 
@@ -608,24 +672,103 @@ class ConfigurationOptimizer:
         
         return train_results
     
+    def fit_calibration(self) -> Optional[dict]:
+        """
+        Fit per-detector confidence calibrators from score history
+        collected during calibrate(). Returns calibrator or None.
+
+        Requires: calibrate() was already called so score_history is populated.
+        """
+        try:
+            from ..eval.confidence_calibration import PerDetectorCalibrator
+        except ImportError:
+            return None
+
+        calibrator = PerDetectorCalibrator()
+        results = {}
+
+        for detector_name, metrics in self.tracker.metrics.items():
+            all_scores = []
+            all_labels = []
+            all_entity_labels = []
+
+            for entity_label, history in metrics.score_history.items():
+                for score, is_correct in history:
+                    all_scores.append(score)
+                    all_labels.append(1 if is_correct else 0)
+                    all_entity_labels.append(entity_label)
+
+            if len(all_scores) >= 20:
+                result = calibrator.fit_detector(
+                    detector_name, all_scores, all_labels, all_entity_labels
+                )
+                results[detector_name] = result
+
+        return calibrator if results else None
+
     def grid_search_thresholds(self,
                                texts: List[str],
                                ground_truth: List[List[Tuple[int, int, str]]],
                                threshold_range: List[float] = None) -> Dict[str, float]:
         """
-        Find optimal confidence thresholds using grid search
-        
+        Find optimal per-label confidence thresholds using grid search.
+
+        For each label, tries each threshold and picks the one maximizing F1.
+
         Args:
             texts: Validation texts
             ground_truth: Ground truth annotations
-            threshold_range: List of thresholds to try (default: [0.3, 0.4, 0.5, 0.6, 0.7])
-        
+            threshold_range: List of thresholds to try
+
         Returns:
             Dictionary of label -> optimal threshold
         """
         if threshold_range is None:
-            threshold_range = [0.3, 0.4, 0.5, 0.6, 0.7]
-        
-        # TODO: Implement grid search over threshold space
-        # For now, return suggested thresholds from calibration
-        return self._suggest_label_thresholds()
+            threshold_range = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]
+
+        # Collect all predictions with scores
+        normalizer = LabelNormalizer()
+        all_predictions = []  # (label, score, is_correct)
+
+        for text, gt in zip(texts, ground_truth):
+            gt_set = set(gt)
+            gt_normalized = {(s, e, normalizer.normalize(l)) for s, e, l in gt}
+
+            for component in self.pipeline.components:
+                preds = component.detect(text)
+                preds = normalizer.normalize_spans(preds)
+                for span in preds:
+                    key = (span.start, span.end, span.label)
+                    is_correct = key in gt_normalized
+                    all_predictions.append((span.label, span.score, is_correct))
+
+        # Group by label
+        label_preds: Dict[str, List[Tuple[float, bool]]] = defaultdict(list)
+        for label, score, correct in all_predictions:
+            label_preds[label].append((score, correct))
+
+        # Grid search per label
+        optimal = {}
+        for label, preds in label_preds.items():
+            if len(preds) < 5:
+                continue
+
+            best_f1 = -1.0
+            best_thresh = 0.5
+
+            for thresh in threshold_range:
+                tp = sum(1 for s, c in preds if s >= thresh and c)
+                fp = sum(1 for s, c in preds if s >= thresh and not c)
+                fn = sum(1 for s, c in preds if s < thresh and c)
+
+                prec = tp / (tp + fp) if (tp + fp) > 0 else 0
+                rec = tp / (tp + fn) if (tp + fn) > 0 else 0
+                f1 = 2 * prec * rec / (prec + rec) if (prec + rec) > 0 else 0
+
+                if f1 > best_f1:
+                    best_f1 = f1
+                    best_thresh = thresh
+
+            optimal[label] = best_thresh
+
+        return optimal
