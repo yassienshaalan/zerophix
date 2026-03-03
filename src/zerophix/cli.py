@@ -10,7 +10,7 @@ from rich.table import Table
 console = Console()
 
 @click.group()
-@click.version_option(version="0.2.0", prog_name="zerophix")
+@click.version_option(version="0.1.20", prog_name="zerophix")
 def app():
     """ZeroPhix - Enterprise PII/PSI/PHI Redaction"""
     pass

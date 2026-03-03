@@ -1,4 +1,4 @@
-# ZeroPhix v0.1.19 - Enterprise PII/PSI/PHI Redaction
+# ZeroPhix v0.1.20 - Enterprise PII/PSI/PHI Redaction
 
 **Enterprise-grade, multilingual PII/PSI/PHI redaction - free, offline, and fully customizable.**
 
