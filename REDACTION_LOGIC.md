@@ -1374,7 +1374,7 @@ This document is part of the ZeroPhix project (Apache 2.0 License).
 ---
 
 **Last Updated:** March 3, 2026
-**Version:** 0.2.1
+**Version:** 0.1.20
 
 **Authors**: ZeroPhix Team
 **Focus**: Australian Data Sovereignty, Offline Operation, Dynamic Configurability

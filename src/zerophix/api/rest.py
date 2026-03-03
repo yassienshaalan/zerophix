@@ -138,7 +138,7 @@ api_config = APIConfig()
 app = FastAPI(
     title="ZeroPhi PII Redaction API",
     description="Enterprise-grade PII/PSI/PHI redaction service with security and compliance",
-    version="0.2.0",
+    version="0.1.20",
     docs_url=api_config.docs_url,
     redoc_url=api_config.redoc_url
 )
@@ -267,7 +267,7 @@ async def health_check():
     
     return HealthResponse(
         status="healthy",
-        version="0.2.0",
+        version="0.1.20",
         uptime=uptime,
         cache_stats=cache_stats,
         performance_summary=performance_summary
