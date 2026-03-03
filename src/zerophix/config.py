@@ -54,6 +54,10 @@ class RedactionConfig(BaseModel):
     allow_list: List[str] = Field(default_factory=list, description="List of terms to never redact")
     allow_list_file: Optional[str] = Field(default=None, description="Path to file containing allow-list terms")
 
+    # Parallel processing
+    parallel_detection: bool = Field(default=False, description="Run detectors in parallel via shared thread pool")
+    max_workers: int = Field(default=4, description="Max threads for parallel detector execution")
+
     # Model specifications
     spacy_model: str = Field(default="en_core_web_sm", description="spaCy model name")
     bert_model: str = Field(default="dslim/bert-base-NER", description="BERT model for NER")

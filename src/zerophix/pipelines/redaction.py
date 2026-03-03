@@ -1,5 +1,7 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from ..config import RedactionConfig
 from ..detectors.regex_detector import RegexDetector
 from ..detectors.custom_detector import CustomEntityDetector
@@ -10,6 +12,13 @@ from .adaptive_ensemble import AdaptiveConsensusModel, PerformanceTracker, Label
 from .context import ContextPropagator
 from .allowlist import AllowListFilter
 from .post_processors import GarbageFilter
+
+# Lazy import calibration
+PerDetectorCalibrator = None
+try:
+    from ..eval.confidence_calibration import PerDetectorCalibrator
+except Exception:
+    pass
 
 # Lazy import optional detectors
 SpacyDetector = None
@@ -110,10 +119,12 @@ class RedactionPipeline:
         
         # Initialize accuracy enhancement components
         # Use adaptive consensus if enabled, otherwise standard consensus
+        self.calibrator = None  # PerDetectorCalibrator (set via calibrate() or load)
+
         if cfg.enable_adaptive_weights or cfg.enable_label_normalization:
             self.performance_tracker = PerformanceTracker() if cfg.track_detector_performance else None
             self.label_normalizer = LabelNormalizer() if cfg.enable_label_normalization else None
-            
+
             # Load pre-calibrated weights if file provided
             if cfg.calibration_file and self.performance_tracker:
                 try:
@@ -122,20 +133,37 @@ class RedactionPipeline:
                     cfg.detector_weights.update(weights)
                 except Exception as e:
                     print(f"Warning: Could not load calibration file {cfg.calibration_file}: {e}")
-            
+
+            # Load per-detector confidence calibration if available
+            if cfg.calibration_file and PerDetectorCalibrator is not None:
+                cal_path = cfg.calibration_file.replace('.json', '_calibrators.json')
+                try:
+                    self.calibrator = PerDetectorCalibrator()
+                    self.calibrator.load(cal_path)
+                except Exception:
+                    self.calibrator = None
+
             self.consensus = AdaptiveConsensusModel(
-                cfg, 
+                cfg,
                 tracker=self.performance_tracker,
-                normalizer=self.label_normalizer
+                normalizer=self.label_normalizer,
+                calibrator=self.calibrator
             )
         else:
             self.performance_tracker = None
             self.label_normalizer = None
             self.consensus = ConsensusModel(cfg)
-        
+
         self.context_propagator = ContextPropagator(cfg)
         self.allow_list = AllowListFilter(cfg)
         self.garbage_filter = GarbageFilter(cfg)
+
+        # Shared thread pool for parallel detector execution (reused across calls)
+        self._detector_pool: Optional[ThreadPoolExecutor] = None
+        if cfg.parallel_detection and len(self.components) > 1:
+            import os
+            n_workers = min(len(self.components), cfg.max_workers, os.cpu_count() or 4)
+            self._detector_pool = ThreadPoolExecutor(max_workers=n_workers)
 
     @classmethod
     def from_config(cls, cfg: RedactionConfig):
@@ -260,79 +288,80 @@ class RedactionPipeline:
         
         return "general"
 
+    def _select_components(self, text: str) -> List:
+        """Select which detectors to run based on mode/domain."""
+        if self.cfg.mode != "auto":
+            return self.components
+
+        domain = self._detect_domain(text)
+        active = []
+
+        for comp in self.components:
+            if isinstance(comp, RegexDetector):
+                active.append(comp)
+                continue
+            if GLiNERDetector and isinstance(comp, GLiNERDetector):
+                active.append(comp)
+                continue
+            if domain == "medical":
+                if (OpenMedDetector and isinstance(comp, OpenMedDetector)) or isinstance(comp, SpacyDetector):
+                    active.append(comp)
+            elif domain == "legal":
+                if isinstance(comp, (SpacyDetector, BertDetector)):
+                    active.append(comp)
+            else:
+                if not (OpenMedDetector and isinstance(comp, OpenMedDetector)):
+                    active.append(comp)
+
+        return active
+
+    def _run_detectors(self, text: str, components: List, parallel: bool = False) -> List[Span]:
+        """
+        Run detectors with optional parallel fan-out via shared thread pool.
+
+        Uses the pre-allocated _detector_pool to avoid thread creation overhead
+        on every call. Falls back to sequential if pool is unavailable.
+        """
+        sorted_components = self._sort_detectors_by_speed(components)
+        spans: List[Span] = []
+
+        use_parallel = parallel and len(sorted_components) > 1 and self._detector_pool is not None
+
+        if use_parallel:
+            futures = {}
+            for comp in sorted_components:
+                fut = self._detector_pool.submit(comp.detect, text)
+                futures[fut] = comp.__class__.__name__
+
+            for fut in as_completed(futures):
+                try:
+                    spans.extend(fut.result())
+                except Exception as e:
+                    print(f"Detector {futures[fut]} failed: {e}")
+        else:
+            for comp in sorted_components:
+                try:
+                    spans.extend(comp.detect(text))
+                except Exception as e:
+                    print(f"Detector {comp.__class__.__name__} failed: {e}")
+
+        return spans
+
     def scan(self, text: str, parallel_detectors: bool = False) -> Dict[str, object]:
         """
         Scan text for entities without redacting.
         Returns a dict with detected entities and metadata.
-        
+
         Args:
             text: Text to scan
             parallel_detectors: Run all detectors in parallel (faster on multi-core)
-            
+
         Returns:
             Dict with keys: detections, total_detections, entity_counts, has_pii
         """
-        spans: List[Span] = []
-        
-        # Determine which components to run
-        active_components = self.components
-        
-        if self.cfg.mode == "auto":
-            domain = self._detect_domain(text)
-            active_components = []
-            
-            for comp in self.components:
-                # Always run Regex (it's fast and handles basics like emails/dates)
-                if isinstance(comp, RegexDetector):
-                    active_components.append(comp)
-                    continue
-                    
-                # Always run GLiNER (it's the smartest generalist)
-                if isinstance(comp, GLiNERDetector):
-                    active_components.append(comp)
-                    continue
-                
-                # Domain specific routing
-                if domain == "medical":
-                    if OpenMedDetector and isinstance(comp, OpenMedDetector):
-                        active_components.append(comp)
-                    # Keep Spacy for basic names
-                    elif isinstance(comp, SpacyDetector):
-                        active_components.append(comp)
-                        
-                elif domain == "legal":
-                    # In legal, Spacy and BERT are good. OpenMed is useless.
-                    if isinstance(comp, (SpacyDetector, BertDetector)):
-                        active_components.append(comp)
-                        
-                else: # General
-                    # Run everything except specialized
-                    if not (OpenMedDetector and isinstance(comp, OpenMedDetector)):
-                        active_components.append(comp)
-
-        # OPTIMIZATION: Run detectors in order of speed (fast -> slow)
-        # Regex: ~1ms, spaCy: ~10ms, GLiNER: ~100ms, BERT: ~200ms, OpenMed: ~300ms
-        sorted_components = self._sort_detectors_by_speed(active_components)
-        
-        if parallel_detectors and len(sorted_components) > 1:
-            # Run all detectors in parallel for maximum speed
-            from concurrent.futures import ThreadPoolExecutor
-            
-            def run_detector(comp):
-                try:
-                    return comp.detect(text)
-                except Exception as e:
-                    print(f"Detector {comp.__class__.__name__} failed: {e}")
-                    return []
-            
-            with ThreadPoolExecutor(max_workers=len(sorted_components)) as executor:
-                futures = [executor.submit(run_detector, comp) for comp in sorted_components]
-                for future in futures:
-                    spans.extend(future.result())
-        else:
-            # Sequential execution (default)
-            for comp in sorted_components:
-                spans.extend(comp.detect(text))
+        active_components = self._select_components(text)
+        use_parallel = parallel_detectors or (self.cfg.parallel_detection and self._detector_pool is not None)
+        spans = self._run_detectors(text, active_components, parallel=use_parallel)
 
         # Apply advanced processing
         merged = self._process_spans(text, spans)
@@ -569,18 +598,18 @@ class RedactionPipeline:
     def redact(self, text: str, user_context: Dict = None, session_id: str = None) -> Dict[str, object]:
         """
         Redact PII/PHI from text
-        
+
         Args:
             text: Input text (str, required)
             user_context: Optional user context
             session_id: Optional session identifier
-            
+
         Returns:
             Dictionary with 'text' (redacted) and 'spans' (detected entities)
         """
-        spans: List[Span] = []
-        for comp in self.components:
-            spans.extend(comp.detect(text))
+        active_components = self._select_components(text)
+        use_parallel = self.cfg.parallel_detection and self._detector_pool is not None
+        spans = self._run_detectors(text, active_components, parallel=use_parallel)
 
         # Apply advanced processing
         merged = self._process_spans(text, spans)
